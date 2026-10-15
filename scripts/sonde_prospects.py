@@ -11,7 +11,7 @@ agg = requests.get(API.replace("/exports/json", "/records"), params={
     "select": "nature_libelle, count(*) as n", "group_by": "nature_libelle",
     "where": f"dateparution >= date'{since}'", "limit": 50}, timeout=60).json()
 print("natures (30 j) :", [(x.get("nature_libelle"), x.get("n")) for x in agg.get("results", [])])
-natures = [x["nature_libelle"] for x in agg.get("results", []) if x.get("nature_libelle") and "ttribu" in x["nature_libelle"]]
+natures = [x["nature_libelle"] for x in agg.get("results", []) if x.get("nature_libelle") in ("Résultat de marché",)]
 recs = []
 for nat in natures:
     r = requests.get(API, params={"where": f"dateparution >= date'{since}' and nature_libelle = \"{nat}\"", "limit": 3000}, timeout=120)
