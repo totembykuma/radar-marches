@@ -56,6 +56,6 @@ editeur:
 # Prospection : 1 seul e-mail par entreprise ayant gagné un marché public récemment (avis « Résultat de marché »).
 # Reste inactive tant que « actif » est false ou qu'aucun expéditeur dédié n'est configuré.
 prospection:
-  actif: false
-  par_jour: 20
-  expediteur: ""          # ex. "Radar Marchés <bonjour@domaine-secondaire.fr>" (domaine vérifié dans Resend)
+  actif: true
+  par_jour: 10
+  expediteur: "Radar Marchés <bonjour@radar-marches.fr>"
