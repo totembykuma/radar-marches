@@ -145,11 +145,11 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
         fin = s.get("fin_essai")
         if not fin or not 0 < fin - now_ts <= 3.5 * 86400:
             continue
-        key = hashlib.sha256(f"{s['email'].lower()}|{fin}".encode()).hexdigest()[:16]
+        fin_fr = datetime.fromtimestamp(fin, timezone.utc).strftime("%d/%m/%Y")
+        key = hashlib.sha256(f"{s['email'].lower()}|{fin_fr}".encode()).hexdigest()[:16]
         if key in rappels:
             continue
         offre = biz["offres"][s["plan"]]
-        fin_fr = datetime.fromtimestamp(fin, timezone.utc).strftime("%d/%m/%Y")
         html = render("email_fin_essai.html", biz=biz, offre=offre, fin_fr=fin_fr, criteres=criteres_txt(s, metiers))
         try:
             res = mailer.send(s["email"], f"Votre essai {biz['nom']} se termine le {fin_fr}", html,
