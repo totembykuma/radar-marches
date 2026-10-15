@@ -67,7 +67,19 @@ def _extract_text(donnees):
 
 
 def _siret_acheteur(donnees):
-    """SIRET de l'acheteur, lu dans le détail de l'avis (formulaires nationaux ou eForms)."""
+    """SIRET de l'acheteur, lu dans le détail de l'avis (formulaires nationaux ou eForms).
+    Ne lève jamais d'erreur : un format inattendu donne simplement « pas de SIRET »."""
+    try:
+        return _siret_brut(donnees)
+    except Exception:
+        return ""
+
+
+def _one(v):
+    return (v[0] if v else {}) if isinstance(v, list) else (v if isinstance(v, dict) else {})
+
+
+def _siret_brut(donnees):
     try:
         data = json.loads(donnees) if isinstance(donnees, str) else (donnees or {})
     except ValueError:
@@ -99,10 +111,10 @@ def _siret_acheteur(donnees):
     except (KeyError, TypeError):
         return ""
     for org in orgs if isinstance(orgs, list) else [orgs]:
-        comp = (org or {}).get("efac:Company") or {}
-        oid = (comp.get("cac:PartyIdentification") or {}).get("cbc:ID")
+        comp = _one(_one(org).get("efac:Company"))
+        oid = _one(comp.get("cac:PartyIdentification")).get("cbc:ID")
         oid = oid.get("#text", "") if isinstance(oid, dict) else str(oid or "")
-        siret = txt((comp.get("cac:PartyLegalEntity") or {}).get("cbc:CompanyID"))
+        siret = txt(_one(comp.get("cac:PartyLegalEntity")).get("cbc:CompanyID"))
         if len(siret) == 14 and (not ref or oid == ref):
             return siret
     return ""

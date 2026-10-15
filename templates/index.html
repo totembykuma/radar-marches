@@ -123,6 +123,7 @@
         <li>Toute l'offre Essentiel, plus :</li>
         <li><b>Autant de départements que vous voulez</b>, ou toute la France</li>
         <li><b>Vos mots-clés</b> en plus du métier (ex. « crèche », « vitrerie », « toiture-terrasse »)</li>
+        <li><b>La fiche « avant de répondre »</b> sur chaque marché : ce que cet acheteur a payé les fois précédentes, combien d'entreprises ont répondu, et qui a gagné</li>
         <li><b>Le bilan du lundi</b> : qui a gagné les marchés de votre métier dans votre secteur, et à quel prix quand il est publié</li>
       </ul>
       {% if o.lien_paiement and biz.stripe_mode == 'réel' %}<a class="btn btn-lg btn-block" href="{{ o.lien_paiement }}" data-mois-href="{{ o.lien_paiement }}" data-an-href="{{ o.lien_annuel }}">Essayer gratuitement</a>{% else %}<a class="btn btn-lg btn-block disabled" href="mailto:{{ biz.email_contact }}">Bientôt disponible</a>{% endif %}
@@ -151,6 +152,7 @@
   <details><summary>Est-ce que vous répondez aux appels d'offres à ma place ?</summary><p>Non. Nous repérons {% if biz.ia_active %}et résumons {% endif %}les opportunités ; vous décidez et répondez sur la plateforme de l'acheteur, dont le lien est dans chaque alerte.</p></details>
   <details><summary>Je suis une petite entreprise, c'est pour moi ?</summary><p>Oui. Beaucoup de marchés locaux (nettoyage d'une mairie, entretien d'un parc, travaux dans une école) sont à la portée des artisans et des TPE. Le plus dur, c'est de les voir à temps.</p></details>
   <details><summary>Quelle offre choisir ?</summary><p>Si vous travaillez dans un seul département, l'offre Essentiel suffit. Si vous intervenez sur plusieurs départements, si vous voulez cibler des chantiers précis avec vos mots-clés, ou savoir qui gagne les marchés de votre métier et à quel prix, prenez l'offre Pro. Vous pouvez changer d'offre à tout moment.</p></details>
+  <details><summary>C'est quoi, la fiche « avant de répondre » ?</summary><p>Sous chaque appel d'offres, les abonnés Pro voient ce que le même acheteur a déjà attribué dans leur métier ces deux dernières années : le montant habituel, le nombre d'offres reçues (donc la concurrence à attendre) et les dernières entreprises retenues. De quoi décider en 30 secondes si le marché vaut le coup, et caler votre prix. Source : données essentielles de la commande publique, publiées par l'État.</p></details>
   <details><summary>C'est quoi, le bilan du lundi ?</summary><p>Chaque lundi, les abonnés Pro reçoivent la liste des marchés de leur métier attribués la semaine précédente dans leur secteur : l'acheteur, l'entreprise qui a gagné et le montant quand l'avis le publie. C'est le meilleur moyen de connaître ses concurrents et les prix du marché.</p></details>
   <details><summary>Et si je reçois des alertes hors sujet ?</summary><p>Répondez simplement à l'e-mail avec vos remarques : nous ajustons votre filtre.</p></details>
   <details><summary>Puis-je arrêter quand je veux ?</summary><p>Oui, sans engagement. Aucun prélèvement pendant l'essai si vous résiliez avant la fin.</p></details>
