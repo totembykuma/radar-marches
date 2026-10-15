@@ -1,7 +1,7 @@
 # Offre, positionnement et acquisition
 
 ## Positionnement
-**Radar Marchés : les appels d'offres publics de votre métier, triés par l'IA, chaque matin.**
+**Radar Marchés : les appels d'offres publics de votre métier, triés par métier et département, chaque matin.** (L'IA — résumé + note TPE — s'ajoute si la clé Claude est configurée.)
 Cible : TPE/PME (1–20 salariés) des métiers qui vendent beaucoup aux collectivités : nettoyage, espaces verts, second œuvre du bâtiment, CVC, restauration, formation, communication, informatique, sécurité, transport.
 Promesse : *voir tôt les quelques marchés qui valent votre temps*, sans jargon ni 50 alertes hors sujet.
 Ce qu'on ne promet pas : gagner des marchés, ni l'exhaustivité (source : BOAMP).
@@ -39,10 +39,10 @@ Chaque matin, le site régénère ~100 à 500 pages « Appels d'offres *métier*
 Publier les messages ci-dessous dans 5 à 10 groupes Facebook/LinkedIn d'artisans et d'entrepreneurs du bâtiment, de la propreté et du paysage (la plupart autorisent les posts utiles ; lire leurs règles).
 
 **Post groupes (exemple nettoyage, à adapter au métier du groupe)** :
-> Bonjour à tous. J'ai créé un petit outil qui lit chaque jour tous les appels d'offres publics (BOAMP) et envoie le matin uniquement ceux d'un métier et d'un secteur, résumés en une phrase. Cette semaine, il y avait par exemple [N] marchés de nettoyage ouverts en [région] : [lien vers la page du site]. La page est gratuite et mise à jour chaque jour. Si vous voulez les recevoir par mail, il y a un essai de 14 jours. Vos retours m'intéressent !
+> Bonjour à tous. J'ai créé un petit outil qui lit chaque jour tous les appels d'offres publics (BOAMP) et envoie le matin uniquement ceux d'un métier et d'un secteur. Cette semaine, il y avait par exemple [N] marchés de nettoyage ouverts en [région] : [lien vers la page du site]. La page est gratuite et mise à jour chaque jour. Si vous voulez les recevoir par mail, il y a un essai de 14 jours. Vos retours m'intéressent !
 
 **Post LinkedIn** :
-> Les mairies, collèges et hôpitaux publient chaque jour des centaines de marchés… et la plupart des TPE ne les voient jamais. J'ai lancé Radar Marchés : chaque matin, l'IA lit tout le BOAMP et n'envoie à chaque entreprise que les marchés de son métier et de son département, avec un résumé clair et une note « accessible à une petite entreprise ». Exemples en direct : [lien]. Essai gratuit 14 jours.
+> Les mairies, collèges et hôpitaux publient chaque jour des centaines de marchés… et la plupart des TPE ne les voient jamais. J'ai lancé Radar Marchés : chaque matin, il lit tout le BOAMP et n'envoie à chaque entreprise que les marchés de son métier et de son département. Exemples en direct : [lien]. Essai gratuit 14 jours.
 
 Annuaires gratuits où inscrire le site (une fois) : Google Business Profile (en « service en ligne »), annuaires de startups/outils (Product Hunt FR, Les-Outils-IA, etc.), et proposer un partenariat aux CMA/fédérations locales (lien vers les pages gratuites).
 
