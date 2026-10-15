@@ -40,7 +40,7 @@ def _link_fields(offre_key, metiers):
         "custom_fields[0][label][type]": "custom", "custom_fields[0][label][custom]": "Votre métier",
         "custom_fields[1][key]": "departements", "custom_fields[1][type]": "text",
         "custom_fields[1][label][type]": "custom",
-        "custom_fields[1][label][custom]": "Départements (ex. 33, 47)" if offre_key == "essentiel" else "Départements ou « France »",
+        "custom_fields[1][label][custom]": "Votre département (ex. 33)" if offre_key == "essentiel" else "Départements (ex. 33, 47) ou « France »",
     }
     for i, (k, m) in enumerate(metiers.items()):
         d[f"custom_fields[0][dropdown][options][{i}][label]"] = m["libelle"][:100]
@@ -68,6 +68,13 @@ def run():
         for pl in _call("GET", "payment_links", params={"active": "true", "limit": 100})["data"]:
             if (pl.get("metadata") or {}).get("radar_offre") == key and (pl.get("metadata") or {}).get("radar_price") == price["id"]:
                 link = pl
+        if link:
+            # Met à jour les champs (libellés, liste des métiers) si l'offre a changé.
+            wanted = {k: v for k, v in _link_fields(key, metiers).items()}
+            labels = [((f.get("label") or {}).get("custom")) for f in link.get("custom_fields") or []]
+            if labels != [v for k, v in wanted.items() if k.endswith("[label][custom]")]:
+                link = _call("POST", f"payment_links/{link['id']}", data=wanted)
+                print(f"[{mode}] {offre['nom']} : champs du lien mis à jour")
         if not link:
             data = {"line_items[0][price]": price["id"], "line_items[0][quantity]": 1,
                     "subscription_data[trial_period_days]": biz["essai_gratuit_jours"],

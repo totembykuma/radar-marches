@@ -5,7 +5,7 @@
     <div>
       <p class="live"><span class="dot"></span>En direct · {{ stats.ouverts }} marchés publics ouverts en ce moment</p>
       <h1>Les marchés publics de <em>votre métier</em>, chaque matin dans votre boîte mail.</h1>
-      <p class="lead">Mairies, collèges, hôpitaux et bailleurs sociaux publient chaque jour des centaines d'appels d'offres. {{ biz.nom }} les lit tous pour vous et ne vous envoie que ceux de votre métier, dans vos départements.</p>
+      <p class="lead">Fini les heures à fouiller les sites d'annonces. Chaque matin, vous recevez <b>uniquement</b> les appels d'offres de votre métier près de chez vous, le jour même de leur publication. Vous répondez plus tôt, vous en gagnez plus.</p>
       <div class="cta-row">
         <a class="btn btn-lg" href="#tarifs">Essayer {{ biz.essai_gratuit_jours }} jours gratuitement</a>
         <a class="btn btn-ghost btn-lg" href="appels-offres/">Voir les marchés en cours</a>
@@ -39,6 +39,30 @@
   <div><b>6h20</b><span>votre alerte, chaque jour ouvré</span></div>
 </div></section>
 
+<section class="wrap block" id="avantages">
+  <p class="kicker">Ce que vous y gagnez</p>
+  <h2>Les marchés publics, sans y passer vos soirées</h2>
+  <p class="sub">Chaque jour, des centaines d'avis sont publiés, éparpillés et écrits en jargon administratif. {{ biz.nom }} fait le tri à votre place.</p>
+  <div class="compare">
+    <div class="col sans"><h3>Sans {{ biz.nom }}</h3><ul>
+      <li>Vous fouillez plusieurs sites d'annonces, quand vous avez le temps</li>
+      <li>Vous lisez des dizaines d'avis hors sujet pour en trouver un bon</li>
+      <li>Vous découvrez les marchés tard, quand il reste quelques jours pour répondre</li>
+      <li>Les bons marchés partent chez vos concurrents mieux organisés</li></ul></div>
+    <div class="col avec"><h3>Avec {{ biz.nom }}</h3><ul>
+      <li>Un seul e-mail à 6h20, chaque jour ouvré : 2 minutes de lecture</li>
+      <li>Uniquement votre métier, dans votre secteur, sans faux amis</li>
+      <li>Vous voyez chaque marché le jour de sa publication : plus de temps pour bien répondre</li>
+      <li>L'objet, l'acheteur, le lieu, la date limite et le lien officiel, d'un coup d'œil</li></ul></div>
+  </div>
+  <div class="gains">
+    <div><b>Du temps gagné</b><span>Plus besoin de chercher : les marchés viennent à vous.</span></div>
+    <div><b>Plus aucun marché raté</b><span>Tous les avis du BOAMP sont lus, chaque jour ouvré.</span></div>
+    <div><b>Que du pertinent</b><span>Un filtre par métier qui écarte les annonces hors sujet.</span></div>
+    <div><b>Une longueur d'avance</b><span>Vous préparez votre offre dès le premier jour.</span></div>
+  </div>
+</section>
+
 <section class="wrap block" id="metiers">
   <p class="kicker">Votre métier</p>
   <h2>Des marchés concrets, pour des artisans et des PME comme vous</h2>
@@ -50,7 +74,7 @@
   <p class="kicker">Comment ça marche</p>
   <h2>Trois étapes, puis plus rien à faire</h2>
   <div class="steps">
-    <div class="step"><span class="num">1</span><h3>Vous choisissez</h3><p>Votre métier et jusqu'à 3 départements, ou toute la France en offre Pro. Ça prend une minute.</p></div>
+    <div class="step"><span class="num">1</span><h3>Vous choisissez</h3><p>Votre métier et votre département, ou plusieurs départements et toute la France avec l'offre Pro. Ça prend une minute.</p></div>
     <div class="step"><span class="num">2</span><h3>Nous trions chaque nuit</h3><p>Tous les nouveaux avis du BOAMP sont lus et filtrés. Les faux amis sont écartés : « peinture routière » n'arrive pas chez un peintre en bâtiment.</p></div>
     <div class="step"><span class="num">3</span><h3>Vous répondez</h3><p>Un e-mail clair chaque jour ouvré, seulement s'il y a du nouveau : objet, acheteur, lieu, date limite et lien vers l'avis officiel.</p></div>
   </div>
@@ -74,22 +98,35 @@
   <h2>Simple, sans engagement, {{ biz.essai_gratuit_jours }} jours offerts</h2>
   <p class="sub">Aucun prélèvement pendant l'essai. Vous arrêtez quand vous voulez, en un clic.</p>
   <div class="prices">
-  {% for key, o in biz.offres.items() %}
-    <div class="price{% if key == 'pro' %} featured{% endif %}">
-      {% if key == 'pro' %}<span class="ribbon">Toute la France</span>{% endif %}
+  {% set o = biz.offres.essentiel %}
+    <div class="price">
       <h3>{{ o.nom }}</h3>
+      <p class="for">Pour l'artisan qui travaille près de chez lui</p>
       <p class="amount">{{ o.prix_mensuel }} €<span>/mois</span></p>
       <ul class="checks">
-        <li>{{ o.metiers_max }} métier{{ 's' if o.metiers_max > 1 }}{% if key == 'pro' %} + vos mots-clés personnalisés{% endif %}</li>
-        <li>{% if o.departements_max >= 101 %}Toute la France (101 départements){% else %}Jusqu'à {{ o.departements_max }} départements{% endif %}</li>
+        <li>1 métier</li>
+        <li><b>1 département</b></li>
         <li>Alerte chaque jour ouvré{% if biz.ia_active %} avec résumé IA{% endif %}</li>
-        {% if biz.ia_active %}<li>Note d'accessibilité pour les TPE</li>{% else %}<li>Filtre anti faux-positifs par métier</li>{% endif %}
-        <li>{{ biz.essai_gratuit_jours }} jours d'essai gratuit</li>
+        <li>Filtre anti faux-positifs par métier</li>
       </ul>
-      {% if o.lien_paiement and biz.stripe_mode == 'réel' %}<a class="btn btn-lg btn-block" href="{{ o.lien_paiement }}">Commencer l'essai gratuit</a>{% else %}<a class="btn btn-lg btn-block disabled" href="mailto:{{ biz.email_contact }}?subject=Essai%20{{ o.nom }}">Bientôt disponible</a>{% endif %}
+      {% if o.lien_paiement and biz.stripe_mode == 'réel' %}<a class="btn btn-lg btn-block btn-ghost-dark" href="{{ o.lien_paiement }}">Essayer gratuitement</a>{% else %}<a class="btn btn-lg btn-block disabled" href="mailto:{{ biz.email_contact }}">Bientôt disponible</a>{% endif %}
     </div>
-  {% endfor %}
+  {% set o = biz.offres.pro %}
+    <div class="price featured">
+      <span class="ribbon">Recommandé</span>
+      <h3>{{ o.nom }}</h3>
+      <p class="for">Pour décrocher plus de marchés et surveiller la concurrence</p>
+      <p class="amount">{{ o.prix_mensuel }} €<span>/mois</span></p>
+      <ul class="checks">
+        <li>Toute l'offre Essentiel, plus :</li>
+        <li><b>Autant de départements que vous voulez</b>, ou toute la France</li>
+        <li><b>Vos mots-clés</b> en plus du métier (ex. « crèche », « vitrerie », « toiture-terrasse »)</li>
+        <li><b>Le bilan du lundi</b> : qui a gagné les marchés de votre métier dans votre secteur, et à quel prix quand il est publié</li>
+      </ul>
+      {% if o.lien_paiement and biz.stripe_mode == 'réel' %}<a class="btn btn-lg btn-block" href="{{ o.lien_paiement }}">Essayer gratuitement</a>{% else %}<a class="btn btn-lg btn-block disabled" href="mailto:{{ biz.email_contact }}">Bientôt disponible</a>{% endif %}
+    </div>
   </div>
+  <p class="fine"><b>{{ biz.essai_gratuit_jours }} jours d'essai gratuit sur les deux offres.</b> Le bilan du lundi vous montre vos concurrents, leurs clients et les prix pratiqués : de quoi ajuster vos devis et viser les bons acheteurs.</p>
   <p class="fine">{{ biz.fiscalite.tva }}. Paiement sécurisé par Stripe. Résiliation à tout moment depuis {% if biz.portail_client %}<a href="{{ biz.portail_client }}">votre espace client</a>{% else %}votre espace client{% endif %}.</p>
 </div></section>
 
@@ -99,6 +136,8 @@
   <details open><summary>D'où viennent les annonces ?</summary><p>Du BOAMP, le Bulletin officiel des annonces des marchés publics, publié en open data par l'État. Nous lisons chaque avis publié, tous les jours ouvrés.</p></details>
   <details><summary>Est-ce que vous répondez aux appels d'offres à ma place ?</summary><p>Non. Nous repérons {% if biz.ia_active %}et résumons {% endif %}les opportunités ; vous décidez et répondez sur la plateforme de l'acheteur, dont le lien est dans chaque alerte.</p></details>
   <details><summary>Je suis une petite entreprise, c'est pour moi ?</summary><p>Oui. Beaucoup de marchés locaux (nettoyage d'une mairie, entretien d'un parc, travaux dans une école) sont à la portée des artisans et des TPE. Le plus dur, c'est de les voir à temps.</p></details>
+  <details><summary>Quelle offre choisir ?</summary><p>Si vous travaillez dans un seul département, l'offre Essentiel suffit. Si vous intervenez sur plusieurs départements, si vous voulez cibler des chantiers précis avec vos mots-clés, ou savoir qui gagne les marchés de votre métier et à quel prix, prenez l'offre Pro. Vous pouvez changer d'offre à tout moment.</p></details>
+  <details><summary>C'est quoi, le bilan du lundi ?</summary><p>Chaque lundi, les abonnés Pro reçoivent la liste des marchés de leur métier attribués la semaine précédente dans leur secteur : l'acheteur, l'entreprise qui a gagné et le montant quand l'avis le publie. C'est le meilleur moyen de connaître ses concurrents et les prix du marché.</p></details>
   <details><summary>Et si je reçois des alertes hors sujet ?</summary><p>Répondez simplement à l'e-mail avec vos remarques : nous ajustons votre filtre.</p></details>
   <details><summary>Puis-je arrêter quand je veux ?</summary><p>Oui, sans engagement. Aucun prélèvement pendant l'essai si vous résiliez avant la fin.</p></details>
 </section>

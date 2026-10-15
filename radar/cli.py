@@ -66,7 +66,42 @@ def criteres_txt(sub, metiers):
     return f"{m} · {d}{extra}"
 
 
-def run_daily(avis_new=None, avis_open=None, subs=None):
+def envoyer_resultats(subs, biz, metiers, matcher, state, records=None):
+    """Offre Pro : chaque lundi, « qui a gagné » les marchés de leur métier et départements (7 derniers jours)."""
+    pros = [s for s in subs if s["plan"] == "pro" and s["metiers"]]
+    if not pros:
+        return 0
+    semaine = date.today().strftime("%G-W%V")
+    faits = state.setdefault("resultats", {})
+    if records is None:
+        records = prospects.fetch_results(days=7)
+    resultats = []
+    for rec in records:
+        a = boamp.normalize(rec)
+        a["metiers"] = matcher.metiers_of(a)
+        if a["metiers"]:
+            a["titulaires"], a["montant"] = prospects.titulaires(rec), prospects.montant(rec)
+            resultats.append(a)
+    envoyes = 0
+    for s in pros:
+        key = hashlib.sha256(s["email"].lower().encode()).hexdigest()[:16]
+        if faits.get(key) == semaine:
+            continue
+        deps = set(s["departements"])
+        items = [r for r in resultats if set(r["metiers"]) & set(s["metiers"]) and (not deps or deps & set(r["departements"]))]
+        if not items:
+            continue
+        items.sort(key=lambda r: -(r["montant"] or 0))
+        html = render("email_resultats.html", biz=biz, items=items[:40], criteres=criteres_txt(s, metiers))
+        res = mailer.send(s["email"], f"Bilan du lundi : {len(items)} marché{'s' if len(items) > 1 else ''} attribué{'s' if len(items) > 1 else ''} dans votre métier",
+                          html, biz["email_expediteur"], reply_to=biz.get("email_proprietaire") or biz["email_contact"])
+        if not res.get("simulated") or os.getenv("RADAR_DEMO") == "1":
+            faits[key] = semaine
+        envoyes += 1
+    return envoyes
+
+
+def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None):
     biz, metiers = business(), load_metiers()
     matcher = Matcher(metiers)
     state = _load_json(DATA / "state.json", {"sent": {}})
@@ -135,6 +170,13 @@ def run_daily(avis_new=None, avis_open=None, subs=None):
         except Exception as exc:
             run["erreurs"].append(f"envoi échoué : {safe(exc)}")
     run["emails_envoyes"] = sent
+
+    # 5b. Offre Pro : bilan « qui a gagné » le lundi
+    if date.today().weekday() == 0 or os.getenv("RADAR_FORCE_RESULTATS") == "1":
+        try:
+            run["bilans_resultats"] = envoyer_resultats(subs, biz, metiers, matcher, state, records=resultats_records)
+        except Exception as exc:
+            run["erreurs"].append(f"bilan des résultats non envoyé : {safe(exc)}")
     run["abonnes_sans_nouveaute"] = len(subs) - len(plans)
 
     # 6. Site

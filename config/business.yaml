@@ -11,7 +11,7 @@ offres:
     nom: "Essentiel"
     prix_mensuel: 29
     metiers_max: 1
-    departements_max: 3
+    departements_max: 1
     lien_paiement: "https://buy.stripe.com/eVqdR2eUg7HrdHj9H23F602"   # Stripe Payment Link (rempli après création)
     stripe_price_ids: ["price_1UQrs879764n3f0zMVMks2Dq"]
   pro:

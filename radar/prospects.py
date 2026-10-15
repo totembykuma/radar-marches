@@ -94,10 +94,46 @@ def _mapa_winners(data):
     return out
 
 
-def winners(rec):
+def _data(rec):
     try:
-        data = json.loads(rec.get("donnees") or "{}") if isinstance(rec.get("donnees"), str) else (rec.get("donnees") or {})
+        return json.loads(rec.get("donnees") or "{}") if isinstance(rec.get("donnees"), str) else (rec.get("donnees") or {})
     except ValueError:
+        return {}
+
+
+def titulaires(rec):
+    """Noms des entreprises retenues (avec ou sans e-mail), pour le bilan « qui a gagné »."""
+    data = _data(rec)
+    noms = [w["nom"] for w in _eforms_winners(data) + _mapa_winners(data) if w["nom"]]
+    return list(dict.fromkeys(n.strip() for n in noms))
+
+
+def montant(rec):
+    """Montant total attribué quand l'avis le publie (en euros), sinon None."""
+    data = _data(rec)
+
+    def nums(keys):
+        out = []
+        for key in keys:
+            for v in _walk_find(data, key):
+                s = re.sub(r"[\s\u202f\u00a0€]", "", _txt(v)).replace(",", ".")
+                try:
+                    f = float(s)
+                except ValueError:
+                    continue
+                if f > 0:
+                    out.append(f)
+        return out
+    lots = nums(["cbc:PayableAmount"])        # eForms : un montant par lot attribué
+    if lots:
+        return round(sum(lots))
+    autres = nums(["montant", "montantMarche", "valeurTotale"])
+    return round(max(autres)) if autres else None
+
+
+def winners(rec):
+    data = _data(rec)
+    if not data:
         return []
     found = _eforms_winners(data) + _mapa_winners(data)
     clean, seen = [], set()

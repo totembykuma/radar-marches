@@ -154,3 +154,21 @@ footer .logo{color:#fff}footer p{margin:12px 0 0;max-width:420px;line-height:1.5
   .foot{grid-template-columns:1fr}.block{padding:60px 20px}
 }
 @media (max-width:560px){.hide-sm{display:none}.wrap{padding:0 16px}.block{padding:52px 16px}.btn-lg{width:100%}.roi-card{flex-direction:column}.head-row{align-items:flex-start}.big-ico{width:54px;height:54px}}
+
+/* Avantages : avant / après */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:22px}
+.compare .col{border-radius:var(--r);padding:28px}.compare h3{margin:0 0 14px;font-size:19px}
+.compare ul{list-style:none;padding:0;margin:0}.compare li{position:relative;padding-left:30px;margin:12px 0}
+.compare li:before{position:absolute;left:0;top:1px;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800}
+.sans{background:var(--soft);color:var(--muted)}.sans h3{color:var(--ink)}.sans li:before{content:"✕";background:#fee2e2;color:#b91c1c}
+.avec{background:linear-gradient(160deg,var(--navy),var(--navy2));color:#dce6f5;box-shadow:var(--shadow-lg)}.avec h3{color:#fff}.avec li:before{content:"✓";background:var(--accent);color:#1a1300}
+.gains{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.gains div{border:1px solid var(--line);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:4px}
+.gains b{font-family:var(--title);font-size:16.5px}.gains span{color:var(--muted);font-size:14.5px}
+.price .for{color:var(--muted);margin:2px 0 0;font-size:15px}
+.price .checks li b{color:var(--ink)}
+.btn-ghost-dark{background:#fff;color:var(--navy);box-shadow:inset 0 0 0 2px var(--navy)}.btn-ghost-dark:hover{background:var(--soft);box-shadow:inset 0 0 0 2px var(--navy)}
+.ribbon{background:var(--accent);color:#1a1300}
+@media (max-width:900px){.compare{grid-template-columns:1fr}.gains{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.gains{grid-template-columns:1fr}}
+.price{display:flex;flex-direction:column}.price .btn{margin-top:auto}.price .checks{margin-bottom:28px}

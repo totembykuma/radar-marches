@@ -86,7 +86,7 @@ def test_subscribers_from_stripe(monkeypatch):
         ]})
     subs = subscribers.from_stripe(biz, metiers(), session=fake)
     assert [s["email"] for s in subs] == ["a@x.fr", "b@x.fr"]
-    assert subs[0]["departements"] == ["33", "47", "24"]            # 3 premiers saisis (Essentiel)
+    assert subs[0]["departements"] == ["33"]                        # 1er saisi seulement (Essentiel : 1 département)
     assert subs[1]["plan"] == "pro" and subs[1]["metiers"] == ["espaces-verts"] and subs[1]["mots_cles"] == ["aire de jeux", "city stade"]
     assert subs[1]["departements"] == ["64"]                       # critère modifié par le support
 
@@ -171,3 +171,22 @@ def test_prospects_winners_and_dedupe():
     assert c[0]["dep"] == "91" and c[0]["metier"] == "nettoyage" and c[1]["dep"] == "33"
     done = {prospects.h("dom:clean.fr")}
     assert [x["email"] for x in prospects.candidates(recs, M, done, ["contact@propre-net.fr"])] == []
+
+
+def test_bilan_resultats_pro(tmp_path, monkeypatch):
+    from radar import cli, prospects
+    monkeypatch.setenv("RADAR_DRY_RUN", "1")
+    monkeypatch.setattr("radar.mailer.OUTBOX", tmp_path)
+    org = {"efac:Company": {"cac:PartyIdentification": {"cbc:ID": "ORG-2"}, "cac:PartyName": {"cbc:Name": "Propre Net"},
+                            "cac:Contact": {"cbc:ElectronicMail": "c@propre-net.fr"}}}
+    don = {"EFORMS": {"x": {"efac:Organization": [org], "efac:Tenderer": {"cbc:ID": "ORG-2"},
+                            "efac:LotTender": [{"cac:LegalMonetaryTotal": {"cbc:PayableAmount": {"#text": "45000.50", "@currencyID": "EUR"}}}]}}}
+    rec = _award(don)
+    assert prospects.titulaires(rec) == ["Propre Net"] and prospects.montant(rec) == 45000
+    subs = [{"email": "pro@example.com", "plan": "pro", "metiers": ["nettoyage"], "departements": ["91"], "mots_cles": []},
+            {"email": "ess@example.com", "plan": "essentiel", "metiers": ["nettoyage"], "departements": ["91"], "mots_cles": []},
+            {"email": "pro2@example.com", "plan": "pro", "metiers": ["nettoyage"], "departements": ["33"], "mots_cles": []}]
+    n = cli.envoyer_resultats(subs, business(), metiers(), M, {}, records=[rec])
+    assert n == 1
+    html = next(tmp_path.iterdir()).read_text(encoding="utf-8")
+    assert "Propre Net" in html and "45 000 € HT" in html
