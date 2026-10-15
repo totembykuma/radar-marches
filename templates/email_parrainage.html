@@ -1,8 +1,8 @@
-<!doctype html><html lang="fr"><body style="font-family:Arial,Helvetica,sans-serif;color:#1d2433;line-height:1.5;max-width:560px;margin:auto;padding:16px">
-<h2 style="color:#123c69">Merci pour votre recommandation</h2>
+{% extends "_email.html" %}
+{% block contenu %}
+<h2 style="color:#0b1b33;font-size:21px;margin:0 0 14px">Merci pour votre recommandation</h2>
 <p>Bonjour,</p>
 <p>Une entreprise que vous avez invitée vient de devenir cliente de {{ biz.nom }}. Comme promis, <b>un mois de votre offre {{ offre.nom }} ({{ offre.prix_mensuel }} €) vous est offert</b> : il sera déduit automatiquement de votre prochaine facture. Vous n'avez rien à faire.</p>
 <p>Votre lien reste valable, sans limite : <a href="{{ lien }}">{{ lien }}</a></p>
-<p>Merci,<br>L'équipe {{ biz.nom }}</p>
-<p style="font-size:12px;color:#5a6478">{{ biz.site_url }} · {{ biz.fiscalite.tva }}</p>
-</body></html>
+<p>Merci,</p>
+{% endblock %}

@@ -1,0 +1,6 @@
+{% extends "_email.html" %}
+{# Messages au propriétaire (bilan, alertes, problèmes) : même habillage que les e-mails clients. #}
+{% block contenu %}
+{{ contenu }}
+{% endblock %}
+{% block pied %}Message automatique réservé au propriétaire de {{ biz.nom }}.<br><br>{% endblock %}

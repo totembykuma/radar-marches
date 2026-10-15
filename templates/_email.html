@@ -1,0 +1,25 @@
+{# Modèle commun des e-mails clients et internes : logo en tête (image hébergée sur le site, texte si les images sont bloquées), signature et pied de page identiques. #}
+{% from "_email_signature.html" import signature %}<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{ biz.nom }}</title></head>
+<body style="margin:0;padding:0;background:#f4f5f7;font-family:Arial,Helvetica,sans-serif;color:#1d2433">
+{% block preheader %}{% endblock %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f5f7"><tr><td align="center" style="padding:24px 12px">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #e6e9ef">
+<tr><td style="padding:18px 28px;border-bottom:3px solid #ffb020">
+  <a href="{{ biz.site_url }}" style="text-decoration:none"><img src="{{ biz.site_url }}/static/logo-email.png" width="163" height="32" alt="{{ biz.nom }}" style="display:block;border:0;font-family:Arial,Helvetica,sans-serif;font-size:20px;font-weight:bold;color:#0b1b33"></a>
+</td></tr>
+{% block bandeau %}{% endblock %}
+{% block lignes %}
+<tr><td style="padding:24px 28px 8px 28px;font-size:15px;line-height:1.6;color:#1d2433">
+{% block contenu %}{% endblock %}
+</td></tr>
+{% endblock %}
+{% if not sans_signature %}<tr><td style="padding:16px 28px 26px 28px">{{ signature(biz) }}</td></tr>{% endif %}
+<tr><td style="background:#f8f9fb;border-top:1px solid #e6e9ef;padding:16px 28px;font-size:12px;line-height:1.55;color:#7a8394">
+{% block pied %}{% endblock %}
+{{ biz.nom }} · <a href="{{ biz.site_url }}" style="color:#7a8394">{{ biz.site_url|replace('https://', '') }}</a>{% if biz.fiscalite and biz.fiscalite.tva %} · {{ biz.fiscalite.tva }}{% endif %}<br>
+<a href="{{ biz.site_url }}/mentions-legales.html" style="color:#7a8394">Mentions légales</a> · <a href="{{ biz.site_url }}/confidentialite.html" style="color:#7a8394">Confidentialité</a>{% if biz.portail_client %} · <a href="{{ biz.portail_client }}" style="color:#7a8394">Espace client</a>{% endif %}
+</td></tr>
+</table>
+</td></tr></table>
+</body></html>
