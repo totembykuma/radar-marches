@@ -27,7 +27,7 @@ offres:
     stripe_price_ids: ["price_1UQrs879764n3f0zbVlgAi7W", "price_1UQtSW79764n3f0zcOnqqpEh"]
 portail_client: "https://billing.stripe.com/p/login/dRm8wIfYk1j39r3aL63F600"
 # Statistiques de visites sans cookie (GoatCounter) : nom du compte, ex. "radarmarches"
-statistiques_goatcounter: ""
+statistiques_goatcounter: "radarmarches"
 google_verification: "SZybI2SsjlqSJ8IoP4km9vdFVcCDOwgf5n3LTYSsxe4"
 stripe_mode: "réel"
 essai_gratuit_jours: 14
