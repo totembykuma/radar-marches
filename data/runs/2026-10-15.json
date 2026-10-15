@@ -1,11 +1,10 @@
 {
- "date": "2026-10-15T16:07+00:00",
+ "date": "2026-10-15T17:15+00:00",
  "erreurs": [],
  "avis_recuperes": 1995,
  "avis_metiers": 788,
- "abonnes": 2,
- "bienvenues": 1,
- "emails_envoyes": 1,
- "abonnes_sans_nouveaute": 1,
- "pages_site": 1242
+ "abonnes": 0,
+ "emails_envoyes": 0,
+ "abonnes_sans_nouveaute": 0,
+ "pages_site": 1239
 }
