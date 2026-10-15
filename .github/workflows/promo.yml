@@ -1,8 +1,10 @@
 name: Promo du jour (code Stripe)
 on:
   schedule:
-    - cron: "1 22 18-22 10 *"   # minuit 01 heure de Paris, du 19 au 23 octobre
-  workflow_dispatch: {}
+    - cron: "5 23 * * 0-4"   # 0 h 05 (hiver) ou 1 h 05 (été) à Paris, du lundi au vendredi
+  workflow_dispatch:
+    inputs:
+      verifier: { description: "Vérifier les droits Stripe seulement", type: boolean, default: true }
 jobs:
   promo:
     runs-on: ubuntu-latest
@@ -13,4 +15,4 @@ jobs:
         with: { python-version: "3.12", cache: pip }
       - run: pip install -r requirements.txt
       - env: { STRIPE_SECRET_KEY: "${{ secrets.STRIPE_SECRET_KEY }}" }
-        run: python -m radar.promo
+        run: python -m radar.promo ${{ github.event_name == 'workflow_dispatch' && inputs.verifier && '--verifier' || '' }}

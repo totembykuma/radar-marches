@@ -282,7 +282,10 @@ def test_promo_hors_periode_ou_non_publiee(monkeypatch):
     import radar.promo as promo
     appels = []
     monkeypatch.setattr(promo, "_call", lambda *a, **k: appels.append(a) or {})
-    assert promo.code_du_jour(date(2026, 10, 19)) == "PRO19"
+    assert promo.code_du_jour(date(2026, 10, 19)) == "PRO1910"
+    assert promo.en_promo(date(2026, 10, 19)) and promo.en_promo(date(2026, 10, 23))
+    assert not promo.en_promo(date(2026, 10, 24)) and not promo.en_promo(date(2026, 10, 16))
+    assert promo.en_promo(date(2026, 11, 16)) and not promo.en_promo(date(2026, 11, 13))
     biz = promo.business()
     biz["promo"]["publie"] = False
     monkeypatch.setattr(promo, "business", lambda: biz)
