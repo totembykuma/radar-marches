@@ -1,0 +1,38 @@
+{# Assistant guidé : réponses validées aux questions courantes, sans IA ni serveur. #}
+<div id="ra" class="ra" aria-live="polite">
+  <button class="ra-btn" type="button" aria-expanded="false" aria-controls="ra-panel"><span class="ra-dot"></span>Une question ?</button>
+  <div class="ra-panel" id="ra-panel" role="dialog" aria-label="Assistant {{ biz.nom }}" hidden>
+    <div class="ra-head"><b>Assistant {{ biz.nom }}</b><span>Réponse immédiate</span><button type="button" class="ra-x" aria-label="Fermer">×</button></div>
+    <div class="ra-body"></div>
+    <div class="ra-chips"></div>
+  </div>
+</div>
+<script>
+(function () {
+  var Q = [
+    ["Comment ça marche ?", "Chaque matin à 6h20, nous lisons tous les nouveaux appels d'offres publiés au BOAMP. Vous recevez par e-mail uniquement ceux de votre métier, dans votre secteur : objet, acheteur, lieu, date limite et lien vers l'avis officiel."],
+    ["Combien ça coûte ?", "Essentiel : {{ biz.offres.essentiel.prix_mensuel }} €/mois (1 métier, 1 département). Pro : {{ biz.offres.pro.prix_mensuel }} €/mois (départements illimités ou toute la France, vos mots-clés, et le bilan du lundi : qui a gagné les marchés de votre métier, et à quel prix). Les deux commencent par {{ biz.essai_gratuit_jours }} jours gratuits."],
+    ["Quelle offre choisir ?", "Vous travaillez dans un seul département ? L'offre Essentiel suffit. Vous intervenez sur plusieurs départements, ou vous voulez surveiller vos concurrents et les prix ? Prenez Pro. Vous pouvez changer d'offre à tout moment."],
+    ["L'essai est-il vraiment gratuit ?", "Oui. Rien n'est prélevé pendant {{ biz.essai_gratuit_jours }} jours. Si vous résiliez avant la fin, vous ne payez rien. La carte sert seulement à éviter une coupure à la fin de l'essai."],
+    ["Comment résilier ?", "En un clic, depuis votre espace client, sans nous écrire. Il n'y a aucun engagement."],
+    ["D'où viennent les marchés ?", "Du BOAMP, le Bulletin officiel des annonces des marchés publics, publié par l'État. Ce sont les avis officiels, et chaque alerte contient le lien vers l'avis complet."],
+    ["Vous répondez à ma place ?", "Non. Nous repérons les marchés qui vous correspondent ; vous décidez et vous répondez sur la plateforme de l'acheteur, dont le lien est dans chaque alerte."],
+    ["Mon métier est-il couvert ?", "Nous suivons {{ metiers|length }} métiers : {% for k, m in metiers.items() %}{{ m.libelle|lower }}{{ ', ' if not loop.last else '.' }}{% endfor %} Avec l'offre Pro, vous pouvez ajouter vos propres mots-clés."]
+  ];
+  var root = document.getElementById("ra"), btn = root.querySelector(".ra-btn"), panel = root.querySelector(".ra-panel"),
+      body = root.querySelector(".ra-body"), chips = root.querySelector(".ra-chips"), asked = {};
+  function msg(text, who) { var d = document.createElement("div"); d.className = "ra-msg " + who; d.textContent = text; body.appendChild(d); body.scrollTop = body.scrollHeight; }
+  function renderChips() {
+    chips.innerHTML = "";
+    Q.forEach(function (q, i) { if (asked[i]) return; var c = document.createElement("button"); c.type = "button"; c.textContent = q[0];
+      c.onclick = function () { asked[i] = 1; msg(q[0], "me"); setTimeout(function () { msg(q[1], "bot"); renderChips(); }, 250); }; chips.appendChild(c); });
+    var a = document.createElement("a"); a.href = "{{ root }}#tarifs"; a.className = "ra-cta"; a.textContent = "Essayer {{ biz.essai_gratuit_jours }} jours gratuitement";
+    a.onclick = function () { toggle(false); }; chips.appendChild(a);
+    var m = document.createElement("a"); m.href = "mailto:{{ biz.email_contact }}?subject=Question%20sur%20{{ biz.nom|urlencode }}"; m.className = "ra-mail"; m.textContent = "Autre question ? Écrivez-nous"; chips.appendChild(m);
+  }
+  function toggle(open) { panel.hidden = !open; btn.setAttribute("aria-expanded", open); root.classList.toggle("open", open);
+    if (open && !body.children.length) { msg("Bonjour ! Je réponds tout de suite aux questions les plus fréquentes. Choisissez la vôtre :", "bot"); renderChips(); } }
+  btn.onclick = function () { toggle(panel.hidden); };
+  root.querySelector(".ra-x").onclick = function () { toggle(false); };
+})();
+</script>
