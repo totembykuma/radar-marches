@@ -29,7 +29,7 @@ offres:
 # les N premiers abonnés Pro (mensuel) de chaque jour paient « prix » € pendant « mois » mois.
 # Le code du jour (ex. PRO1910 = 19 octobre) est créé dans Stripe vers minuit (workflow promo.yml), limité à N utilisations.
 promo:
-  publie: false        # true = bandeau visible sur le site et codes créés dans Stripe
+  publie: true         # true = bandeau visible sur le site et codes créés dans Stripe
   offre: "pro"
   semaine: 3
   places_par_jour: 5
