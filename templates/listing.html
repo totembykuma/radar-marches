@@ -1,16 +1,31 @@
-{% extends "base.html" %}{% block main %}
-<section class="wrap">
-  <p class="crumbs"><a href="{{ root }}appels-offres/">Appels d'offres</a>{% if dep %} › <a href="{{ root }}appels-offres/{{ metier_key }}/">{{ metier.libelle }}</a>{% endif %}</p>
-  <h1>{{ h1 }}</h1>
-  <p class="lead">{{ avis|length }} appel{{ 's' if avis|length > 1 }} d'offres en cours, mis à jour le {{ date_fr }}. Recevez les nouveaux chaque matin par e-mail : <a href="{{ root }}#tarifs">essai gratuit {{ biz.essai_gratuit_jours }} jours</a>.</p>
-  {% if deps %}<p class="tags">{% for d in deps %}<a href="{{ root }}appels-offres/{{ metier_key }}/{{ d }}.html">{{ d }} ({{ dep_counts[d] }})</a>{% endfor %}</p>{% endif %}
+{% extends "base.html" %}{% import "_ui.html" as ui %}{% block main %}
+<section class="page-head metier-head" style="--c:{{ ui.couleur(metier_key) }}"><div class="wrap">
+  <p class="crumbs"><a href="{{ root }}">Accueil</a> › <a href="{{ root }}appels-offres/">Appels d'offres</a>{% if dep %} › <a href="{{ root }}appels-offres/{{ metier_key }}/">{{ metier.libelle }}</a>{% endif %}</p>
+  <div class="head-row">
+    <span class="big-ico">{{ ui.icone(metier_key, 34) }}</span>
+    <div>
+      <h1>{{ h1 }}</h1>
+      <p class="lead"><b>{{ total }}</b> appel{{ 's' if total > 1 }} d'offres en cours · mis à jour le {{ date_fr }}</p>
+    </div>
+  </div>
+  {% if deps %}<div class="deps"><span>Par département :</span>{% for d in deps %}<a href="{{ root }}appels-offres/{{ metier_key }}/{{ d }}.html">{{ d }} <small>{{ dep_counts[d] }}</small></a>{% endfor %}</div>{% endif %}
+</div></section>
+
+<section class="wrap listing">
+  <div class="cards">
   {% for a in avis %}
-  <article class="avis">
-    <div class="meta">{{ a.acheteur }}{% if a.departements %} · Dép. {{ a.departements|join(', ') }}{% endif %} · publié le {{ a.date_parution }}</div>
-    <h2><a href="{{ a.url }}" rel="nofollow noopener" target="_blank">{{ a.objet }}</a></h2>
-    {% if a.date_limite %}<div class="meta">Date limite : <b>{{ a.date_limite_fr }}</b></div>{% endif %}
-  </article>
-  {% else %}<p>Aucun appel d'offres ouvert pour l'instant. Les nouveaux sont ajoutés chaque jour.</p>{% endfor %}
-  <div class="cta"><b>Ne ratez plus les prochains.</b> {{ biz.nom }} vous les envoie le matin même{% if biz.ia_active %}, résumés par l'IA{% endif %}. <a class="btn" href="{{ root }}#tarifs">Essai gratuit</a></div>
+    <article class="avis">
+      <div class="avis-top">{% if a.departements %}<span class="chip">Dép. {{ a.departements|join(', ') }}</span>{% endif %}{{ ui.echeance(a.jours_restants) }}</div>
+      <h2><a href="{{ a.url }}" rel="nofollow noopener" target="_blank">{{ a.objet }}</a></h2>
+      <p class="buyer">{{ a.acheteur }}</p>
+      <div class="avis-foot"><span>Publié le {{ a.date_parution_fr or a.date_parution }}</span>{% if a.date_limite %}<span>Réponse avant le <b>{{ a.date_limite_fr }}</b></span>{% endif %}<a href="{{ a.url }}" rel="nofollow noopener" target="_blank">Avis officiel →</a></div>
+    </article>
+    {% if loop.index == 6 %}{% include "_cta.html" %}{% endif %}
+  {% else %}
+    <p class="empty">Aucun appel d'offres ouvert pour l'instant ici. Les nouveaux sont ajoutés chaque matin.</p>
+  {% endfor %}
+  {% if total > avis|length %}<p class="fine">Les {{ avis|length }} plus récents sont affichés. Choisissez un département ci-dessus pour tout voir.</p>{% endif %}
+  </div>
+  <aside class="side">{% include "_cta.html" %}</aside>
 </section>
 {% endblock %}

@@ -10,6 +10,15 @@ from .config import ROOT
 from .render import date_fr, date_limite_fr, render, render_string
 
 
+def _jours_restants(s, today):
+    if not s:
+        return None
+    try:
+        return (date.fromisoformat(str(s)[:10]) - today).days
+    except ValueError:
+        return None
+
+
 def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None):
     out_dir = Path(out_dir)
     if out_dir.exists():
@@ -22,10 +31,14 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None):
         if matcher.is_award_notice(a):
             continue
         a["date_limite_fr"] = date_limite_fr(a["date_limite"])
+        a["date_parution_fr"] = date_limite_fr(a["date_parution"])
         for m in a.get("metiers") or matcher.metiers_of(a):
             by_metier[m].append(a)
+    today = date.today()
     for lst in by_metier.values():
         lst.sort(key=lambda a: a["date_parution"], reverse=True)
+        for a in lst:
+            a["jours_restants"] = _jours_restants(a.get("date_limite"), today)
 
     common = dict(biz=biz, metiers=metiers, date_fr=date_fr())
     pages = []
@@ -37,11 +50,17 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None):
         pages.append(rel)
 
     stats = stats or {"total": len(avis_open), "metiers_hits": sum(len(v) for v in by_metier.values())}
-    write("index.html", render("index.html", root="", path="/", stats=stats,
+    counts = {k: len(by_metier[k]) for k in metiers}
+    stats["ouverts"] = len({id(a) for lst in by_metier.values() for a in lst})
+    # Aperçu « e-mail du matin » de la page d'accueil : de vrais avis du métier le plus fourni.
+    ex_key = max(counts, key=counts.get) if counts else None
+    exemple = [a for a in by_metier.get(ex_key, []) if (a.get("jours_restants") or 0) > 0][:3]
+    write("index.html", render("index.html", root="", path="/", stats=stats, counts=counts,
+                               ex_key=ex_key, exemple=exemple,
                                title=f"{biz['nom']} · Appels d'offres publics par métier, triés" + (" par IA" if biz.get("ia_active") else ""),
                                description=biz["slogan"], **common))
     write("appels-offres/index.html", render(
-        "hub.html", root="../", path="/appels-offres/", counts={k: len(by_metier[k]) for k in metiers},
+        "hub.html", root="../", path="/appels-offres/", counts=counts,
         title="Appels d'offres publics en cours par métier", description="Marchés publics en cours classés par métier, mis à jour chaque jour.", **common))
 
     for key, m in metiers.items():
@@ -49,14 +68,14 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None):
         dep_counts = Counter(d for a in lst for d in a["departements"])
         deps = sorted(dep_counts)
         write(f"appels-offres/{key}/index.html", render(
-            "listing.html", root="../../", path=f"/appels-offres/{key}/", avis=lst[:150], metier=m, metier_key=key,
+            "listing.html", root="../../", path=f"/appels-offres/{key}/", avis=lst[:150], total=len(lst), metier=m, metier_key=key,
             dep=None, deps=deps, dep_counts=dep_counts, h1=f"Appels d'offres {m['libelle'].lower()} en cours",
             title=f"Appels d'offres {m['libelle'].lower()} : marchés publics en cours ({date_fr()})",
             description=f"{len(lst)} marchés publics {m['libelle'].lower()} ouverts, mis à jour chaque jour.", **common))
         for d in deps:
             sub = [a for a in lst if d in a["departements"]]
             write(f"appels-offres/{key}/{d}.html", render(
-                "listing.html", root="../../", path=f"/appels-offres/{key}/{d}.html", avis=sub, metier=m,
+                "listing.html", root="../../", path=f"/appels-offres/{key}/{d}.html", avis=sub, total=len(sub), metier=m,
                 metier_key=key, dep=d, deps=[], dep_counts={}, h1=f"Appels d'offres {m['libelle'].lower()} · département {d}",
                 title=f"Appels d'offres {m['libelle'].lower()} {d} : marchés publics en cours",
                 description=f"{len(sub)} marchés publics {m['libelle'].lower()} ouverts dans le département {d}.", **common))

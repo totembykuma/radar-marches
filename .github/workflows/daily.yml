@@ -15,6 +15,12 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.12", cache: pip }
       - run: pip install -r requirements.txt
+      - name: Polices du site (facultatif, repli sur les polices système)
+        run: |
+          mkdir -p static/fonts
+          curl -fsSL -o static/fonts/inter.woff2 https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/files/inter-latin-wght-normal.woff2 || rm -f static/fonts/inter.woff2
+          curl -fsSL -o static/fonts/jakarta.woff2 https://cdn.jsdelivr.net/npm/@fontsource-variable/plus-jakarta-sans@5/files/plus-jakarta-sans-latin-wght-normal.woff2 || rm -f static/fonts/jakarta.woff2
+          ls -la static/fonts
       - name: Alertes + génération du site
         env:
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}

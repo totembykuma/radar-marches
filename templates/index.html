@@ -1,58 +1,110 @@
-{% extends "base.html" %}{% block main %}
-<section class="hero"><div class="wrap">
-  <h1>Les appels d'offres publics de votre métier, triés{% if biz.ia_active %} par l'IA{% endif %}, chaque matin dans votre boîte mail.</h1>
-  <p class="lead">Mairies, hôpitaux, collèges, bailleurs sociaux publient chaque jour des centaines de marchés. {{ biz.nom }} lit tout le BOAMP pour vous et ne vous envoie que ceux qui correspondent à votre métier et à votre secteur, {% if biz.ia_active %}avec un résumé clair et une note d'accessibilité pour les petites entreprises{% else %}avec l'essentiel en un coup d'œil : objet, acheteur, lieu, date limite{% endif %}.</p>
-  <p><a class="btn" href="#tarifs">Essayer {{ biz.essai_gratuit_jours }} jours gratuitement</a> <span class="muted">Sans engagement · résiliable en 1 clic</span></p>
-  <p class="stat">Hier : <b>{{ stats.total }}</b> avis publiés au BOAMP. {{ stats.metiers_hits }} concernaient un des {{ metiers|length }} métiers que nous suivons.</p>
+{% extends "base.html" %}{% import "_ui.html" as ui %}{% block main %}
+<section class="hero">
+  <div class="radar-bg" aria-hidden="true"><span></span><span></span><span></span><i></i></div>
+  <div class="wrap hero-grid">
+    <div>
+      <p class="live"><span class="dot"></span>En direct · {{ stats.ouverts }} marchés publics ouverts en ce moment</p>
+      <h1>Les marchés publics de <em>votre métier</em>, chaque matin dans votre boîte mail.</h1>
+      <p class="lead">Mairies, collèges, hôpitaux et bailleurs sociaux publient chaque jour des centaines d'appels d'offres. {{ biz.nom }} les lit tous pour vous et ne vous envoie que ceux de votre métier, dans vos départements.</p>
+      <div class="cta-row">
+        <a class="btn btn-lg" href="#tarifs">Essayer {{ biz.essai_gratuit_jours }} jours gratuitement</a>
+        <a class="btn btn-ghost btn-lg" href="appels-offres/">Voir les marchés en cours</a>
+      </div>
+      <ul class="trust"><li>Sans engagement</li><li>Résiliable en 1 clic</li><li>Données officielles BOAMP</li></ul>
+    </div>
+    {% if exemple %}
+    <div class="mail" aria-label="Exemple d'alerte reçue le matin">
+      <div class="mail-bar"><span></span><span></span><span></span></div>
+      <div class="mail-head">
+        <span class="mail-ico" style="--c:{{ ui.couleur(ex_key) }}">{{ ui.icone(ex_key, 20) }}</span>
+        <div><b>{{ biz.nom }}</b> <small>· aujourd'hui, 6h20</small><br><span>{{ counts[ex_key] }} marchés « {{ metiers[ex_key].libelle|lower }} » ouverts</span></div>
+      </div>
+      {% for a in exemple %}
+      <div class="mail-item">
+        <div class="mail-top"><span class="chip">Dép. {{ a.departements|join(', ') or '—' }}</span>{{ ui.echeance(a.jours_restants) }}</div>
+        <p>{{ a.objet|truncate(90) }}</p>
+        <small>{{ a.acheteur|truncate(60) }}</small>
+      </div>
+      {% endfor %}
+      <p class="mail-foot">Exemple réel, tiré des avis publiés au BOAMP</p>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<section class="band"><div class="wrap stats">
+  <div><b>{{ stats.ouverts }}</b><span>marchés ouverts aujourd'hui</span></div>
+  <div><b>{{ metiers|length }}</b><span>métiers suivis</span></div>
+  <div><b>101</b><span>départements couverts</span></div>
+  <div><b>6h20</b><span>votre alerte, chaque jour ouvré</span></div>
 </div></section>
 
-<section class="wrap grid3">
-  <div class="card"><h3>1. Vous choisissez</h3><p>Votre métier et jusqu'à 3 départements (ou toute la France en offre Pro).</p></div>
-  <div class="card"><h3>2. {% if biz.ia_active %}L'IA trie{% else %}Nous trions{% endif %}</h3><p>Chaque nuit, nous analysons tous les nouveaux avis et écartons les faux positifs (« peinture routière » pour un peintre en bâtiment, par exemple).</p></div>
-  <div class="card"><h3>3. Vous répondez</h3><p>Un e-mail par jour ouvré, seulement s'il y a du nouveau : objet, acheteur, date limite, {% if biz.ia_active %}résumé et {% endif %}lien officiel.</p></div>
+<section class="wrap block" id="metiers">
+  <p class="kicker">Votre métier</p>
+  <h2>Des marchés concrets, pour des artisans et des PME comme vous</h2>
+  <p class="sub">Le nombre de marchés ouverts est mis à jour chaque matin. Cliquez pour les voir, c'est gratuit.</p>
+  <div class="tiles">{% for k, m in metiers.items() %}{{ ui.tuile(k, m, counts[k], 'appels-offres/' ~ k ~ '/') }}{% endfor %}</div>
 </section>
 
-<section class="wrap">
-  <h2>Pourquoi les petites entreprises passent à côté des marchés publics</h2>
-  <ul class="checks">
-    <li>Les avis sont éparpillés et rédigés dans un jargon administratif.</li>
-    <li>Les plateformes généralistes envoient des dizaines d'alertes hors sujet.</li>
-    <li>Les bons marchés locaux (souvent sous 90 000 €) se jouent en 2 à 4 semaines : il faut les voir tôt.</li>
-  </ul>
-  <p>{{ biz.nom }} fait une seule chose : vous montrer, chaque matin, les quelques marchés qui valent votre temps.</p>
+<section class="soft"><div class="wrap block">
+  <p class="kicker">Comment ça marche</p>
+  <h2>Trois étapes, puis plus rien à faire</h2>
+  <div class="steps">
+    <div class="step"><span class="num">1</span><h3>Vous choisissez</h3><p>Votre métier et jusqu'à 3 départements, ou toute la France en offre Pro. Ça prend une minute.</p></div>
+    <div class="step"><span class="num">2</span><h3>Nous trions chaque nuit</h3><p>Tous les nouveaux avis du BOAMP sont lus et filtrés. Les faux amis sont écartés : « peinture routière » n'arrive pas chez un peintre en bâtiment.</p></div>
+    <div class="step"><span class="num">3</span><h3>Vous répondez</h3><p>Un e-mail clair chaque jour ouvré, seulement s'il y a du nouveau : objet, acheteur, lieu, date limite et lien vers l'avis officiel.</p></div>
+  </div>
+</div></section>
+
+<section class="wrap block roi">
+  <div>
+    <p class="kicker">Le calcul est vite fait</p>
+    <h2>Un seul marché gagné peut rembourser des années d'abonnement</h2>
+    <p class="sub">Le nettoyage d'une école, l'entretien d'un parc, la peinture d'un gymnase : ce sont des contrats réguliers, souvent de plusieurs milliers d'euros. Les petits marchés locaux se jouent en 2 à 4 semaines. Il faut les voir tôt, pas les découvrir trop tard.</p>
+  </div>
+  <div class="roi-card">
+    <div><small>Votre abonnement</small><b>{{ biz.offres.essentiel.prix_mensuel }} €<span>/mois</span></b></div>
+    <div class="vs">vs</div>
+    <div><small>Un marché public local</small><b class="big">plusieurs milliers d'€</b></div>
+  </div>
 </section>
 
-<section id="tarifs" class="wrap">
-  <h2>Tarifs simples</h2>
-  <div class="grid2">
+<section id="tarifs" class="soft"><div class="wrap block">
+  <p class="kicker">Tarifs</p>
+  <h2>Simple, sans engagement, {{ biz.essai_gratuit_jours }} jours offerts</h2>
+  <p class="sub">Aucun prélèvement pendant l'essai. Vous arrêtez quand vous voulez, en un clic.</p>
+  <div class="prices">
   {% for key, o in biz.offres.items() %}
-    <div class="card price{% if key == 'pro' %} featured{% endif %}">
+    <div class="price{% if key == 'pro' %} featured{% endif %}">
+      {% if key == 'pro' %}<span class="ribbon">Toute la France</span>{% endif %}
       <h3>{{ o.nom }}</h3>
       <p class="amount">{{ o.prix_mensuel }} €<span>/mois</span></p>
       <ul class="checks">
         <li>{{ o.metiers_max }} métier{{ 's' if o.metiers_max > 1 }}{% if key == 'pro' %} + vos mots-clés personnalisés{% endif %}</li>
-        <li>{% if o.departements_max >= 101 %}Toute la France{% else %}Jusqu'à {{ o.departements_max }} départements{% endif %}</li>
-        <li>Alerte quotidienne{% if biz.ia_active %} avec résumé IA{% endif %}</li>
-        {% if biz.ia_active %}<li>Note d'accessibilité TPE</li>{% else %}<li>Filtre anti faux-positifs par métier</li>{% endif %}
+        <li>{% if o.departements_max >= 101 %}Toute la France (101 départements){% else %}Jusqu'à {{ o.departements_max }} départements{% endif %}</li>
+        <li>Alerte chaque jour ouvré{% if biz.ia_active %} avec résumé IA{% endif %}</li>
+        {% if biz.ia_active %}<li>Note d'accessibilité pour les TPE</li>{% else %}<li>Filtre anti faux-positifs par métier</li>{% endif %}
         <li>{{ biz.essai_gratuit_jours }} jours d'essai gratuit</li>
       </ul>
-      {% if o.lien_paiement and biz.stripe_mode == 'réel' %}<a class="btn" href="{{ o.lien_paiement }}">Commencer l'essai</a>{% else %}<a class="btn disabled" href="mailto:{{ biz.email_contact }}?subject=Essai%20{{ o.nom }}">Bientôt disponible : me prévenir</a>{% endif %}
+      {% if o.lien_paiement and biz.stripe_mode == 'réel' %}<a class="btn btn-lg btn-block" href="{{ o.lien_paiement }}">Commencer l'essai gratuit</a>{% else %}<a class="btn btn-lg btn-block disabled" href="mailto:{{ biz.email_contact }}?subject=Essai%20{{ o.nom }}">Bientôt disponible</a>{% endif %}
     </div>
   {% endfor %}
   </div>
-  <p class="muted">{{ biz.fiscalite.tva }}. Paiement sécurisé par Stripe. Résiliation à tout moment depuis {% if biz.portail_client %}<a href="{{ biz.portail_client }}">votre espace client</a>{% else %}votre espace client{% endif %}.</p>
-</section>
+  <p class="fine">{{ biz.fiscalite.tva }}. Paiement sécurisé par Stripe. Résiliation à tout moment depuis {% if biz.portail_client %}<a href="{{ biz.portail_client }}">votre espace client</a>{% else %}votre espace client{% endif %}.</p>
+</div></section>
 
-<section class="wrap">
-  <h2>Métiers suivis</h2>
-  <p class="tags">{% for k, m in metiers.items() %}<a href="{{ root }}appels-offres/{{ k }}/">{{ m.libelle }}</a>{% endfor %}</p>
-</section>
-
-<section class="wrap faq">
-  <h2>Questions fréquentes</h2>
-  <details><summary>D'où viennent les annonces ?</summary><p>Du BOAMP, le Bulletin officiel des annonces des marchés publics, publié en open data par l'État. Nous lisons chaque avis publié.</p></details>
-  <details><summary>Est-ce que vous répondez aux appels d'offres à ma place ?</summary><p>Non. Nous repérons {% if biz.ia_active %}et résumons {% endif %}les opportunités ; vous décidez et répondez sur la plateforme de l'acheteur.</p></details>
-  <details><summary>Et si je reçois des alertes hors sujet ?</summary><p>Répondez à l'e-mail avec vos remarques, nous ajustons votre filtre.</p></details>
+<section class="wrap block faq">
+  <p class="kicker">Questions fréquentes</p>
+  <h2>Vous vous demandez sans doute…</h2>
+  <details open><summary>D'où viennent les annonces ?</summary><p>Du BOAMP, le Bulletin officiel des annonces des marchés publics, publié en open data par l'État. Nous lisons chaque avis publié, tous les jours ouvrés.</p></details>
+  <details><summary>Est-ce que vous répondez aux appels d'offres à ma place ?</summary><p>Non. Nous repérons {% if biz.ia_active %}et résumons {% endif %}les opportunités ; vous décidez et répondez sur la plateforme de l'acheteur, dont le lien est dans chaque alerte.</p></details>
+  <details><summary>Je suis une petite entreprise, c'est pour moi ?</summary><p>Oui. Beaucoup de marchés locaux (nettoyage d'une mairie, entretien d'un parc, travaux dans une école) sont à la portée des artisans et des TPE. Le plus dur, c'est de les voir à temps.</p></details>
+  <details><summary>Et si je reçois des alertes hors sujet ?</summary><p>Répondez simplement à l'e-mail avec vos remarques : nous ajustons votre filtre.</p></details>
   <details><summary>Puis-je arrêter quand je veux ?</summary><p>Oui, sans engagement. Aucun prélèvement pendant l'essai si vous résiliez avant la fin.</p></details>
 </section>
+
+<section class="final"><div class="wrap">
+  <h2>Le prochain marché de votre secteur sera peut-être publié demain matin.</h2>
+  <a class="btn btn-lg" href="#tarifs">Je commence mon essai gratuit</a>
+</div></section>
 {% endblock %}
