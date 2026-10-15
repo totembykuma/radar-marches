@@ -16,7 +16,7 @@ def _ts(d):
 
 def stripe_revenue(start: date, end: date, session=None):
     """CA encaissé, frais et remboursements sur la période (en euros)."""
-    key = os.getenv("STRIPE_SECRET_KEY")
+    key = (os.getenv("STRIPE_SECRET_KEY") or "").strip()
     res = {"ca_brut": 0.0, "frais_stripe": 0.0, "remboursements": 0.0, "paiements": 0}
     if not key:
         return res
@@ -83,7 +83,7 @@ def mrr(subscribers_stripe_raw):
 
 
 def list_subscriptions(session=None):
-    key = os.getenv("STRIPE_SECRET_KEY")
+    key = (os.getenv("STRIPE_SECRET_KEY") or "").strip()
     if not key:
         return []
     http = session or requests

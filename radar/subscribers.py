@@ -62,7 +62,7 @@ def plan_for_price(price_id, biz):
 
 
 def from_stripe(biz, metiers, session=None):
-    key = os.getenv("STRIPE_SECRET_KEY")
+    key = (os.getenv("STRIPE_SECRET_KEY") or "").strip()
     if not key:
         return []
     subs = {s["id"]: s for s in _stripe_list("subscriptions", {"status": "all"}, key, session)}

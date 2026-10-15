@@ -12,7 +12,7 @@ API = "https://api.stripe.com/v1"
 
 
 def _call(method, path, data=None, params=None):
-    key = os.environ["STRIPE_SECRET_KEY"]
+    key = os.environ["STRIPE_SECRET_KEY"].strip()
     r = requests.request(method, f"{API}/{path}", data=data, params=params, auth=(key, ""), timeout=60)
     if r.status_code >= 400:
         raise RuntimeError(f"Stripe {path} : {r.status_code} {r.text[:500]}")
@@ -53,7 +53,7 @@ def _link_fields(offre_key, metiers):
 
 def run():
     biz, metiers = business(), load_metiers()
-    mode = "test" if os.environ["STRIPE_SECRET_KEY"].split("_")[1] == "test" else "réel"
+    mode = "test" if os.environ["STRIPE_SECRET_KEY"].strip().split("_")[1] == "test" else "réel"
     results = {}
     for key, offre in biz["offres"].items():
         product = _find_product(key) or _call("POST", "products", data={

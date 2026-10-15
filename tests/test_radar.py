@@ -140,3 +140,9 @@ def test_stripe_setup_writes_config(tmp_path, monkeypatch):
     assert biz["stripe_mode"] == "test" and biz["portail_client"].endswith("test_x")
     stripe_setup.run()  # relancer ne casse pas le fichier
     assert config.business()["offres"]["pro"]["stripe_price_ids"] == ["price_4900"]
+
+
+def test_secrets_never_logged(monkeypatch):
+    from radar.cli import safe
+    monkeypatch.setenv("RESEND_API_KEY", " re_abcdef123456\n")
+    assert "re_abcdef123456" not in safe("Invalid header value: 'Bearer re_abcdef123456'")

@@ -19,7 +19,7 @@ Avis :
 
 
 def enrich(avis_list, model="claude-haiku-5-5", batch=25, session=None):
-    key = os.getenv("ANTHROPIC_API_KEY")
+    key = (os.getenv("ANTHROPIC_API_KEY") or "").strip()
     if not key or not avis_list:
         return avis_list
     http = session or requests
@@ -53,7 +53,7 @@ def enrich(avis_list, model="claude-haiku-5-5", batch=25, session=None):
 
 def ask(prompt, model="claude-haiku-5-5", max_tokens=1500, session=None):
     """Question libre (rapport hebdo). Renvoie '' si pas de clé ou erreur."""
-    key = os.getenv("ANTHROPIC_API_KEY")
+    key = (os.getenv("ANTHROPIC_API_KEY") or "").strip()
     if not key:
         return ""
     http = session or requests

@@ -10,7 +10,7 @@ OUTBOX = Path(os.getenv("RADAR_OUTBOX", "out/outbox"))
 
 
 def send(to, subject, html, sender, reply_to=None, session=None):
-    key = os.getenv("RESEND_API_KEY")
+    key = (os.getenv("RESEND_API_KEY") or "").strip()
     if not key or os.getenv("RADAR_DRY_RUN") == "1":
         OUTBOX.mkdir(parents=True, exist_ok=True)
         safe = "".join(c if c.isalnum() else "_" for c in f"{to}_{subject}")[:120]
@@ -23,5 +23,6 @@ def send(to, subject, html, sender, reply_to=None, session=None):
         body["reply_to"] = reply_to
     r = http.post("https://api.resend.com/emails", json=body, timeout=30,
                   headers={"Authorization": f"Bearer {key}"})
-    r.raise_for_status()
+    if r.status_code >= 400:
+        raise RuntimeError(f"Resend a refusé l'envoi ({r.status_code}) : {r.text[:300]}")
     return r.json()

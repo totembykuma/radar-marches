@@ -36,9 +36,25 @@ def _save_json(path, obj):
     Path(path).write_text(json.dumps(obj, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
+SECRETS = ("RESEND_API_KEY", "STRIPE_SECRET_KEY", "ANTHROPIC_API_KEY", "OWNER_EMAIL")
+
+
+def safe(msg):
+    """Retire toute clé secrète d'un message d'erreur avant de l'écrire dans un journal public."""
+    msg = str(msg)
+    for name in SECRETS:
+        val = (os.getenv(name) or "").strip()
+        if len(val) > 4:
+            msg = msg.replace(val, "***")
+    return msg[:500]
+
+
 def alert_owner(biz, subject, body_html):
     if biz["email_proprietaire"]:
-        mailer.send(biz["email_proprietaire"], f"[{biz['nom']}] {subject}", body_html, biz["email_expediteur"])
+        try:
+            mailer.send(biz["email_proprietaire"].strip(), f"[{biz['nom']}] {subject}", body_html, biz["email_expediteur"])
+        except Exception as exc:  # une alerte ratée ne doit pas faire échouer la tâche
+            log.error("Alerte propriétaire non envoyée : %s", safe(exc))
     else:
         log.warning("Alerte non envoyée (pas d'e-mail propriétaire) : %s", subject)
 
@@ -84,7 +100,7 @@ def run_daily(avis_new=None, avis_open=None, subs=None):
                 state["known"].append(key)
             run["bienvenues"] = run.get("bienvenues", 0) + 1
         except Exception as exc:
-            run["erreurs"].append(f"bienvenue non envoyée : {exc}")
+            run["erreurs"].append(f"bienvenue non envoyée : {safe(exc)}")
 
     # 3. Sélection par abonné (sans renvoyer ce qui a déjà été envoyé)
     plans, to_enrich = {}, {}
@@ -117,7 +133,7 @@ def run_daily(avis_new=None, avis_open=None, subs=None):
                 state["sent"][key] = (state["sent"].get(key, []) + [a["id"] for a in sel])[-500:]
             sent += 1
         except Exception as exc:
-            run["erreurs"].append(f"envoi échoué : {exc}")
+            run["erreurs"].append(f"envoi échoué : {safe(exc)}")
     run["emails_envoyes"] = sent
     run["abonnes_sans_nouveaute"] = len(subs) - len(plans)
 
@@ -129,7 +145,7 @@ def run_daily(avis_new=None, avis_open=None, subs=None):
                          stats={"total": len(avis_new), "metiers_hits": run["avis_metiers"]})
         run["pages_site"] = res["pages"]
     except Exception as exc:
-        run["erreurs"].append(f"site non généré : {exc}")
+        run["erreurs"].append(f"site non généré : {safe(exc)}")
 
     # 7. Contrôles
     weekday = date.today().weekday() < 5
@@ -266,7 +282,7 @@ def main(argv=None):
     except Exception:
         traceback.print_exc()
         try:
-            alert_owner(business(), f"Échec de la tâche '{args.cmd}'", f"<pre>{traceback.format_exc()[-3000:]}</pre>")
+            alert_owner(business(), f"Échec de la tâche '{args.cmd}'", f"<pre>{safe(traceback.format_exc()[-3000:])}</pre>")
         finally:
             sys.exit(1)
 
