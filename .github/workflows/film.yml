@@ -1,9 +1,6 @@
 name: Aperçu du film (MP4)
 on:
   workflow_dispatch:
-  push:
-    branches: [claude/project-thread-ttpnkd]
-    paths: [templates/_film.html, scripts/film_video.py, static/film.mp3, .github/workflows/film.yml]
 permissions: { contents: write }
 jobs:
   film:
