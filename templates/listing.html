@@ -15,7 +15,7 @@
   <div class="cards">
   {% for a in avis %}
     <article class="avis">
-      <div class="avis-top">{% if a.departements %}<span class="chip">Dép. {{ a.departements|join(', ') }}</span>{% endif %}{{ ui.echeance(a.jours_restants) }}</div>
+      <div class="avis-top">{% if a.departements %}<span class="chip">Dép. {{ a.departements|join(', ') }}</span>{% endif %}{% if a.pme %}<span class="chip chip-pme" title="{{ a.pme }}">✔ Accessible PME</span>{% endif %}{{ ui.echeance(a.jours_restants) }}</div>
       <h2><a href="{{ a.url }}" rel="nofollow noopener" target="_blank">{{ a.objet }}</a></h2>
       <p class="buyer">{{ a.acheteur }}</p>
       <div class="avis-foot"><span>Publié le {{ a.date_parution_fr or a.date_parution }}</span>{% if a.date_limite %}<span>Réponse avant le <b>{{ a.date_limite_fr }}</b></span>{% endif %}<a href="{{ a.url }}" rel="nofollow noopener" target="_blank">Avis officiel →</a></div>

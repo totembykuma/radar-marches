@@ -102,6 +102,11 @@ def test_demo_end_to_end(tmp_path, monkeypatch):
     mails = sorted(m.name for m in (tmp_path / "outbox").glob("*.html"))
     assert len(mails) == 4 and sum("Bienvenue" in m for m in mails) == 2   # 2 bienvenues + 2 alertes
     assert (tmp_path / "site" / "appels-offres" / "nettoyage" / "33.html").exists()
+    assert (tmp_path / "site" / "rappel" / "index.html").exists()
+    g = (tmp_path / "site" / "guides" / "mapa-procedure-adaptee.html").read_text()
+    assert "Accessible PME" in g and "{{" not in g
+    alerte = next(m for m in (tmp_path / "outbox").glob("*.html") if "Bienvenue" not in m.name).read_text()
+    assert "/rappel/?o=" in alerte
     # pas de doublon au 2e passage
     run2 = cli.run_demo()
     assert run2["emails_envoyes"] == 0 and "bienvenues" not in run2
@@ -261,3 +266,26 @@ def test_fiche_avant_de_repondre(tmp_path, monkeypatch):
     html = render.render("email_digest.html", biz=business(), avis=[{**a, "fiche_complete": False}], date_fr="", criteres="")
     assert "réservés à l'offre Pro" in html and "PROPRE ET NET" not in html
     assert render.euros(1250000) == "1,25 M€"
+
+
+def test_badge_pme():
+    from radar.boamp import _pme
+    assert _pme({"famille": "MAPA"}).startswith("Petit marché")
+    assert _pme({"famille": "FNS"})
+    assert _pme({"famille": "JOUE", "donnees": '{"cbc:SMESuitableIndicator": "true"}'})
+    assert _pme({"famille": "JOUE", "donnees": '{"cbc:SMESuitableIndicator": true}'})
+    assert not _pme({"famille": "JOUE", "donnees": '{"cbc:SMESuitableIndicator": "false"}'})
+
+
+def test_promo_hors_periode_ou_non_publiee(monkeypatch):
+    from datetime import date
+    import radar.promo as promo
+    appels = []
+    monkeypatch.setattr(promo, "_call", lambda *a, **k: appels.append(a) or {})
+    assert promo.code_du_jour(date(2026, 10, 19)) == "PRO19"
+    biz = promo.business()
+    biz["promo"]["publie"] = False
+    monkeypatch.setattr(promo, "business", lambda: biz)
+    assert promo.run(date(2026, 10, 20)) is None and not appels
+    biz["promo"]["publie"] = True
+    assert promo.run(date(2026, 10, 24)) is None and not appels

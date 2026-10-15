@@ -169,7 +169,7 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
     # 5. Envoi
     sent = 0
     for key, (s, sel) in plans.items():
-        sel.sort(key=lambda a: (-(a.get("score") or 0), a["date_limite"] or "9999"))
+        sel.sort(key=lambda a: (-(a.get("score") or 0), not a.get("pme"), a["date_limite"] or "9999"))
         for a in sel:
             a["date_limite_fr"] = date_limite_fr(a["date_limite"])
             m = next((m for m in s["metiers"] if m in (a.get("metiers") or [])), None)

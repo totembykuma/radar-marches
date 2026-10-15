@@ -1,0 +1,45 @@
+{% extends "base.html" %}{% block main %}
+<section class="wrap rappel">
+  <p class="kicker">Ça m'intéresse</p>
+  <h1>Ajoutez un rappel à votre agenda</h1>
+  <p class="lead">Votre agenda vous préviendra <b>3 jours avant la date limite</b>, le temps de finir votre réponse.</p>
+  <div class="card" id="r-card">
+    <b id="r-objet">Appel d'offres</b><br><span id="r-acheteur" class="muted"></span><br>
+    Réponse avant le <b id="r-date">?</b> · rappel le <b id="r-rappel">?</b>
+  </div>
+  <div class="opts">
+    <a class="btn" id="r-google" target="_blank" rel="noopener">Google Agenda</a>
+    <a class="btn" id="r-outlook" target="_blank" rel="noopener">Outlook</a>
+    <a class="btn" id="r-ics" download="rappel-appel-offres.ics">iPhone / autre (.ics)</a>
+  </div>
+  <p><a id="r-avis" target="_blank" rel="nofollow noopener">Ouvrir l'avis officiel →</a></p>
+  <p class="fine">Rien n'est enregistré chez nous : le rappel est créé dans votre propre agenda.</p>
+</section>
+<script>
+(function () {
+  var q = new URLSearchParams(location.search), o = q.get("o") || "Appel d'offres", a = q.get("a") || "",
+      u = q.get("u") || "", d = q.get("d") || "";
+  var lim = new Date(d.length > 10 ? d : d + "T12:00");
+  if (isNaN(lim)) { document.getElementById("r-card").textContent = "Lien incomplet : ouvrez l'avis officiel pour connaître la date limite."; return; }
+  var r = new Date(lim.getTime() - 3 * 864e5); r.setHours(9, 0, 0, 0);
+  if (r < new Date()) { r = new Date(Date.now() + 36e5); r.setMinutes(0, 0, 0); }
+  var fin = new Date(r.getTime() + 18e5), fmt = { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" };
+  function z(x) { return x.toISOString().replace(/[-:]/g, "").replace(/\.\d+/, ""); }
+  var titre = "Rendre l'offre : " + o, det = "Date limite : " + lim.toLocaleString("fr-FR", fmt) + (a ? "\nAcheteur : " + a : "") + "\nAvis officiel : " + u + "\n(Rappel créé avec Radar Marchés)";
+  document.getElementById("r-objet").textContent = o;
+  document.getElementById("r-acheteur").textContent = a;
+  document.getElementById("r-date").textContent = lim.toLocaleString("fr-FR", fmt);
+  document.getElementById("r-rappel").textContent = r.toLocaleString("fr-FR", fmt);
+  var av = document.getElementById("r-avis"); if (/^https:\/\//.test(u)) av.href = u; else av.style.display = "none";
+  document.getElementById("r-google").href = "https://calendar.google.com/calendar/render?action=TEMPLATE&text=" + encodeURIComponent(titre) +
+    "&dates=" + z(r) + "/" + z(fin) + "&details=" + encodeURIComponent(det);
+  document.getElementById("r-outlook").href = "https://outlook.live.com/calendar/0/deeplink/compose?subject=" + encodeURIComponent(titre) +
+    "&startdt=" + r.toISOString() + "&enddt=" + fin.toISOString() + "&body=" + encodeURIComponent(det);
+  function e(s) { return s.replace(/[\;,]/g, function (c) { return "\\" + c; }).replace(/\n/g, "\\n"); }
+  var ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Radar Marches//Rappel//FR", "BEGIN:VEVENT", "UID:" + z(r) + "-" + Math.random().toString(36).slice(2) + "@radar-marches.fr",
+    "DTSTAMP:" + z(new Date()), "DTSTART:" + z(r), "DTEND:" + z(fin), "SUMMARY:" + e(titre), "DESCRIPTION:" + e(det),
+    "BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:" + e(titre), "TRIGGER:-PT0M", "END:VALARM", "END:VEVENT", "END:VCALENDAR"].join("\r\n");
+  document.getElementById("r-ics").href = "data:text/calendar;charset=utf-8," + encodeURIComponent(ics);
+})();
+</script>
+{% endblock %}

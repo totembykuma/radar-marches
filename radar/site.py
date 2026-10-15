@@ -4,6 +4,7 @@ from collections import Counter, defaultdict
 from datetime import date
 from pathlib import Path
 
+import yaml
 from markupsafe import Markup
 
 from .config import ROOT
@@ -80,6 +81,20 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None):
                 title=f"Appels d'offres {m['libelle'].lower()} {d} : marchés publics en cours",
                 description=f"{len(sub)} marchés publics {m['libelle'].lower()} ouverts dans le département {d}.", **common))
 
+    guides = yaml.safe_load((ROOT / "config" / "guides.yaml").read_text(encoding="utf-8"))
+    write("guides/index.html", render("guide.html", root="../", path="/guides/", guide=None, guides=guides,
+                                      h1="Guides : répondre à un appel d'offres public",
+                                      title=f"Guides pour répondre à un appel d'offres public · {biz['nom']}",
+                                      description="Guides gratuits et concrets pour répondre aux marchés publics : étapes, MAPA, documents, mémoire technique, prix.", **common))
+    for g in guides:
+        src = (ROOT / "templates" / "guides" / f"{g['slug']}.html").read_text(encoding="utf-8")
+        content = Markup(render_string(src, root="../", **common))
+        write(f"guides/{g['slug']}.html", render("guide.html", root="../", path=f"/guides/{g['slug']}.html", guide=g, guides=guides,
+                                                 content=content, h1=g["titre"], title=g["titre"], description=g["description"], **common))
+
+    write("rappel/index.html", render("rappel.html", root="../", path="/rappel/", noindex=True,
+                                      title=f"Ajouter un rappel · {biz['nom']}", description="", **common))
+
     for name in ("mentions-legales", "cgv", "confidentialite"):
         src = (ROOT / "templates" / "legal" / f"{name}.html").read_text(encoding="utf-8")
         content = Markup(render_string(src, e=biz["editeur"], **common))
@@ -88,7 +103,7 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None):
 
     base = biz["site_url"].rstrip("/")
     # Les pages légales (adresse de l'éditeur) restent accessibles mais hors Google.
-    pages = [p for p in pages if p not in ("mentions-legales.html", "cgv.html", "confidentialite.html")]
+    pages = [p for p in pages if p not in ("mentions-legales.html", "cgv.html", "confidentialite.html", "rappel/index.html")]
     urls = "".join(f"<url><loc>{base}/{p.removesuffix('index.html')}</loc><lastmod>{date.today()}</lastmod></url>" for p in pages)
     (out_dir / "sitemap.xml").write_text(
         f'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>', encoding="utf-8")

@@ -1,4 +1,9 @@
 {% extends "base.html" %}{% import "_ui.html" as ui %}{% block main %}
+{% set promo = biz.promo if biz.promo and (biz.promo.publie or promo_apercu) and biz.offres[biz.promo.offre].lien_paiement else None %}
+{% if promo %}<div class="promo-bar" id="promo-bar" hidden data-debut="{{ promo.debut }}" data-fin="{{ promo.fin }}"><div class="wrap">
+  <b>Offre de lancement</b> : aujourd'hui, les <b>{{ promo.places_par_jour }} premiers</b> abonnés {{ biz.offres[promo.offre].nom }} paient <b>{{ promo.prix }} €/mois au lieu de {{ biz.offres[promo.offre].prix_mensuel }} €</b> pendant {{ promo.mois }} mois.
+  <a href="#tarifs">J'en profite →</a>
+</div></div>{% endif %}
 <section class="hero">
   <div class="radar-bg" aria-hidden="true"><span></span><span></span><span></span><i></i></div>
   <div class="wrap hero-grid">
@@ -118,7 +123,7 @@
       <span class="ribbon">Recommandé</span>
       <h3>{{ o.nom }}</h3>
       <p class="for">Pour décrocher plus de marchés et surveiller la concurrence</p>
-      <p class="amount" data-mois>{{ o.prix_mensuel }} €<span>/mois</span></p>{% if annuel %}<p class="amount" data-an hidden>{{ o.prix_annuel }} €<span>/an</span></p><p class="eco" data-an hidden>Soit {{ '%.2f'|format(o.prix_annuel / 12)|replace('.', ',') }} €/mois : vous économisez {{ o.prix_mensuel * 12 - o.prix_annuel }} €</p>{% endif %}
+      <p class="amount" data-mois>{% if promo %}<s class="promo-old" hidden>{{ o.prix_mensuel }} €</s> <b class="promo-new" hidden>{{ promo.prix }} €</b><b class="promo-std">{{ o.prix_mensuel }} €</b>{% else %}{{ o.prix_mensuel }} €{% endif %}<span>/mois</span></p>{% if promo %}<p class="promo-note" hidden>Offre de lancement : <b>{{ promo.prix }} €/mois pendant {{ promo.mois }} mois</b>, puis {{ o.prix_mensuel }} €. Réservée aux {{ promo.places_par_jour }} premiers du jour, code <b class="promo-code"></b> déjà appliqué. Si le code est refusé, les places du jour sont prises : revenez demain dès minuit.</p>{% endif %}{% if annuel %}<p class="amount" data-an hidden>{{ o.prix_annuel }} €<span>/an</span></p><p class="eco" data-an hidden>Soit {{ '%.2f'|format(o.prix_annuel / 12)|replace('.', ',') }} €/mois : vous économisez {{ o.prix_mensuel * 12 - o.prix_annuel }} €</p>{% endif %}
       <ul class="checks">
         <li>Toute l'offre Essentiel, plus :</li>
         <li><b>Autant de départements que vous voulez</b>, ou toute la France</li>
@@ -129,6 +134,23 @@
       {% if o.lien_paiement and biz.stripe_mode == 'réel' %}<a class="btn btn-lg btn-block" href="{{ o.lien_paiement }}" data-mois-href="{{ o.lien_paiement }}" data-an-href="{{ o.lien_annuel }}">Essayer gratuitement</a>{% else %}<a class="btn btn-lg btn-block disabled" href="mailto:{{ biz.email_contact }}">Bientôt disponible</a>{% endif %}
     </div>
   </div>
+  {% if promo %}<script>
+  (function () {
+    var b = document.getElementById("promo-bar"), q = new URLSearchParams(location.search).get("apercu_promo");
+    var j = q || new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(new Date());
+    if (j < b.dataset.debut || j > b.dataset.fin) return;
+    var code = "PRO" + j.slice(8, 10), t = document.getElementById("tarifs"), pro = t.querySelector(".price.featured");
+    b.hidden = false;
+    pro.querySelectorAll(".promo-old,.promo-new,.promo-note").forEach(function (e) { e.hidden = false; });
+    pro.querySelector(".promo-std").hidden = true;
+    pro.querySelector(".promo-code").textContent = code;
+    var a = pro.querySelector("a.btn"); a.dataset.moisHref = a.dataset.moisHref + "?prefilled_promo_code=" + code; a.href = a.dataset.moisHref;
+    a.textContent = "Profiter de l'offre à {{ promo.prix }} €";
+    t.querySelectorAll(".periode button").forEach(function (x) { x.addEventListener("click", function () {
+      pro.querySelector(".promo-note").hidden = x.dataset.p === "an";
+    }); });
+  })();
+  </script>{% endif %}
   <p class="fine"><b>{{ biz.essai_gratuit_jours }} jours d'essai gratuit sur les deux offres.</b> Le bilan du lundi vous montre vos concurrents, leurs clients et les prix pratiqués : de quoi ajuster vos devis et viser les bons acheteurs.</p>
   {% if annuel %}<script>
   (function () {
