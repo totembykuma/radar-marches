@@ -22,7 +22,7 @@ class Matcher:
         full, court = self.haystack(avis), self.haystack(avis, texte=False)
         out = []
         for key in self.metiers:
-            text = full if self.metiers[key].get("texte", True) else court
+            text = full if self.metiers[key].get("texte", False) else court
             if any(p.search(text) for p in self._exc[key]):
                 continue
             if any(p.search(text) for p in self._inc[key]):

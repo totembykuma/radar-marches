@@ -190,3 +190,15 @@ def test_bilan_resultats_pro(tmp_path, monkeypatch):
     assert n == 1
     html = next(tmp_path.iterdir()).read_text(encoding="utf-8")
     assert "Propre Net" in html and "45 000 € HT" in html
+
+
+def test_intrus_ecartes():
+    def av(objet, desc=(), texte=""):
+        return {"objet": objet, "descripteurs": list(desc), "texte": texte}
+    assert "nettoyage" not in M.metiers_of(av("Prestations de balayage de la voirie", ["Nettoyage urbain"]))
+    assert "nettoyage" in M.metiers_of(av("Entretien des locaux de la mairie", ["Nettoyage de locaux"]))
+    assert "communication-web" not in M.metiers_of(av("Location de copieurs", ["Matériel d'imprimerie"]))
+    assert "communication-web" not in M.metiers_of(av("Maintenance du système de vidéoprotection", ["Audiovisuel"]))
+    assert "communication-web" in M.metiers_of(av("Refonte du site internet de la ville"))
+    assert "informatique" not in M.metiers_of(av("Contrat d'assurances", texte="flotte informatique"))
+    assert "electricite" not in M.metiers_of(av("Aménagement d'un parking", texte="éclairage et électricité"))

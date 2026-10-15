@@ -7,6 +7,7 @@
 import argparse
 import hashlib
 import json
+import time
 import logging
 import os
 import sys
@@ -231,6 +232,7 @@ def run_weekly():
     debut = (today - timedelta(days=7)).isoformat()
     kpi["prospects_contactes_7j"] = sum(j.get("envoyes", 0) for j in pj if j.get("date", "") >= debut)
     kpi["prospects_contactes_total"] = sum(j.get("envoyes", 0) for j in pj)
+    kpi["prospects_clics_7j"] = _clics([i for j in pj if j.get("date", "") >= debut for i in j.get("ids", [])])
     decisions = []
     if impayes:
         decisions.append(f"{len(impayes)} abonnement(s) impayé(s) : Stripe relance automatiquement, rien à faire sauf si cela dure.")
@@ -306,6 +308,7 @@ def run_prospection(apercu=False):
             n, zone, ex, lien = len(local), f"dans le département {p['dep']}", local[0], base + f"{p['dep']}.html"
         else:
             n, zone, ex, lien = len(lst), "en France", (lst[0] if lst else None), base
+        lien += f"?utm_source=prospection&utm_medium=email&utm_campaign={p['metier']}"
         m = metiers[p["metier"]]
         subject = f"{n} marchés publics « {m['libelle'].lower()} » ouverts {zone.replace('dans le département', 'dans le')}"
         html = render("email_prospect.html", p=p, n=n, zone=zone, ex=ex, lien=lien, metier=m, biz=biz)
@@ -332,7 +335,11 @@ def run_prospection(apercu=False):
             resume["apercu_envoye"] = True
         return resume
 
-    envoyes = 0
+    try:  # compter les clics sur les liens (réglage du domaine d'envoi, sans compte en plus)
+        mailer.activer_suivi_clics(conf["expediteur"].split("@")[-1].strip(" >"))
+    except Exception as exc:
+        log.warning("Suivi des clics non activé : %s", safe(exc))
+    envoyes, ids = 0, []
     for c in cands[: int(conf.get("par_jour") or 20)]:
         subject, html, _ = compose(c)
         reply = biz.get("email_proprietaire") or biz["email_contact"]
@@ -348,11 +355,26 @@ def run_prospection(apercu=False):
         if c.get("dom_key"):
             state["contactes"].append(prospects.h(c["dom_key"]))
         envoyes += 1
-    state["journal"].append({"date": date.today().isoformat(), "envoyes": envoyes})
+        if res.get("id"):
+            ids.append(res["id"])
+    state["journal"].append({"date": date.today().isoformat(), "envoyes": envoyes, "ids": ids})
     state["journal"] = state["journal"][-120:]
     _save_json(state_path, state)
     resume["envoyes"] = envoyes
     return resume
+
+
+def _clics(ids):
+    """Nombre d'e-mails de prospection dont le lien a été cliqué (None si Resend ne répond pas)."""
+    n = 0
+    for i in ids:
+        try:
+            n += mailer.dernier_evenement(i) == "clicked"
+        except Exception as exc:
+            log.warning("Clics non lus : %s", safe(exc))
+            return None
+        time.sleep(0.6)  # limite Resend : 2 requêtes/seconde
+    return n
 
 
 def run_audit():
