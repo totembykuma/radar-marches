@@ -36,11 +36,11 @@
         <li>Note d'accessibilité TPE</li>
         <li>{{ biz.essai_gratuit_jours }} jours d'essai gratuit</li>
       </ul>
-      {% if o.lien_paiement %}<a class="btn" href="{{ o.lien_paiement }}">Commencer l'essai</a>{% else %}<a class="btn disabled" href="mailto:{{ biz.email_contact }}?subject=Essai%20{{ o.nom }}">Bientôt disponible : me prévenir</a>{% endif %}
+      {% if o.lien_paiement and biz.stripe_mode == 'réel' %}<a class="btn" href="{{ o.lien_paiement }}">Commencer l'essai</a>{% else %}<a class="btn disabled" href="mailto:{{ biz.email_contact }}?subject=Essai%20{{ o.nom }}">Bientôt disponible : me prévenir</a>{% endif %}
     </div>
   {% endfor %}
   </div>
-  <p class="muted">{{ biz.fiscalite.tva }}. Paiement sécurisé par Stripe. Résiliation à tout moment depuis votre espace client.</p>
+  <p class="muted">{{ biz.fiscalite.tva }}. Paiement sécurisé par Stripe. Résiliation à tout moment depuis {% if biz.portail_client %}<a href="{{ biz.portail_client }}">votre espace client</a>{% else %}votre espace client{% endif %}.</p>
 </section>
 
 <section class="wrap">

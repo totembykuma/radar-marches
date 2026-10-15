@@ -105,3 +105,38 @@ def test_demo_end_to_end(tmp_path, monkeypatch):
     # pas de doublon au 2e passage
     run2 = cli.run_demo()
     assert run2["emails_envoyes"] == 0 and "bienvenues" not in run2
+
+
+def test_stripe_setup_writes_config(tmp_path, monkeypatch):
+    import shutil
+    from radar import stripe_setup, config
+    (tmp_path / "config").mkdir()
+    for f in ("business.yaml", "metiers.yaml"):
+        shutil.copy(config.ROOT / "config" / f, tmp_path / "config" / f)
+    monkeypatch.setattr(config, "ROOT", tmp_path)
+    monkeypatch.setattr(stripe_setup, "ROOT", tmp_path)
+    monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_x")
+    calls = []
+
+    def fake(method, path, data=None, params=None):
+        calls.append((method, path, data))
+        if method == "GET":
+            return {"data": []}
+        if path == "products":
+            return {"id": f"prod_{data['metadata[radar_offre]']}"}
+        if path == "prices":
+            return {"id": f"price_{data['unit_amount']}", "unit_amount": data["unit_amount"], "recurring": {"interval": "month"}}
+        if path == "payment_links":
+            assert data["custom_fields[0][dropdown][options][1][value]"] == "espacesverts"
+            assert data["subscription_data[trial_period_days]"] == 14
+            return {"url": f"https://buy.stripe.com/test_{data['metadata[radar_offre]']}"}
+        if path == "billing_portal/configurations":
+            return {"login_page": {"url": "https://billing.stripe.com/p/login/test_x"}}
+    monkeypatch.setattr(stripe_setup, "_call", fake)
+    stripe_setup.run()
+    biz = config.business()
+    assert biz["offres"]["pro"]["lien_paiement"] == "https://buy.stripe.com/test_pro"
+    assert biz["offres"]["essentiel"]["stripe_price_ids"] == ["price_2900"]
+    assert biz["stripe_mode"] == "test" and biz["portail_client"].endswith("test_x")
+    stripe_setup.run()  # relancer ne casse pas le fichier
+    assert config.business()["offres"]["pro"]["stripe_price_ids"] == ["price_4900"]
