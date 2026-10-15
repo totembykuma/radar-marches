@@ -3,6 +3,7 @@
   <p class="crumbs"><a href="{{ root }}">Accueil</a> › Appels d'offres</p>
   <h1>Appels d'offres publics par métier</h1>
   <p class="lead">Les marchés publics en cours, issus du BOAMP, classés par métier et mis à jour chaque matin ({{ date_fr }}).</p>
+  {% if nb_villes %}<p><a href="villes/">Voir les appels d'offres par ville ({{ nb_villes }} villes) →</a></p>{% endif %}
 </div></section>
 <section class="wrap block">
   <div class="tiles">{% for k, m in metiers.items() %}{{ ui.tuile(k, m, counts[k], k ~ '/') }}{% endfor %}</div>

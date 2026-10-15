@@ -1,0 +1,41 @@
+{% extends "base.html" %}{% import "_ui.html" as ui %}{% block main %}
+<section class="page-head"><div class="wrap">
+  <p class="crumbs"><a href="{{ root }}">Accueil</a> › <a href="{{ root }}appels-offres/">Appels d'offres</a> › <a href="{{ root }}appels-offres/villes/">Par ville</a>{% if ville %} › {{ ville.nom }}{% endif %}</p>
+  <h1>{{ h1 }}</h1>
+  {% if ville %}
+  <p class="lead"><b>{{ ville.total }}</b> appel{{ 's' if ville.total > 1 }} d'offres en cours publiés par des acheteurs publics de {{ ville.nom }} (département {{ ville.dep }}) · mis à jour le {{ date_fr }}</p>
+  <div class="deps"><span>Métiers :</span>{% for k, lst in ville.par_metier %}<a href="#{{ k }}" style="--c:{{ ui.couleur(k) }}">{{ metiers[k].libelle }} <small>{{ lst|length }}</small></a>{% endfor %}</div>
+  {% else %}
+  <p class="lead">Les villes où les acheteurs publics ont le plus d'appels d'offres en cours, mis à jour chaque matin ({{ date_fr }}).</p>
+  {% endif %}
+</div></section>
+
+{% if ville %}
+<section class="wrap listing">
+  <div class="cards">
+  {% if ville.acheteurs %}<p class="fine">Principaux acheteurs : {{ ville.acheteurs|join(', ') }}.</p>{% endif %}
+  {% for k, lst in ville.par_metier %}
+    <h2 id="{{ k }}" class="ville-metier">{{ ui.icone(k, 22) }} {{ metiers[k].libelle }} · {{ lst|length }} marché{{ 's' if lst|length > 1 }}
+      <a class="fine" href="{{ root }}appels-offres/{{ k }}/{{ ville.dep }}.html">tout le département {{ ville.dep }} →</a></h2>
+    {% for a in lst %}
+    <article class="avis">
+      <div class="avis-top"><span class="chip">{{ ville.nom }}</span>{% if a.pme %}<span class="chip chip-pme" title="{{ a.pme }}">✔ Accessible PME</span>{% endif %}{{ ui.echeance(a.jours_restants) }}</div>
+      <h3><a href="{{ a.url }}" rel="nofollow noopener" target="_blank">{{ a.objet }}</a></h3>
+      <p class="buyer">{{ a.acheteur }}</p>
+      <div class="avis-foot"><span>Publié le {{ a.date_parution_fr or a.date_parution }}</span>{% if a.date_limite %}<span>Réponse avant le <b>{{ a.date_limite_fr }}</b></span>{% endif %}<a href="{{ a.url }}" rel="nofollow noopener" target="_blank">Avis officiel →</a></div>
+    </article>
+    {% endfor %}
+    {% if loop.index == 1 %}{% include "_cta.html" %}{% endif %}
+  {% endfor %}
+  {% if autres %}<p class="fine">Autres villes du département : {% for v in autres %}<a href="{{ v.slug }}.html">{{ v.nom }} ({{ v.total }})</a>{{ ', ' if not loop.last }}{% endfor %}.</p>{% endif %}
+  </div>
+  <aside class="side">{% include "_cta.html" %}</aside>
+</section>
+{% else %}
+<section class="wrap block">
+  {% for dep, vs in par_dep %}
+  <div class="deps"><span>Département {{ dep }} :</span>{% for v in vs %}<a href="{{ v.slug }}.html">{{ v.nom }} <small>{{ v.total }}</small></a>{% endfor %}</div>
+  {% endfor %}
+</section>
+{% endif %}
+{% endblock %}

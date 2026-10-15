@@ -1,6 +1,6 @@
 """Point d'entrée. Exemples :
     python -m radar.cli daily      # envoi des alertes + site (tous les matins)
-    python -m radar.cli weekly     # rapport hebdo au propriétaire (lundi)
+    python -m radar.cli weekly     # bilan du dimanche au propriétaire
     python -m radar.cli check-api  # diagnostic des champs BOAMP
     python -m radar.cli demo       # test complet hors ligne avec des données d'exemple
 """
@@ -12,6 +12,8 @@ import logging
 import os
 import sys
 import traceback
+
+import requests
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
@@ -298,6 +300,9 @@ def run_weekly():
     week_ago = int((datetime.now(timezone.utc) - timedelta(days=7)).timestamp())
     nouveaux = [s for s in subs_raw if s.get("created", 0) >= week_ago]
     resilies = [s for s in subs_raw if (s.get("canceled_at") or 0) >= week_ago]
+    now_ts = int(datetime.now(timezone.utc).timestamp())
+    # Passés payants : fin d'essai cette semaine et abonnement actif (ou payé directement sans essai).
+    ventes = [s for s in subs_raw if s["status"] == "active" and week_ago <= (s.get("trial_end") or s.get("created") or 0) <= now_ts]
     runs = [_load_json(DATA / "runs" / f"{(today - timedelta(days=i)).isoformat()}.json", None) for i in range(7)]
     runs = [r for r in runs if r]
     kpi = {
@@ -307,13 +312,18 @@ def run_weekly():
         "emails_7j": sum(r.get("emails_envoyes", 0) for r in runs),
         "avis_moyens_jour": round(sum(r.get("avis_recuperes", 0) for r in runs) / max(1, len(runs))),
         "objectif_mensuel_ca": [800, 1300],
+        "essais_commences_7j": sum(1 for s in nouveaux if s.get("trial_end")),
+        "ventes_7j": len(ventes),
     }
+    kpi["visites_7j"] = visites(biz, today - timedelta(days=7), today)
     pj = _load_json(DATA / "prospection.json", {}).get("journal", [])
     debut = (today - timedelta(days=7)).isoformat()
     kpi["prospects_contactes_7j"] = sum(j.get("envoyes", 0) for j in pj if j.get("date", "") >= debut)
     kpi["prospects_contactes_total"] = sum(j.get("envoyes", 0) for j in pj)
     kpi["prospects_clics_7j"] = _clics([i for j in pj if j.get("date", "") >= debut for i in j.get("ids", [])])
     decisions = []
+    if kpi["visites_7j"] is None and biz.get("statistiques_goatcounter"):
+        decisions.append("Visites illisibles : sur goatcounter.com, Settings, cocher « Allow adding visitor counts on your website » puis Save.")
     if impayes:
         decisions.append(f"{len(impayes)} abonnement(s) impayé(s) : Stripe relance automatiquement, rien à faire sauf si cela dure.")
     if kpi["runs_7j"] < 5:
@@ -328,15 +338,43 @@ def run_weekly():
         "Ne promets aucun revenu.\n" + json.dumps({"kpi": kpi, "finance_mois": bilan}, ensure_ascii=False),
         model=biz["ia"]["modele"])
     rows = "".join(f"<tr><td>{k}</td><td style='text-align:right'><b>{v}</b></td></tr>" for k, v in {**kpi, **bilan}.items())
-    html = (f"<h2>{biz['nom']} · rapport du {date_fr(today)}</h2>"
-            f"<p>Mois en cours : CA {bilan['chiffre_affaires']} € · bénéfice {bilan['benefice_apres_depenses']} € · "
+    def ligne(lib, v, aide=""):
+        v = "non disponible" if v is None else v
+        return f"<tr><td>{lib}</td><td style='text-align:right;font-size:18px'><b>{v}</b></td><td style='color:#667'>{aide}</td></tr>"
+    resume = ("<table cellpadding='6' style='border-collapse:collapse'>"
+              + ligne("Visites du site", kpi["visites_7j"], "personnes venues sur radar-marches.fr")
+              + ligne("Entreprises prospectées", kpi["prospects_contactes_7j"], "1 seul e-mail par entreprise")
+              + ligne("Clics dans ces e-mails", kpi["prospects_clics_7j"], "")
+              + ligne("Essais gratuits commencés", kpi["essais_commences_7j"], "")
+              + ligne("Ventes (passés payants)", kpi["ventes_7j"], "")
+              + ligne("Résiliations", kpi["resilies_7j"], "")
+              + ligne("Clients payants", kpi["abonnes_payants"], f"revenu mensuel récurrent {kpi['mrr']} €")
+              + "</table>")
+    html = (f"<h2>{biz['nom']} · bilan de la semaine ({date_fr(today)})</h2>" + resume
+            + f"<p>Mois en cours : CA {bilan['chiffre_affaires']} € · bénéfice {bilan['benefice_apres_depenses']} € · "
             f"net estimé après cotisations et impôt {bilan['revenu_net']} €.</p>"
             + ("<h3>Décisions / points d'attention</h3><ul>" + "".join(f"<li>{d}</li>" for d in decisions) + "</ul>" if decisions else "<p>Aucune décision requise cette semaine.</p>")
             + (f"<h3>Analyse de l'agent</h3><div style='white-space:pre-wrap'>{analyse}</div>" if analyse else "")
             + f"<h3>Détail</h3><table cellpadding='4'>{rows}</table>")
     _save_json(DATA / "rapports" / f"{today.isoformat()}.json", {"kpi": kpi, "finance": bilan, "decisions": decisions})
-    alert_owner(biz, f"Rapport hebdo · MRR {kpi['mrr']} €", html)
+    alert_owner(biz, f"Bilan du dimanche · {kpi['visites_7j'] if kpi['visites_7j'] is not None else '?'} visites, "
+                     f"{kpi['essais_commences_7j']} essai(s), {kpi['ventes_7j']} vente(s)", html)
     return {"kpi": kpi, "finance": bilan, "decisions": decisions, "analyse": analyse}
+
+
+def visites(biz, debut, fin):
+    """Visiteurs uniques GoatCounter sur la période (compteur public du compte), None si illisible."""
+    compte = (biz.get("statistiques_goatcounter") or "").strip()
+    if not compte:
+        return None
+    try:
+        r = requests.get(f"https://{compte}.goatcounter.com/counter/TOTAL.json",
+                         params={"start": debut.isoformat(), "end": fin.isoformat()}, timeout=30)
+        r.raise_for_status()
+        return int("".join(c for c in str(r.json().get("count", "")) if c.isdigit()) or 0)
+    except Exception as exc:
+        log.warning("Visites GoatCounter non lues : %s", safe(exc))
+        return None
 
 
 def run_abonnes():
@@ -420,7 +458,9 @@ def run_prospection(apercu=False):
     except Exception as exc:
         log.warning("Suivi des clics non activé : %s", safe(exc))
     envoyes, ids = 0, []
-    for c in cands[: int(conf.get("par_jour") or 20)]:
+    quota = quota_prospection(int(conf.get("par_jour") or 20), state["journal"])
+    resume["quota_du_jour"] = quota
+    for c in cands[:quota]:
         subject, html, _ = compose(c)
         reply = biz.get("email_proprietaire") or biz["email_contact"]
         try:
@@ -442,6 +482,25 @@ def run_prospection(apercu=False):
     _save_json(state_path, state)
     resume["envoyes"] = envoyes
     return resume
+
+
+# Offre gratuite Resend : 100 e-mails/jour et 3 000/mois, tous envois confondus.
+# Les alertes clients passent toujours en premier : la prospection prend ce qui reste, moins une marge.
+RESEND_JOUR, RESEND_MOIS, MARGE_JOUR, MARGE_MOIS = 100, 3000, 20, 300
+
+
+def quota_prospection(par_jour, journal, today=None):
+    today = today or date.today()
+    run = _load_json(DATA / "runs" / f"{today.isoformat()}.json", {}) or {}
+    reste_jour = RESEND_JOUR - MARGE_JOUR - int(run.get("emails_envoyes") or 0)
+    mois = today.strftime("%Y-%m")
+    clients_mois = sum(int((_load_json(f, {}) or {}).get("emails_envoyes") or 0) for f in (DATA / "runs").glob(f"{mois}-*.json"))
+    prospects_mois = sum(j.get("envoyes", 0) for j in journal if str(j.get("date", "")).startswith(mois))
+    # Envois clients encore à venir ce mois-ci (estimés sur la moyenne des jours déjà passés).
+    jours = max(1, len(list((DATA / "runs").glob(f"{mois}-*.json"))))
+    a_venir = clients_mois / jours * max(0, 22 - jours)
+    reste_mois = RESEND_MOIS - MARGE_MOIS - clients_mois - prospects_mois - a_venir
+    return max(0, min(par_jour, reste_jour, int(reste_mois)))
 
 
 def _clics(ids):

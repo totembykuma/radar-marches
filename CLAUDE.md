@@ -10,6 +10,9 @@ tout tourne dans GitHub Actions. Propriétaire non technique, en français, une 
 - `config/business.yaml` (offres, liens Stripe, prospection), `config/metiers.yaml` (mots, exclusions, cpv).
 - `templates/` (site + e-mails), `static/style.css`, `tests/test_radar.py` (`python3 -m pytest -q tests`).
 
+- Bilan du dimanche (weekly.yml, dim. 17 h UTC) : visites GoatCounter (compteur public, sinon « non disponible »), prospection, essais, ventes.
+- Prospection : par_jour 20, plafonnée par `quota_prospection` (Resend gratuit 100/jour, 3 000/mois, alertes clients prioritaires).
+- Pages ville `/appels-offres/villes/<ville>-<dep>.html` (ville de l'acheteur lue dans `donnees`, ≥ 5 avis sinon pas de page).
 - Résumés IA : actifs seulement si secret ANTHROPIC_API_KEY ET `premier_client_payant` dans data/state.json (posé par daily, qui prévient le propriétaire).
 
 ## Règles pour économiser les tokens

@@ -10,6 +10,7 @@ from markupsafe import Markup
 from . import avis as avis_mod
 from .config import ROOT
 from .render import date_fr, date_limite_fr, render, render_string
+from .textutil import slugify
 
 
 def _jours_restants(s, today):
@@ -57,6 +58,30 @@ def _film(by_metier, histo=None, essais=8):
             "depot": (dl - timedelta(days=2)).strftime("%d/%m")}
 
 
+VILLE_MIN, VILLES_MAX = 5, 250   # une page par ville seulement si assez d'avis (pas de pages creuses)
+
+
+def _villes(by_metier, metiers):
+    """Villes d'acheteurs avec au moins VILLE_MIN avis ouverts de nos métiers, les plus fournies d'abord."""
+    groupes = defaultdict(dict)
+    for key in metiers:
+        for a in by_metier.get(key, []):
+            if a.get("ville") and (a.get("jours_restants") is None or a["jours_restants"] >= 0):
+                dep = next((d for d in a["departements"] if d), "")
+                groupes[(a["ville"], dep)].setdefault(key, []).append(a)
+    out = []
+    for (nom, dep), pm in groupes.items():
+        uniques = {id(a): a for lst in pm.values() for a in lst}
+        if len(uniques) < VILLE_MIN or not dep:
+            continue
+        acheteurs = Counter(a["acheteur"] for a in uniques.values() if a.get("acheteur"))
+        out.append({"nom": nom, "dep": dep, "slug": f"{slugify(nom)}-{slugify(dep)}", "total": len(uniques),
+                    "par_metier": sorted(pm.items(), key=lambda kv: -len(kv[1])),
+                    "acheteurs": [n for n, _ in acheteurs.most_common(5)]})
+    out.sort(key=lambda v: -v["total"])
+    return out[:VILLES_MAX]
+
+
 def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=None):
     out_dir = Path(out_dir)
     if out_dir.exists():
@@ -99,8 +124,9 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=Non
                                ex_key=ex_key, exemple=exemple, film=film, avis_clients=avis_clients,
                                title=f"{biz['nom']} · Appels d'offres publics par métier, triés" + (" par IA" if biz.get("ia_active") else ""),
                                description=biz["slogan"], **common))
+    villes = _villes(by_metier, metiers)
     write("appels-offres/index.html", render(
-        "hub.html", root="../", path="/appels-offres/", counts=counts,
+        "hub.html", root="../", path="/appels-offres/", counts=counts, nb_villes=len(villes),
         title="Appels d'offres publics en cours par métier", description="Marchés publics en cours classés par métier, mis à jour chaque jour.", **common))
 
     for key, m in metiers.items():
@@ -116,9 +142,24 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=Non
             sub = [a for a in lst if d in a["departements"]]
             write(f"appels-offres/{key}/{d}.html", render(
                 "listing.html", root="../../", path=f"/appels-offres/{key}/{d}.html", avis=sub, total=len(sub), metier=m,
-                metier_key=key, dep=d, deps=[], dep_counts={}, h1=f"Appels d'offres {m['libelle'].lower()} · département {d}",
+                metier_key=key, dep=d, deps=[], dep_counts={}, villes=[v for v in villes if v["dep"] == d][:15], h1=f"Appels d'offres {m['libelle'].lower()} · département {d}",
                 title=f"Appels d'offres {m['libelle'].lower()} {d} : marchés publics en cours",
                 description=f"{len(sub)} marchés publics {m['libelle'].lower()} ouverts dans le département {d}.", **common))
+
+    for v in villes:
+        autres = [x for x in villes if x["dep"] == v["dep"] and x is not v][:12]
+        noms = ", ".join(metiers[k]["libelle"].lower() for k, _ in v["par_metier"][:3])
+        write(f"appels-offres/villes/{v['slug']}.html", render(
+            "ville.html", root="../../", path=f"/appels-offres/villes/{v['slug']}.html", ville=v, autres=autres,
+            metier=metiers[v["par_metier"][0][0]], dep=v["dep"],
+            h1=f"Appels d'offres à {v['nom']} ({v['dep']})",
+            title=f"Appels d'offres {v['nom']} ({v['dep']}) : {v['total']} marchés publics en cours",
+            description=f"{v['total']} marchés publics en cours à {v['nom']} : {noms}. Mis à jour chaque matin.", **common))
+    par_dep = sorted(((d, [v for v in villes if v["dep"] == d]) for d in {v["dep"] for v in villes}), key=lambda x: x[0])
+    write("appels-offres/villes/index.html", render(
+        "ville.html", root="../../", path="/appels-offres/villes/", ville=None, par_dep=par_dep,
+        h1="Appels d'offres publics par ville", title="Appels d'offres publics par ville : marchés en cours",
+        description=f"Marchés publics en cours dans {len(villes)} villes de France, classés par métier et mis à jour chaque jour.", **common))
 
     guides = yaml.safe_load((ROOT / "config" / "guides.yaml").read_text(encoding="utf-8"))
     write("guides/index.html", render("guide.html", root="../", path="/guides/", guide=None, guides=guides,

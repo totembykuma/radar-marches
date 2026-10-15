@@ -8,6 +8,7 @@
       <p class="lead"><b>{{ total }}</b> appel{{ 's' if total > 1 }} d'offres en cours · mis à jour le {{ date_fr }}</p>
     </div>
   </div>
+  {% if villes %}<div class="deps"><span>Toutes les offres par ville :</span>{% for v in villes %}<a href="{{ root }}appels-offres/villes/{{ v.slug }}.html">{{ v.nom }} <small>{{ v.total }}</small></a>{% endfor %}</div>{% endif %}
   {% if deps %}<div class="deps"><span>Par département :</span>{% for d in deps %}<a href="{{ root }}appels-offres/{{ metier_key }}/{{ d }}.html">{{ d }} <small>{{ dep_counts[d] }}</small></a>{% endfor %}</div>{% endif %}
 </div></section>
 

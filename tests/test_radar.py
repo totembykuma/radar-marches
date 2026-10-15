@@ -449,3 +449,49 @@ def test_ia_attend_le_premier_client_payant(monkeypatch, tmp_path):
     assert run["premier_client_payant"] and not appels    # pas de clé : rien n'est dépensé, le propriétaire est prévenu
     assert any("Premier_client_payant" in m.name for m in (tmp_path / "outbox").glob("*.html"))
     assert json.loads((tmp_path / "demo-data" / "state.json").read_text())["premier_client_payant"]
+
+
+def test_ville_acheteur():
+    from radar.boamp import _ville_acheteur as v
+    ef = {"EFORMS": {"ContractNotice": {
+        "cac:ContractingParty": {"cac:Party": {"cac:PartyIdentification": {"cbc:ID": "ORG-0001"}}},
+        "ext:UBLExtensions": {"ext:UBLExtension": {"ext:ExtensionContent": {"efext:EformsExtension": {"efac:Organizations": {
+            "efac:Organization": [
+                {"efac:Company": {"cac:PartyIdentification": {"cbc:ID": "ORG-0002"}, "cac:PostalAddress": {"cbc:CityName": "Grenoble", "cbc:PostalZone": "38000"}}},
+                {"efac:Company": {"cac:PartyIdentification": {"cbc:ID": "ORG-0001"}, "cac:PostalAddress": {"cbc:CityName": "Seyssinet-Pariset", "cbc:PostalZone": "38170"}}}]}}}}}}}}
+    assert v(ef, ["38"]) == "Seyssinet-Pariset"          # l'acheteur, pas le tribunal de recours
+    assert v({"FNSimple": {"organisme": {"ville": "LYON CEDEX 03", "cp": "69003"}}}, ["69"]) == "Lyon"
+    assert v({"MAPA": {"organisme": {"adr": {"ville": "MANZAT", "cp": "63410"}}}}, ["63"]) == "Manzat"
+    assert v({"FNSimple": {"organisme": {"ville": "Paris", "cp": "75001"}}}, ["33"]) == ""   # hors département
+    assert v("pas du json", ["33"]) == ""
+
+
+def test_pages_villes(tmp_path):
+    from radar import site
+    from radar.config import business, metiers as load_metiers
+    from radar.matching import Matcher
+    biz, metiers = business(), load_metiers()
+    avis = [{"id": str(i), "objet": f"Nettoyage des locaux lot {i}", "acheteur": "Mairie de Lyon", "departements": ["69"],
+             "descripteurs": ["Nettoyage"], "date_parution": "2099-01-01", "date_limite": "2099-02-01", "url": "https://x/",
+             "nature": "", "type_marche": "", "texte": "", "pme": "", "ville": "Lyon" if i < 5 else "Bron",
+             "metiers": ["nettoyage"]} for i in range(7)]
+    site.build(avis, biz, metiers, Matcher(metiers), tmp_path)
+    page = tmp_path / "appels-offres" / "villes" / "lyon-69.html"
+    assert page.exists() and "à Lyon (69)" in page.read_text()
+    assert not (tmp_path / "appels-offres" / "villes" / "bron-69.html").exists()   # trop peu d'avis : pas de page creuse
+    assert "villes/lyon-69.html" in (tmp_path / "appels-offres" / "nettoyage" / "69.html").read_text()
+    assert "/appels-offres/villes/lyon-69.html" in (tmp_path / "sitemap.xml").read_text()
+
+
+def test_quota_prospection(tmp_path, monkeypatch):
+    import json
+    import radar.cli as cli
+    from datetime import date
+    monkeypatch.setattr(cli, "DATA", tmp_path)
+    (tmp_path / "runs").mkdir()
+    assert cli.quota_prospection(20, [], date(2026, 11, 3)) == 20
+    (tmp_path / "runs" / "2026-11-03.json").write_text(json.dumps({"emails_envoyes": 70}))
+    assert cli.quota_prospection(20, [], date(2026, 11, 3)) == 10      # 100/jour Resend, marge 20
+    for d in range(4, 10):
+        (tmp_path / "runs" / f"2026-11-{d:02d}.json").write_text(json.dumps({"emails_envoyes": 300}))
+    assert cli.quota_prospection(20, [], date(2026, 11, 10)) == 0      # le mois serait dépassé
