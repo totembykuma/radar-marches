@@ -174,7 +174,7 @@
   sc.forEach(function(s,n){var b=document.createElement('button');b.type='button';b.className='film-seg';
     b.setAttribute('aria-label','Chapitre '+(n+1)+' : '+s.dataset.titre);b.title=s.dataset.titre;b.innerHTML='<i></i>';
     b.onclick=function(){started=true;if(!muted)sound=true;go(n,true)};box.appendChild(b);segs.push(b)});
-  function count(el){var n=+el.dataset.n,d=+(el.dataset.d||0),s=null,fmt=function(v){return Math.round(v).toLocaleString('fr-FR')};
+  function count(el){var n=+el.dataset.n,d=+(el.dataset.d||0),s=null,fmt=function(v){return String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g,'\u202f')};
     el.textContent='0';if(rm){el.textContent=fmt(n);return}
     setTimeout(function step(ts){requestAnimationFrame(function(ts){if(s===null)s=ts;var p=Math.min(1,(ts-s)/1300);
       el.textContent=fmt(n*(1-Math.pow(1-p,3)));if(p<1)step()})},d)}
