@@ -15,7 +15,7 @@ import traceback
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
-from . import ai, boamp, finance, mailer, prospects, site, subscribers
+from . import ai, boamp, finance, historique, mailer, prospects, site, subscribers
 from .config import ROOT, business, metiers as load_metiers
 from .matching import Matcher
 from .render import date_fr, date_limite_fr, render
@@ -102,7 +102,7 @@ def envoyer_resultats(subs, biz, metiers, matcher, state, records=None):
     return envoyes
 
 
-def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None):
+def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, histo=None):
     biz, metiers = business(), load_metiers()
     matcher = Matcher(metiers)
     state = _load_json(DATA / "state.json", {"sent": {}})
@@ -155,12 +155,27 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None):
     # 4. Résumés IA (une seule fois par avis, même s'il intéresse plusieurs abonnés)
     ai.enrich(list(to_enrich.values()), model=biz["ia"]["modele"], batch=biz["ia"]["max_avis_par_appel"])
 
+    # 4b. Fiche « avant de répondre » : ce que l'acheteur a déjà attribué dans le métier de l'abonné
+    histo = histo or historique.Historique(metiers)
+    n_fiches = 0
+    for key, (s, sel) in plans.items():
+        for a in sel:
+            for m in s["metiers"]:
+                if m in (a.get("metiers") or []) and a.get("acheteur_siret"):
+                    n_fiches += histo.fiche(a["acheteur_siret"], m) is not None
+    histo.sauver()
+    run["fiches_acheteur"] = n_fiches
+
     # 5. Envoi
     sent = 0
     for key, (s, sel) in plans.items():
         sel.sort(key=lambda a: (-(a.get("score") or 0), a["date_limite"] or "9999"))
         for a in sel:
             a["date_limite_fr"] = date_limite_fr(a["date_limite"])
+            m = next((m for m in s["metiers"] if m in (a.get("metiers") or [])), None)
+            a["fiche"] = histo.fiche(a.get("acheteur_siret"), m) if m and a.get("acheteur_siret") else None
+            a["fiche_complete"] = s.get("plan") == "pro"
+            a["metier_libelle"] = metiers[m]["libelle"].lower() if m else ""
         html = render("email_digest.html", biz=biz, avis=sel, date_fr=date_fr(), criteres=criteres_txt(s, metiers))
         subject = f"{len(sel)} appel{'s' if len(sel) > 1 else ''} d'offres : {sel[0]['objet'][:60]}"
         try:

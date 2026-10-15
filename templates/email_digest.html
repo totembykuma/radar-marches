@@ -17,11 +17,22 @@
     {% if a.date_limite %}Réponse avant le <b>{{ a.date_limite_fr }}</b>{% endif %}
     {% if a.score %} · Accessibilité TPE : {{ '★' * a.score }}{{ '☆' * (5 - a.score) }}{% endif %}
   </div>
+  {% if a.fiche %}{% set f = a.fiche %}
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:10px;background:#f5f8fc;border-left:3px solid #ffb020;border-radius:6px"><tr><td style="padding:10px 12px;font-size:13px;line-height:1.5;color:#1d2433">
+    <b>Avant de répondre</b> · cet acheteur a attribué <b>{{ f.n }} marché{{ 's' if f.n > 1 }} « {{ a.metier_libelle }} »</b> en {{ f.mois // 12 }} ans.
+    {% if a.fiche_complete %}
+      {% if f.montant_median %}<br>Montant habituel : <b>{{ f.montant_median|euros }}</b> HT{% endif %}{% if f.offres_median %} · en général <b>{{ f.offres_median }} offre{{ 's' if f.offres_median > 1 }}</b> reçue{{ 's' if f.offres_median > 1 }}{% endif %}
+      {% for d in f.derniers %}<br>· {{ d.date|date_courte }} : {% if d.gagnant %}<b>{{ d.gagnant }}</b>{% else %}titulaire non publié{% endif %}{% if d.montant %}, {{ d.montant|euros }}{% endif %}{% if d.offres %} ({{ d.offres }} offre{{ 's' if d.offres > 1 }}){% endif %}{% endfor %}
+    {% else %}
+      <br><span style="color:#5a6478">Les montants payés, le nombre de concurrents et les gagnants sont réservés à l'offre Pro.</span>
+    {% endif %}
+  </td></tr></table>
+  {% endif %}
 </td></tr>
 {% endfor %}
 <tr><td style="padding:18px 24px;font-size:12px;color:#5a6478;line-height:1.5">
   Pour modifier vos critères, répondez simplement à cet e-mail.<br>
-  {% if biz.ia_active %}Résumés générés automatiquement par IA à partir des avis officiels du BOAMP : vérifiez{% else %}Sélection automatique à partir des avis officiels du BOAMP : vérifiez{% endif %} toujours l'avis complet avant de répondre.<br>
+  {% if biz.ia_active %}Résumés générés automatiquement par IA à partir des avis officiels du BOAMP : vérifiez{% else %}Sélection automatique à partir des avis officiels du BOAMP : vérifiez{% endif %} toujours l'avis complet avant de répondre. Fiches « avant de répondre » : données essentielles de la commande publique (marchés notifiés depuis 2 ans).<br>
   {{ biz.nom }} · {{ biz.site_url }} · Pour vous désabonner, répondez « STOP » ou résiliez {% if biz.portail_client %}<a href="{{ biz.portail_client }}">depuis votre espace client</a>{% else %}depuis votre espace client{% endif %}.
 </td></tr>
 </table></td></tr></table></body></html>

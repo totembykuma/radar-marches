@@ -1,59 +1,74 @@
 # Chaque métier = mots-clés recherchés dans l'objet et les descripteurs BOAMP.
 # Les mots sont comparés sans accents ni majuscules. "exclure" retire les faux positifs.
+# "cpv" : débuts de codes CPV, pour retrouver l'historique d'un acheteur dans les données essentielles.
 # Le texte détaillé de l'avis n'est lu que si "texte: true" (sinon trop de faux positifs).
 nettoyage:
   libelle: "Nettoyage et propreté"
+  cpv: ["9090", "9091"]   # codes des marchés attribués (données essentielles)
   mots: ["nettoyage", "proprete", "entretien des locaux", "lavage des vitres", "nettoyage des vitres", "menage", "desinfection"]
   exclure: ["nettoyage de voirie", "nettoyage urbain", "nettoiement", "balayage", "balayeuse", "colonnes", "conteneur", "viabilite hivernale", "assainissement", "ordures", "dechets", "deratisation"]
 espaces-verts:
   libelle: "Espaces verts et paysage"
+  cpv: ["7731", "7734", "771", "451127"]   # codes des marchés attribués (données essentielles)
   mots: ["espaces verts", "elagage", "paysag", "tonte", "fauchage", "debroussaillage", "plantation", "arboric"]
   exclure: ["maitrise d'oeuvre", "hygiene corporelle"]
 peinture:
   libelle: "Peinture et revêtements"
+  cpv: ["45442", "45432", "45443"]   # codes des marchés attribués (données essentielles)
   mots: ["peinture", "revetements de sols", "revetement de sol", "ravalement", "papier peint", "sols souples"]
   exclure: ["peinture routiere", "signalisation horizontale", "pavage", "dallage"]
 electricite:
   libelle: "Électricité"
+  cpv: ["4531", "50711", "50232"]   # codes des marchés attribués (données essentielles)
   mots: ["electricite", "courants forts", "courants faibles", "eclairage", "installation electrique", "cfo", "cfa"]
   exclure: ["fourniture d'electricite", "acheminement d'electricite", "energie electrique", "gaz naturel", "fourniture de gaz", "carburant"]
 plomberie-cvc:
   libelle: "Plomberie, chauffage, ventilation"
+  cpv: ["4533", "50720", "50730"]   # codes des marchés attribués (données essentielles)
   mots: ["plomberie", "chauffage", "ventilation", "climatisation", "cvc", "sanitaire", "chaufferie", "pompe a chaleur"]
   exclure: ["fourniture de gaz", "fioul domestique", "medecine", "sante au travail"]
 menuiserie:
   libelle: "Menuiserie et serrurerie"
+  cpv: ["45421", "45422", "44221"]   # codes des marchés attribués (données essentielles)
   mots: ["menuiserie", "menuiseries", "serrurerie", "metallerie", "fermetures", "portes", "fenetres", "volets"]
   exclure: []
 maconnerie-gros-oeuvre:
   libelle: "Maçonnerie et gros œuvre"
+  cpv: ["452625", "45223", "4521", "45111"]   # codes des marchés attribués (données essentielles)
   mots: ["maconnerie", "gros oeuvre", "gros-oeuvre", "beton", "demolition", "terrassement"]
   exclure: []
 couverture:
   libelle: "Couverture, charpente, étanchéité"
+  cpv: ["45261"]   # codes des marchés attribués (données essentielles)
   mots: ["couverture", "charpente", "etancheite", "zinguerie", "toiture"]
   exclure: ["couverture assurance", "couverture des risques", "couverture mobile", "couverture reseau"]
 restauration:
   libelle: "Restauration et traiteur"
+  cpv: ["5551", "5552", "5532"]   # codes des marchés attribués (données essentielles)
   mots: ["restauration collective", "repas", "traiteur", "cantine", "portage de repas", "plateaux repas"]
   exclure: []
 formation:
   libelle: "Formation professionnelle"
+  cpv: ["804", "805"]   # codes des marchés attribués (données essentielles)
   mots: ["formation", "formations", "accompagnement professionnel", "bilan de competences"]
   exclure: ["formation de la voirie", "sirh", "systeme d'information"]
 communication-web:
   libelle: "Communication, web et graphisme"
+  cpv: ["7934", "79416", "72413", "7982", "7995"]   # codes des marchés attribués (données essentielles)
   mots: ["site internet", "site web", "communication", "graphisme", "graphique", "impression de supports", "imprimerie", "supports de communication", "evenementiel", "reseaux sociaux"]
   exclure: ["communications electroniques", "telecommunications", "materiel d'imprimerie", "copieur", "photocopi", "imprimante", "videoprotection", "videosurveillance", "cablage", "vdi", "cinematographique"]
 informatique:
   libelle: "Informatique et numérique"
+  cpv: ["72", "48", "302"]   # codes des marchés attribués (données essentielles)
   mots: ["informatique", "logiciel", "maintenance informatique", "infogerance", "cybersecurite", "developpement d'application", "materiel informatique"]
   exclure: ["assurance", "climatiseur", "climatisation", "pylone"]
 securite:
   libelle: "Sécurité et gardiennage"
+  cpv: ["7971", "50413"]   # codes des marchés attribués (données essentielles)
   mots: ["gardiennage", "surveillance humaine", "securite incendie", "telesurveillance", "agents de securite", "ssiap"]
   exclure: ["eclairage de securite"]
 transport:
   libelle: "Transport et déménagement"
+  cpv: ["6010", "6011", "6013", "6014", "98392"]   # codes des marchés attribués (données essentielles)
   mots: ["transport scolaire", "transport de personnes", "demenagement", "transport de marchandises", "navette"]
   exclure: []

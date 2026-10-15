@@ -66,6 +66,48 @@ def _extract_text(donnees):
     return " ".join(dict.fromkeys(found))[:1500]
 
 
+def _siret_acheteur(donnees):
+    """SIRET de l'acheteur, lu dans le détail de l'avis (formulaires nationaux ou eForms)."""
+    try:
+        data = json.loads(donnees) if isinstance(donnees, str) else (donnees or {})
+    except ValueError:
+        return ""
+
+    def txt(v):
+        if isinstance(v, list):
+            v = v[0] if v else ""
+        if isinstance(v, dict):
+            v = v.get("#text") or v.get("$") or ""
+        return "".join(c for c in str(v or "") if c.isdigit())
+
+    fn = (data.get("FNSimple") or {}).get("organisme") or {}
+    if isinstance(fn, dict) and len(txt(fn.get("codeIdentificationNational"))) == 14:
+        return txt(fn.get("codeIdentificationNational"))
+    ef = data.get("EFORMS") if isinstance(data.get("EFORMS"), dict) else {}
+    root = next((v for v in ef.values() if isinstance(v, dict)), {})
+    party = root.get("cac:ContractingParty") or {}
+    party = party[0] if isinstance(party, list) and party else party
+    ref = ""
+    if isinstance(party, dict):
+        pid = ((party.get("cac:Party") or {}).get("cac:PartyIdentification") or {})
+        pid = pid[0] if isinstance(pid, list) and pid else pid
+        ref = (pid.get("cbc:ID") if isinstance(pid, dict) else "") or ""
+        ref = ref.get("#text", "") if isinstance(ref, dict) else str(ref)
+    try:
+        orgs = root["ext:UBLExtensions"]["ext:UBLExtension"]["ext:ExtensionContent"]["efext:EformsExtension"][
+            "efac:Organizations"]["efac:Organization"]
+    except (KeyError, TypeError):
+        return ""
+    for org in orgs if isinstance(orgs, list) else [orgs]:
+        comp = (org or {}).get("efac:Company") or {}
+        oid = (comp.get("cac:PartyIdentification") or {}).get("cbc:ID")
+        oid = oid.get("#text", "") if isinstance(oid, dict) else str(oid or "")
+        siret = txt((comp.get("cac:PartyLegalEntity") or {}).get("cbc:CompanyID"))
+        if len(siret) == 14 and (not ref or oid == ref):
+            return siret
+    return ""
+
+
 def normalize(rec):
     avis_id = str(_first(rec, FIELDS["id"]) or "")
     url = _first(rec, FIELDS["url"]) or (f"https://www.boamp.fr/pages/avis/?q=idweb:%22{avis_id}%22" if avis_id else "")
@@ -81,6 +123,7 @@ def normalize(rec):
         "nature": str(_first(rec, FIELDS["nature"]) or ""),
         "type_marche": " ".join(_as_list(_first(rec, FIELDS["type_marche"]))),
         "texte": _extract_text(rec.get("donnees")),
+        "acheteur_siret": _siret_acheteur(rec.get("donnees")),
     }
 
 

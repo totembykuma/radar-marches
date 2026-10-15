@@ -204,3 +204,60 @@ def test_intrus_ecartes():
     assert "communication-web" in M.metiers_of(av("Refonte du site internet de la ville"))
     assert "informatique" not in M.metiers_of(av("Contrat d'assurances", texte="flotte informatique"))
     assert "electricite" not in M.metiers_of(av("Aménagement d'un parking", texte="éclairage et électricité"))
+
+
+def test_siret_acheteur():
+    fn = {"FNSimple": {"organisme": {"codeIdentificationNational": "217 703 073 00015"}}}
+    assert boamp._siret_acheteur(json.dumps(fn)) == "21770307300015"
+    ef = {"EFORMS": {"ContractNotice": {
+        "cac:ContractingParty": {"cac:Party": {"cac:PartyIdentification": {"cbc:ID": "ORG-0002"}}},
+        "ext:UBLExtensions": {"ext:UBLExtension": {"ext:ExtensionContent": {"efext:EformsExtension": {
+            "efac:Organizations": {"efac:Organization": [
+                {"efac:Company": {"cac:PartyIdentification": {"cbc:ID": "ORG-0001"}, "cac:PartyLegalEntity": {"cbc:CompanyID": "11111111111111"}}},
+                {"efac:Company": {"cac:PartyIdentification": {"cbc:ID": "ORG-0002"}, "cac:PartyLegalEntity": {"cbc:CompanyID": "22222222222222"}}},
+            ]}}}}}}}}
+    assert boamp._siret_acheteur(json.dumps(ef)) == "22222222222222"
+    assert boamp._siret_acheteur("{}") == ""
+
+
+def test_fiche_avant_de_repondre(tmp_path, monkeypatch):
+    from radar import historique, render
+
+    class R:
+        def __init__(self, j):
+            self.j, self.ok, self.status_code = j, True, 200
+
+        def json(self):
+            return self.j
+
+        def raise_for_status(self):
+            pass
+
+    class S:
+        def __init__(self):
+            self.where = None
+
+        def get(self, url, params=None, timeout=None):
+            if "recherche-entreprises" in url:
+                return R({"results": [{"nom_raison_sociale": "PROPRE ET NET"}]})
+            self.where = params["where"]
+            rows = [{"id": "A", "objet": "Nettoyage des écoles", "montant": 55000.0, "offresrecues": "12",
+                     "titulaire_id_1": "84265429500018", "datenotification": "2026-03-28"},
+                    {"id": "A", "objet": "Nettoyage des écoles", "montant": 55000.0, "offresrecues": "12",
+                     "titulaire_id_1": "84265429500018", "datenotification": "2026-03-28"},
+                    {"id": "B", "objet": "Vitrerie", "montant": 15000.0, "offresrecues": "3",
+                     "titulaire_id_1": "12345678900011", "datenotification": "2025-06-01"}]
+            return R({"results": rows})
+
+    monkeypatch.setattr(historique, "NOMS", tmp_path / "noms.json")
+    s = S()
+    h = historique.Historique(metiers(), session=s)
+    f = h.fiche("21770307300015", "nettoyage")
+    assert 'startswith(codecpv, "9091")' in s.where and "21770307300015" in s.where
+    assert f["n"] == 2 and f["offres_median"] == 8 and f["derniers"][0]["gagnant"] == "PROPRE ET NET"
+    a = {**by_id(101001), "fiche": f, "fiche_complete": True, "metier_libelle": "nettoyage", "date_limite_fr": ""}
+    html = render.render("email_digest.html", biz=business(), avis=[a], date_fr="", criteres="")
+    assert "Avant de répondre" in html and "PROPRE ET NET" in html and "55 000 €" in html
+    html = render.render("email_digest.html", biz=business(), avis=[{**a, "fiche_complete": False}], date_fr="", criteres="")
+    assert "réservés à l'offre Pro" in html and "PROPRE ET NET" not in html
+    assert render.euros(1250000) == "1,25 M€"
