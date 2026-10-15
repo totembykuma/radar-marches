@@ -4,6 +4,7 @@ on:
   push:
     branches: [claude/project-thread-ttpnkd]
     paths: [templates/_film.html, scripts/film_video.py, static/film.mp3, .github/workflows/film.yml]
+permissions: { contents: write }
 jobs:
   film:
     runs-on: ubuntu-latest
@@ -16,5 +17,9 @@ jobs:
       - name: Site avec les données réelles du jour (aucun e-mail envoyé)
         run: python -m radar.cli essai | tail -5
       - run: python scripts/film_video.py out/site out/film-explicatif.mp4
-      - uses: actions/upload-artifact@v4
-        with: { name: film, path: out/film-explicatif.mp4, retention-days: 7 }
+      - name: Publier l'aperçu sur la branche apercu-film
+        run: |
+          cd out && git init -q apercu && cp film-explicatif.mp4 apercu/ && cd apercu
+          git config user.name "radar-bot" && git config user.email "radar-bot@users.noreply.github.com"
+          git checkout -q -b apercu-film && git add film-explicatif.mp4 && git commit -qm "Aperçu du film"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" apercu-film
