@@ -87,6 +87,8 @@ class Historique:
         return out
 
     def sauver(self):
+        if not self.noms:
+            return
         try:
             NOMS.parent.mkdir(parents=True, exist_ok=True)
             NOMS.write_text(json.dumps(dict(sorted(self.noms.items())[-20000:]), ensure_ascii=False, indent=0), encoding="utf-8")
