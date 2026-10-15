@@ -1,0 +1,7 @@
+# Abonnés hors Stripe (tests, comptes offerts). Exemple :
+# - email: "toi@exemple.fr"
+#   plan: "pro"
+#   metiers: ["nettoyage"]
+#   departements: [33, 47]
+#   mots_cles: []
+[]

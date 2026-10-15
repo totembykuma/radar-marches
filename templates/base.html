@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="fr"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{ title }}</title>
+<meta name="description" content="{{ description }}">
+<link rel="canonical" href="{{ biz.site_url }}{{ path }}">
+<link rel="stylesheet" href="{{ root }}static/style.css">
+</head><body>
+<header class="top"><div class="wrap">
+  <a class="logo" href="{{ root }}">◉ {{ biz.nom }}</a>
+  <nav><a href="{{ root }}appels-offres/">Appels d'offres</a><a href="{{ root }}#tarifs" class="btn small">Essai gratuit</a></nav>
+</div></header>
+<main>{% block main %}{% endblock %}</main>
+<footer><div class="wrap">
+  <p>{{ biz.nom }} · Données issues du BOAMP (open data DILA, Licence Ouverte). Service indépendant, non affilié à l'administration.</p>
+  <p><a href="{{ root }}mentions-legales.html">Mentions légales</a> · <a href="{{ root }}cgv.html">CGV</a> · <a href="{{ root }}confidentialite.html">Confidentialité</a> · <a href="mailto:{{ biz.email_contact }}">{{ biz.email_contact }}</a></p>
+</div></footer>
+</body></html>

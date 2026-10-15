@@ -1,0 +1,195 @@
+[
+ {
+  "idweb": "26-101001",
+  "objet": "Nettoyage des locaux de la mairie et des écoles",
+  "nomacheteur": "Commune de Libourne",
+  "code_departement": [
+   "33"
+  ],
+  "descripteur_libelle": [
+   "Nettoyage de locaux"
+  ],
+  "dateparution": "2026-10-14",
+  "datelimitereponse": "2026-11-06T12:00:00+01:00",
+  "url_avis": "https://www.boamp.fr/pages/avis/?q=idweb:%2226-101001%22",
+  "nature_libelle": "Avis de marché",
+  "type_marche": [
+   "SERVICES"
+  ],
+  "donnees": "{\"OBJET\": {\"DESCRIPTION\": \"Nettoyage des locaux de la mairie et des \\u00e9coles pour une dur\\u00e9e de 12 mois reconductible.\"}}"
+ },
+ {
+  "idweb": "26-101002",
+  "objet": "Prestations de nettoyage de voirie et balayage mécanisé",
+  "nomacheteur": "Bordeaux Métropole",
+  "code_departement": [
+   "33"
+  ],
+  "descripteur_libelle": [
+   "Nettoyage"
+  ],
+  "dateparution": "2026-10-14",
+  "datelimitereponse": "2026-11-10T12:00:00+01:00",
+  "url_avis": "https://www.boamp.fr/pages/avis/?q=idweb:%2226-101002%22",
+  "nature_libelle": "Avis de marché",
+  "type_marche": [
+   "SERVICES"
+  ],
+  "donnees": "{\"OBJET\": {\"DESCRIPTION\": \"Prestations de nettoyage de voirie et balayage m\\u00e9canis\\u00e9 pour une dur\\u00e9e de 12 mois reconductible.\"}}"
+ },
+ {
+  "idweb": "26-101003",
+  "objet": "Entretien des espaces verts du collège Jean Moulin",
+  "nomacheteur": "Département de Lot-et-Garonne",
+  "code_departement": [
+   "47"
+  ],
+  "descripteur_libelle": [
+   "Espaces verts"
+  ],
+  "dateparution": "2026-10-14",
+  "datelimitereponse": "2026-11-03",
+  "url_avis": "https://www.boamp.fr/pages/avis/?q=idweb:%2226-101003%22",
+  "nature_libelle": "Avis de marché",
+  "type_marche": [
+   "SERVICES"
+  ],
+  "donnees": "{\"OBJET\": {\"DESCRIPTION\": \"Entretien des espaces verts du coll\\u00e8ge Jean Moulin pour une dur\\u00e9e de 12 mois reconductible.\"}}"
+ },
+ {
+  "idweb": "26-101004",
+  "objet": "Travaux de peinture routière et signalisation horizontale",
+  "nomacheteur": "Communauté de communes du Val de Garonne",
+  "code_departement": [
+   "47"
+  ],
+  "descripteur_libelle": [
+   "Signalisation routière"
+  ],
+  "dateparution": "2026-10-14",
+  "datelimitereponse": "2026-10-30",
+  "url_avis": "https://www.boamp.fr/pages/avis/?q=idweb:%2226-101004%22",
+  "nature_libelle": "Avis de marché",
+  "type_marche": [
+   "SERVICES"
+  ],
+  "donnees": "{\"OBJET\": {\"DESCRIPTION\": \"Travaux de peinture routi\\u00e8re et signalisation horizontale pour une dur\\u00e9e de 12 mois reconductible.\"}}"
+ },
+ {
+  "idweb": "26-101005",
+  "objet": "Remplacement d'une aire de jeux et travaux paysagers",
+  "nomacheteur": "Ville de Lyon",
+  "code_departement": [
+   "69"
+  ],
+  "descripteur_libelle": [
+   "Mobilier urbain"
+  ],
+  "dateparution": "2026-10-14",
+  "datelimitereponse": "2026-11-14T16:00:00+01:00",
+  "url_avis": "https://www.boamp.fr/pages/avis/?q=idweb:%2226-101005%22",
+  "nature_libelle": "Avis de marché",
+  "type_marche": [
+   "SERVICES"
+  ],
+  "donnees": "{\"OBJET\": {\"DESCRIPTION\": \"Remplacement d'une aire de jeux et travaux paysagers pour une dur\\u00e9e de 12 mois reconductible.\"}}"
+ },
+ {
+  "idweb": "26-101006",
+  "objet": "Nettoyage et vitrerie des bâtiments communaux",
+  "nomacheteur": "Commune d'Agen",
+  "code_departement": [
+   "47"
+  ],
+  "descripteur_libelle": [
+   "Nettoyage de locaux",
+   "Vitrerie"
+  ],
+  "dateparution": "2026-10-14",
+  "datelimitereponse": "2026-10-28",
+  "url_avis": "https://www.boamp.fr/pages/avis/?q=idweb:%2226-101006%22",
+  "nature_libelle": "Résultat de marché",
+  "type_marche": [
+   "SERVICES"
+  ],
+  "donnees": "{\"OBJET\": {\"DESCRIPTION\": \"Nettoyage et vitrerie des b\\u00e2timents communaux pour une dur\\u00e9e de 12 mois reconductible.\"}}"
+ },
+ {
+  "idweb": "26-101007",
+  "objet": "Fourniture d'électricité pour les bâtiments publics",
+  "nomacheteur": "SDE 24",
+  "code_departement": [
+   "24"
+  ],
+  "descripteur_libelle": [
+   "Énergie"
+  ],
+  "dateparution": "2026-10-14",
+  "datelimitereponse": "2026-11-20",
+  "url_avis": "https://www.boamp.fr/pages/avis/?q=idweb:%2226-101007%22",
+  "nature_libelle": "Avis de marché",
+  "type_marche": [
+   "SERVICES"
+  ],
+  "donnees": "{\"OBJET\": {\"DESCRIPTION\": \"Fourniture d'\\u00e9lectricit\\u00e9 pour les b\\u00e2timents publics pour une dur\\u00e9e de 12 mois reconductible.\"}}"
+ },
+ {
+  "idweb": "26-101008",
+  "objet": "Travaux de rénovation : lot 3 peinture, lot 4 revêtements de sols souples",
+  "nomacheteur": "Office public de l'habitat de la Gironde",
+  "code_departement": [
+   "33"
+  ],
+  "descripteur_libelle": [
+   "Peinture",
+   "Revêtements de sols"
+  ],
+  "dateparution": "2026-10-14",
+  "datelimitereponse": "2026-11-12T12:00:00+01:00",
+  "url_avis": "https://www.boamp.fr/pages/avis/?q=idweb:%2226-101008%22",
+  "nature_libelle": "Avis de marché",
+  "type_marche": [
+   "SERVICES"
+  ],
+  "donnees": "{\"OBJET\": {\"DESCRIPTION\": \"Travaux de r\\u00e9novation : lot 3 peinture, lot 4 rev\\u00eatements de sols souples pour une dur\\u00e9e de 12 mois reconductible.\"}}"
+ },
+ {
+  "idweb": "26-101009",
+  "objet": "Prestations de ménage et désinfection du centre hospitalier",
+  "nomacheteur": "CH de Villeneuve-sur-Lot",
+  "code_departement": [
+   "47"
+  ],
+  "descripteur_libelle": [
+   "Nettoyage de locaux"
+  ],
+  "dateparution": "2026-10-14",
+  "datelimitereponse": "2026-11-05",
+  "url_avis": "https://www.boamp.fr/pages/avis/?q=idweb:%2226-101009%22",
+  "nature_libelle": "Avis de marché",
+  "type_marche": [
+   "SERVICES"
+  ],
+  "donnees": "{\"OBJET\": {\"DESCRIPTION\": \"Prestations de m\\u00e9nage et d\\u00e9sinfection du centre hospitalier pour une dur\\u00e9e de 12 mois reconductible.\"}}"
+ },
+ {
+  "idweb": "26-101010",
+  "objet": "Maintenance des installations de chauffage, ventilation et climatisation",
+  "nomacheteur": "Lycée Montesquieu",
+  "code_departement": [
+   "33"
+  ],
+  "descripteur_libelle": [
+   "Chauffage",
+   "Ventilation"
+  ],
+  "dateparution": "2026-10-14",
+  "datelimitereponse": "2026-11-18",
+  "url_avis": "https://www.boamp.fr/pages/avis/?q=idweb:%2226-101010%22",
+  "nature_libelle": "Avis de marché",
+  "type_marche": [
+   "SERVICES"
+  ],
+  "donnees": "{\"OBJET\": {\"DESCRIPTION\": \"Maintenance des installations de chauffage, ventilation et climatisation pour une dur\\u00e9e de 12 mois reconductible.\"}}"
+ }
+]

@@ -1,0 +1,19 @@
+:root{--ink:#1d2433;--muted:#5a6478;--brand:#123c69;--accent:#e8a33d;--bg:#ffffff;--soft:#f4f5f7;--line:#e3e6ec}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg);line-height:1.55}
+.wrap{max-width:1040px;margin:0 auto;padding:0 16px}a{color:var(--brand)}
+.top{border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:2}.top .wrap{display:flex;justify-content:space-between;align-items:center;height:60px}
+.logo{font-weight:800;text-decoration:none;font-size:18px}nav a{margin-left:16px;text-decoration:none}
+.hero{background:linear-gradient(160deg,#123c69,#1e5a96);color:#fff;padding:56px 0 48px}.hero h1{font-size:clamp(26px,4vw,40px);line-height:1.2;margin:0 0 16px;max-width:820px}
+.hero .lead{font-size:18px;max-width:760px;opacity:.95}.hero .muted{color:#d6e2f0}.stat{margin-top:20px;font-size:14px;opacity:.9}
+.btn{display:inline-block;background:var(--accent);color:#1d2433;font-weight:700;padding:12px 20px;border-radius:8px;text-decoration:none}.btn.small{padding:6px 12px}.btn.disabled{background:#d8dce3}
+section{padding:28px 0}h2{font-size:24px}.muted{color:var(--muted);font-size:14px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.card{display:block;border:1px solid var(--line);border-radius:10px;padding:18px;background:#fff;text-decoration:none;color:inherit}.card h3{margin-top:0}
+.price .amount{font-size:36px;font-weight:800;margin:4px 0}.price .amount span{font-size:16px;color:var(--muted)}.featured{border:2px solid var(--brand)}
+.checks{padding-left:0;list-style:none}.checks li{padding-left:24px;position:relative;margin:6px 0}.checks li:before{content:"✓";position:absolute;left:0;color:#1f8a4c;font-weight:700}
+.tags a{display:inline-block;margin:4px 6px 4px 0;padding:5px 10px;background:var(--soft);border-radius:999px;text-decoration:none;font-size:14px}
+.avis{border-bottom:1px solid var(--line);padding:14px 0}.avis h2{font-size:17px;margin:4px 0}.avis h2 a{text-decoration:none}.meta{font-size:13px;color:var(--muted)}
+.cta{margin:28px 0;padding:18px;background:var(--soft);border-radius:10px}.crumbs{font-size:14px}
+.faq details{border-bottom:1px solid var(--line);padding:10px 0}.faq summary{cursor:pointer;font-weight:600}
+footer{border-top:1px solid var(--line);margin-top:32px;padding:20px 0;font-size:13px;color:var(--muted)}.legal{max-width:760px}
+section.wrap{padding:28px 16px}

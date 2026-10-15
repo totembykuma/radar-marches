@@ -1,0 +1,27 @@
+<!doctype html><html lang="fr"><body style="margin:0;background:#f4f5f7;font-family:Arial,Helvetica,sans-serif;color:#1d2433">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 12px">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:10px;overflow:hidden">
+<tr><td style="background:#123c69;color:#fff;padding:20px 24px">
+  <div style="font-size:20px;font-weight:bold">{{ biz.nom }}</div>
+  <div style="font-size:14px;opacity:.85">{{ avis|length }} appel{{ 's' if avis|length > 1 }} d'offres pour vous · {{ date_fr }}</div>
+</td></tr>
+<tr><td style="padding:8px 24px 0 24px;font-size:13px;color:#5a6478">
+  Vos critères : {{ criteres }}
+</td></tr>
+{% for a in avis %}
+<tr><td style="padding:16px 24px;border-bottom:1px solid #eceef2">
+  <div style="font-size:12px;color:#5a6478">{{ a.acheteur }}{% if a.departements %} · Dép. {{ a.departements|join(', ') }}{% endif %}</div>
+  <div style="font-size:16px;font-weight:bold;margin:4px 0"><a href="{{ a.url }}" style="color:#123c69;text-decoration:none">{{ a.objet }}</a></div>
+  {% if a.resume %}<div style="font-size:14px;line-height:1.45">{{ a.resume }}</div>{% endif %}
+  <div style="font-size:12px;color:#5a6478;margin-top:6px">
+    {% if a.date_limite %}Réponse avant le <b>{{ a.date_limite_fr }}</b>{% endif %}
+    {% if a.score %} · Accessibilité TPE : {{ '★' * a.score }}{{ '☆' * (5 - a.score) }}{% endif %}
+  </div>
+</td></tr>
+{% endfor %}
+<tr><td style="padding:18px 24px;font-size:12px;color:#5a6478;line-height:1.5">
+  Pour modifier vos critères, répondez simplement à cet e-mail.<br>
+  Résumés générés automatiquement par IA à partir des avis officiels du BOAMP : vérifiez toujours l'avis complet avant de répondre.<br>
+  {{ biz.nom }} · {{ biz.site_url }} · Pour vous désabonner, répondez « STOP » ou résiliez depuis votre espace client Stripe.
+</td></tr>
+</table></td></tr></table></body></html>

@@ -1,0 +1,51 @@
+# Paramètres du business. Modifiable sans toucher au code.
+nom: "Radar Marchés"
+slogan: "Les appels d'offres publics de votre métier, triés par l'IA, chaque matin."
+site_url: "https://totembykuma.github.io/radar-marches"   # gratuit ; remplacer par le domaine une fois acheté
+email_contact: "contact@radar-marches.fr"     # adresse de support (Resend / boîte mail)
+email_expediteur: "Radar Marchés <alertes@radar-marches.fr>"
+email_proprietaire: ""                        # ton e-mail perso pour les rapports (secret OWNER_EMAIL prioritaire)
+
+offres:
+  essentiel:
+    nom: "Essentiel"
+    prix_mensuel: 29
+    metiers_max: 1
+    departements_max: 3
+    lien_paiement: ""   # Stripe Payment Link (rempli après création)
+    stripe_price_ids: []
+  pro:
+    nom: "Pro"
+    prix_mensuel: 49
+    metiers_max: 1
+    departements_max: 101
+    lien_paiement: ""
+    stripe_price_ids: []
+essai_gratuit_jours: 14
+
+# Fiscalité micro-entreprise (taux 2026, BNC non réglementé, à vérifier sur urssaf.fr)
+fiscalite:
+  regime: "micro-entreprise BNC"
+  taux_cotisations: 0.232       # 0.116 la 1re année avec l'ACRE
+  taux_cfp: 0.002
+  taux_versement_liberatoire: 0.022   # 0 si non choisi (impôt calculé ensuite au barème)
+  tva: "TVA non applicable, art. 293 B du CGI"
+
+# Coûts fixes mensuels estimés (€) — les dépenses réelles vont dans finance/depenses.csv
+couts_fixes_mensuels:
+  nom_de_domaine: 1.0
+  api_claude: 5.0
+  envoi_emails: 0.0
+  hebergement: 0.0
+
+ia:
+  modele: "claude-haiku-5-5"
+  max_avis_par_appel: 25
+
+# Mentions légales (obligatoires avant la mise en vente)
+editeur:
+  nom: "[Prénom Nom]"
+  statut: "Entrepreneur individuel (micro-entreprise)"
+  siret: "[SIRET]"
+  adresse: "[Adresse postale]"
+  hebergeur: "GitHub Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, USA"

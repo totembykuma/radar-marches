@@ -1,0 +1,58 @@
+# Chaque métier = mots-clés recherchés dans l'objet et les descripteurs BOAMP.
+# Les mots sont comparés sans accents ni majuscules. "exclure" retire les faux positifs.
+nettoyage:
+  libelle: "Nettoyage et propreté"
+  mots: ["nettoyage", "proprete", "entretien des locaux", "vitrerie", "lavage des vitres", "menage", "desinfection"]
+  exclure: ["nettoyage de voirie", "balayage mecanise", "assainissement"]
+espaces-verts:
+  libelle: "Espaces verts et paysage"
+  mots: ["espaces verts", "elagage", "paysag", "tonte", "fauchage", "debroussaillage", "plantation", "arboric"]
+  exclure: []
+peinture:
+  libelle: "Peinture et revêtements"
+  mots: ["peinture", "revetements de sols", "revetement de sol", "ravalement", "papier peint", "sols souples"]
+  exclure: ["peinture routiere", "signalisation horizontale"]
+electricite:
+  libelle: "Électricité"
+  mots: ["electricite", "courants forts", "courants faibles", "eclairage", "installation electrique", "cfo", "cfa"]
+  exclure: ["fourniture d'electricite", "acheminement d'electricite", "energie electrique"]
+plomberie-cvc:
+  libelle: "Plomberie, chauffage, ventilation"
+  mots: ["plomberie", "chauffage", "ventilation", "climatisation", "cvc", "sanitaire", "chaufferie", "pompe a chaleur"]
+  exclure: ["fourniture de gaz", "fioul domestique"]
+menuiserie:
+  libelle: "Menuiserie et serrurerie"
+  mots: ["menuiserie", "menuiseries", "serrurerie", "metallerie", "fermetures", "portes", "fenetres", "volets"]
+  exclure: []
+maconnerie-gros-oeuvre:
+  libelle: "Maçonnerie et gros œuvre"
+  mots: ["maconnerie", "gros oeuvre", "gros-oeuvre", "beton", "demolition", "terrassement"]
+  exclure: []
+couverture:
+  libelle: "Couverture, charpente, étanchéité"
+  mots: ["couverture", "charpente", "etancheite", "zinguerie", "toiture"]
+  exclure: ["couverture assurance", "couverture des risques", "couverture mobile", "couverture reseau"]
+restauration:
+  libelle: "Restauration et traiteur"
+  mots: ["restauration collective", "repas", "traiteur", "cantine", "denrees alimentaires", "portage de repas", "plateaux repas"]
+  exclure: []
+formation:
+  libelle: "Formation professionnelle"
+  mots: ["formation", "formations", "accompagnement professionnel", "bilan de competences"]
+  exclure: ["formation de la voirie"]
+communication-web:
+  libelle: "Communication, web et graphisme"
+  mots: ["site internet", "site web", "communication", "graphisme", "graphique", "impression", "audiovisuel", "evenementiel", "reseaux sociaux"]
+  exclure: ["communications electroniques", "telecommunications"]
+informatique:
+  libelle: "Informatique et numérique"
+  mots: ["informatique", "logiciel", "maintenance informatique", "infogerance", "cybersecurite", "developpement d'application", "materiel informatique"]
+  exclure: []
+securite:
+  libelle: "Sécurité et gardiennage"
+  mots: ["gardiennage", "surveillance humaine", "securite incendie", "telesurveillance", "agents de securite", "ssiap"]
+  exclure: []
+transport:
+  libelle: "Transport et déménagement"
+  mots: ["transport scolaire", "transport de personnes", "demenagement", "transport de marchandises", "navette"]
+  exclure: []

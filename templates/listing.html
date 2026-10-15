@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% block main %}
+<section class="wrap">
+  <p class="crumbs"><a href="{{ root }}appels-offres/">Appels d'offres</a>{% if dep %} › <a href="{{ root }}appels-offres/{{ metier_key }}/">{{ metier.libelle }}</a>{% endif %}</p>
+  <h1>{{ h1 }}</h1>
+  <p class="lead">{{ avis|length }} appel{{ 's' if avis|length > 1 }} d'offres en cours, mis à jour le {{ date_fr }}. Recevez les nouveaux chaque matin par e-mail : <a href="{{ root }}#tarifs">essai gratuit {{ biz.essai_gratuit_jours }} jours</a>.</p>
+  {% if deps %}<p class="tags">{% for d in deps %}<a href="{{ root }}appels-offres/{{ metier_key }}/{{ d }}.html">{{ d }} ({{ dep_counts[d] }})</a>{% endfor %}</p>{% endif %}
+  {% for a in avis %}
+  <article class="avis">
+    <div class="meta">{{ a.acheteur }}{% if a.departements %} · Dép. {{ a.departements|join(', ') }}{% endif %} · publié le {{ a.date_parution }}</div>
+    <h2><a href="{{ a.url }}" rel="nofollow noopener" target="_blank">{{ a.objet }}</a></h2>
+    {% if a.date_limite %}<div class="meta">Date limite : <b>{{ a.date_limite_fr }}</b></div>{% endif %}
+  </article>
+  {% else %}<p>Aucun appel d'offres ouvert pour l'instant. Les nouveaux sont ajoutés chaque jour.</p>{% endfor %}
+  <div class="cta"><b>Ne ratez plus les prochains.</b> {{ biz.nom }} vous les envoie le matin même, résumés par l'IA. <a class="btn" href="{{ root }}#tarifs">Essai gratuit</a></div>
+</section>
+{% endblock %}

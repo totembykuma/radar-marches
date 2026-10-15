@@ -1,0 +1,237 @@
+"""Point d'entrée. Exemples :
+    python -m radar.cli daily      # envoi des alertes + site (tous les matins)
+    python -m radar.cli weekly     # rapport hebdo au propriétaire (lundi)
+    python -m radar.cli check-api  # diagnostic des champs BOAMP
+    python -m radar.cli demo       # test complet hors ligne avec des données d'exemple
+"""
+import argparse
+import hashlib
+import json
+import logging
+import os
+import sys
+import traceback
+from datetime import date, datetime, timedelta, timezone
+from pathlib import Path
+
+from . import ai, boamp, finance, mailer, site, subscribers
+from .config import ROOT, business, metiers as load_metiers
+from .matching import Matcher
+from .render import date_fr, date_limite_fr, render
+
+log = logging.getLogger("radar")
+DATA = ROOT / "data"
+OUT = Path(os.getenv("RADAR_OUT", ROOT / "out"))
+
+
+def _load_json(path, default):
+    try:
+        return json.loads(Path(path).read_text(encoding="utf-8"))
+    except (FileNotFoundError, ValueError):
+        return default
+
+
+def _save_json(path, obj):
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    Path(path).write_text(json.dumps(obj, ensure_ascii=False, indent=1), encoding="utf-8")
+
+
+def alert_owner(biz, subject, body_html):
+    if biz["email_proprietaire"]:
+        mailer.send(biz["email_proprietaire"], f"[{biz['nom']}] {subject}", body_html, biz["email_expediteur"])
+    else:
+        log.warning("Alerte non envoyée (pas d'e-mail propriétaire) : %s", subject)
+
+
+def criteres_txt(sub, metiers):
+    m = ", ".join(metiers[k]["libelle"] for k in sub["metiers"] if k in metiers) or "—"
+    d = ", ".join(sub["departements"]) if sub["departements"] else "toute la France"
+    extra = f" · mots-clés : {', '.join(sub['mots_cles'])}" if sub.get("mots_cles") else ""
+    return f"{m} · {d}{extra}"
+
+
+def run_daily(avis_new=None, avis_open=None, subs=None):
+    biz, metiers = business(), load_metiers()
+    matcher = Matcher(metiers)
+    state = _load_json(DATA / "state.json", {"sent": {}})
+    run = {"date": datetime.now(timezone.utc).isoformat(timespec="minutes"), "erreurs": []}
+
+    # 1. Nouveaux avis
+    if avis_new is None:
+        since = date.today() - timedelta(days=4)  # couvre le week-end ; les doublons sont filtrés
+        avis_new = boamp.fetch_since(since)
+    for a in avis_new:
+        a["metiers"] = matcher.metiers_of(a)
+    run["avis_recuperes"] = len(avis_new)
+    run["avis_metiers"] = sum(1 for a in avis_new if a["metiers"])
+
+    # 2. Abonnés
+    if subs is None:
+        subs = subscribers.load_all(biz, metiers)
+    run["abonnes"] = len(subs)
+
+    # 2b. Message de bienvenue aux nouveaux abonnés
+    known = set(state.setdefault("known", []))
+    for s in subs:
+        key = hashlib.sha256(s["email"].lower().encode()).hexdigest()[:16]
+        if key in known:
+            continue
+        html = render("email_bienvenue.html", biz=biz, criteres=criteres_txt(s, metiers), sub=s)
+        try:
+            mailer.send(s["email"], f"Bienvenue sur {biz['nom']} : votre veille est active", html,
+                        biz["email_expediteur"], reply_to=biz["email_contact"])
+            state["known"].append(key)
+            run["bienvenues"] = run.get("bienvenues", 0) + 1
+        except Exception as exc:
+            run["erreurs"].append(f"bienvenue non envoyée : {exc}")
+
+    # 3. Sélection par abonné (sans renvoyer ce qui a déjà été envoyé)
+    plans, to_enrich = {}, {}
+    for s in subs:
+        if not s["metiers"] and not s.get("mots_cles"):
+            run["erreurs"].append(f"abonné sans métier reconnu ({s['plan']})")
+            continue
+        key = hashlib.sha256(s["email"].lower().encode()).hexdigest()[:16]
+        already = set(state["sent"].get(key, []))
+        sel = [a for a in matcher.for_subscriber(avis_new, s) if a["id"] not in already]
+        if sel:
+            plans[key] = (s, sel)
+            for a in sel:
+                to_enrich[a["id"]] = a
+
+    # 4. Résumés IA (une seule fois par avis, même s'il intéresse plusieurs abonnés)
+    ai.enrich(list(to_enrich.values()), model=biz["ia"]["modele"], batch=biz["ia"]["max_avis_par_appel"])
+
+    # 5. Envoi
+    sent = 0
+    for key, (s, sel) in plans.items():
+        sel.sort(key=lambda a: (-(a.get("score") or 0), a["date_limite"] or "9999"))
+        for a in sel:
+            a["date_limite_fr"] = date_limite_fr(a["date_limite"])
+        html = render("email_digest.html", biz=biz, avis=sel, date_fr=date_fr(), criteres=criteres_txt(s, metiers))
+        subject = f"{len(sel)} appel{'s' if len(sel) > 1 else ''} d'offres : {sel[0]['objet'][:60]}"
+        try:
+            mailer.send(s["email"], subject, html, biz["email_expediteur"], reply_to=biz["email_contact"])
+            state["sent"][key] = (state["sent"].get(key, []) + [a["id"] for a in sel])[-500:]
+            sent += 1
+        except Exception as exc:
+            run["erreurs"].append(f"envoi échoué : {exc}")
+    run["emails_envoyes"] = sent
+    run["abonnes_sans_nouveaute"] = len(subs) - len(plans)
+
+    # 6. Site
+    try:
+        if avis_open is None:
+            avis_open = boamp.fetch_open(days=30)
+        res = site.build(avis_open, biz, metiers, matcher, OUT / "site",
+                         stats={"total": len(avis_new), "metiers_hits": run["avis_metiers"]})
+        run["pages_site"] = res["pages"]
+    except Exception as exc:
+        run["erreurs"].append(f"site non généré : {exc}")
+
+    # 7. Contrôles
+    weekday = date.today().weekday() < 5
+    if weekday and run["avis_recuperes"] == 0:
+        run["erreurs"].append("aucun avis BOAMP récupéré un jour ouvré (API en panne ou format changé ?)")
+    _save_json(DATA / "state.json", state)
+    _save_json(DATA / "runs" / f"{date.today().isoformat()}.json", run)
+    if run["erreurs"]:
+        alert_owner(biz, "Problème détecté lors de l'envoi quotidien",
+                    "<p>L'agent a détecté :</p><ul>" + "".join(f"<li>{e}</li>" for e in run["erreurs"]) +
+                    "</ul><p>Aucune action n'est requise si cela ne se reproduit pas demain.</p>")
+    log.info("Run quotidien : %s", json.dumps(run, ensure_ascii=False))
+    return run
+
+
+def run_weekly():
+    biz, metiers = business(), load_metiers()
+    today = date.today()
+    month_start = today.replace(day=1)
+    rev = finance.stripe_revenue(month_start, today + timedelta(days=1))
+    dep, _ = finance.depenses(month_start, today + timedelta(days=1))
+    bilan = finance.bilan(rev["ca_brut"], rev["remboursements"], rev["frais_stripe"], dep, biz["fiscalite"])
+    subs_raw = finance.list_subscriptions()
+    actifs = [s for s in subs_raw if s["status"] == "active"]
+    essais = [s for s in subs_raw if s["status"] == "trialing"]
+    impayes = [s for s in subs_raw if s["status"] in ("past_due", "unpaid")]
+    week_ago = int((datetime.now(timezone.utc) - timedelta(days=7)).timestamp())
+    nouveaux = [s for s in subs_raw if s.get("created", 0) >= week_ago]
+    resilies = [s for s in subs_raw if (s.get("canceled_at") or 0) >= week_ago]
+    runs = [_load_json(DATA / "runs" / f"{(today - timedelta(days=i)).isoformat()}.json", None) for i in range(7)]
+    runs = [r for r in runs if r]
+    kpi = {
+        "mrr": finance.mrr(subs_raw), "abonnes_payants": len(actifs), "en_essai": len(essais), "impayes": len(impayes),
+        "nouveaux_7j": len(nouveaux), "resilies_7j": len(resilies),
+        "runs_7j": len(runs), "runs_avec_erreur": sum(1 for r in runs if r.get("erreurs")),
+        "emails_7j": sum(r.get("emails_envoyes", 0) for r in runs),
+        "avis_moyens_jour": round(sum(r.get("avis_recuperes", 0) for r in runs) / max(1, len(runs))),
+        "objectif_mensuel_ca": [800, 1300],
+    }
+    decisions = []
+    if impayes:
+        decisions.append(f"{len(impayes)} abonnement(s) impayé(s) : Stripe relance automatiquement, rien à faire sauf si cela dure.")
+    if kpi["runs_7j"] < 5:
+        decisions.append("Moins de 5 envois quotidiens cette semaine : vérifier l'onglet Actions de GitHub.")
+    if kpi["resilies_7j"] > kpi["nouveaux_7j"] and kpi["resilies_7j"]:
+        decisions.append("Plus de résiliations que de nouveaux clients : lire les réponses clients pour comprendre pourquoi.")
+    analyse = ai.ask(
+        "Tu es le directeur des opérations d'un petit service d'alertes d'appels d'offres par abonnement "
+        f"({biz['offres']['essentiel']['prix_mensuel']}€ et {biz['offres']['pro']['prix_mensuel']}€/mois). "
+        "Voici les indicateurs de la semaine (JSON). En 5 puces maximum, en français simple : "
+        "ce qui va bien, ce qui inquiète, et UNE action concrète prioritaire qui ne demande pas plus de 15 minutes au propriétaire. "
+        "Ne promets aucun revenu.\n" + json.dumps({"kpi": kpi, "finance_mois": bilan}, ensure_ascii=False),
+        model=biz["ia"]["modele"])
+    rows = "".join(f"<tr><td>{k}</td><td style='text-align:right'><b>{v}</b></td></tr>" for k, v in {**kpi, **bilan}.items())
+    html = (f"<h2>{biz['nom']} · rapport du {date_fr(today)}</h2>"
+            f"<p>Mois en cours : CA {bilan['chiffre_affaires']} € · bénéfice {bilan['benefice_apres_depenses']} € · "
+            f"net estimé après cotisations et impôt {bilan['revenu_net']} €.</p>"
+            + ("<h3>Décisions / points d'attention</h3><ul>" + "".join(f"<li>{d}</li>" for d in decisions) + "</ul>" if decisions else "<p>Aucune décision requise cette semaine.</p>")
+            + (f"<h3>Analyse de l'agent</h3><div style='white-space:pre-wrap'>{analyse}</div>" if analyse else "")
+            + f"<h3>Détail</h3><table cellpadding='4'>{rows}</table>")
+    _save_json(DATA / "rapports" / f"{today.isoformat()}.json", {"kpi": kpi, "finance": bilan, "decisions": decisions})
+    alert_owner(biz, f"Rapport hebdo · MRR {kpi['mrr']} €", html)
+    return {"kpi": kpi, "finance": bilan, "decisions": decisions, "analyse": analyse}
+
+
+def run_demo():
+    """Test bout-en-bout sans réseau : avis d'exemple + 2 abonnés fictifs, e-mails écrits dans out/outbox."""
+    os.environ["RADAR_DRY_RUN"] = "1"
+    sample = _load_json(ROOT / "tests" / "fixtures" / "boamp_sample.json", [])
+    avis = [boamp.normalize(r) for r in sample]
+    subs = [
+        {"email": "demo-nettoyage@example.com", "plan": "essentiel", "metiers": ["nettoyage"], "departements": ["33", "47"], "mots_cles": []},
+        {"email": "demo-pro@example.com", "plan": "pro", "metiers": ["espaces-verts"], "departements": [], "mots_cles": ["aire de jeux"]},
+    ]
+    global DATA
+    DATA = OUT / "demo-data"
+    return run_daily(avis_new=avis, avis_open=[dict(a) for a in avis], subs=subs)
+
+
+def main(argv=None):
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
+    p = argparse.ArgumentParser(prog="radar")
+    p.add_argument("cmd", choices=["daily", "weekly", "check-api", "demo"])
+    args = p.parse_args(argv)
+    try:
+        if args.cmd == "daily":
+            run_daily()
+        elif args.cmd == "weekly":
+            print(json.dumps(run_weekly(), ensure_ascii=False, indent=1))
+        elif args.cmd == "check-api":
+            fields = boamp.schema_sample()
+            print("Champs BOAMP :", fields)
+            missing = [k for k, cands in boamp.FIELDS.items() if not set(cands) & set(fields)]
+            print("Champs logiques non trouvés :", missing or "aucun")
+            sys.exit(1 if {"id", "objet", "date_parution"} & set(missing) else 0)
+        elif args.cmd == "demo":
+            print(json.dumps(run_demo(), ensure_ascii=False, indent=1))
+    except Exception:
+        traceback.print_exc()
+        try:
+            alert_owner(business(), f"Échec de la tâche '{args.cmd}'", f"<pre>{traceback.format_exc()[-3000:]}</pre>")
+        finally:
+            sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

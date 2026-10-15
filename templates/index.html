@@ -1,0 +1,58 @@
+{% extends "base.html" %}{% block main %}
+<section class="hero"><div class="wrap">
+  <h1>Les appels d'offres publics de votre métier, triés par l'IA, chaque matin dans votre boîte mail.</h1>
+  <p class="lead">Mairies, hôpitaux, collèges, bailleurs sociaux publient chaque jour des centaines de marchés. {{ biz.nom }} lit tout le BOAMP pour vous et ne vous envoie que ceux qui correspondent à votre métier et à votre secteur, avec un résumé clair et une note d'accessibilité pour les petites entreprises.</p>
+  <p><a class="btn" href="#tarifs">Essayer {{ biz.essai_gratuit_jours }} jours gratuitement</a> <span class="muted">Sans engagement · résiliable en 1 clic</span></p>
+  <p class="stat">Hier : <b>{{ stats.total }}</b> avis publiés au BOAMP. {{ stats.metiers_hits }} concernaient un des {{ metiers|length }} métiers que nous suivons.</p>
+</div></section>
+
+<section class="wrap grid3">
+  <div class="card"><h3>1. Vous choisissez</h3><p>Votre métier et jusqu'à 3 départements (ou toute la France en offre Pro).</p></div>
+  <div class="card"><h3>2. L'IA trie</h3><p>Chaque nuit, nous analysons tous les nouveaux avis et écartons les faux positifs (« peinture routière » pour un peintre en bâtiment, par exemple).</p></div>
+  <div class="card"><h3>3. Vous répondez</h3><p>Un e-mail par jour ouvré, seulement s'il y a du nouveau : objet, acheteur, date limite, résumé et lien officiel.</p></div>
+</section>
+
+<section class="wrap">
+  <h2>Pourquoi les petites entreprises passent à côté des marchés publics</h2>
+  <ul class="checks">
+    <li>Les avis sont éparpillés et rédigés dans un jargon administratif.</li>
+    <li>Les plateformes généralistes envoient des dizaines d'alertes hors sujet.</li>
+    <li>Les bons marchés locaux (souvent sous 90 000 €) se jouent en 2 à 4 semaines : il faut les voir tôt.</li>
+  </ul>
+  <p>{{ biz.nom }} fait une seule chose : vous montrer, chaque matin, les quelques marchés qui valent votre temps.</p>
+</section>
+
+<section id="tarifs" class="wrap">
+  <h2>Tarifs simples</h2>
+  <div class="grid2">
+  {% for key, o in biz.offres.items() %}
+    <div class="card price{% if key == 'pro' %} featured{% endif %}">
+      <h3>{{ o.nom }}</h3>
+      <p class="amount">{{ o.prix_mensuel }} €<span>/mois</span></p>
+      <ul class="checks">
+        <li>{{ o.metiers_max }} métier{{ 's' if o.metiers_max > 1 }}{% if key == 'pro' %} + vos mots-clés personnalisés{% endif %}</li>
+        <li>{% if o.departements_max >= 101 %}Toute la France{% else %}Jusqu'à {{ o.departements_max }} départements{% endif %}</li>
+        <li>Alerte quotidienne avec résumé IA</li>
+        <li>Note d'accessibilité TPE</li>
+        <li>{{ biz.essai_gratuit_jours }} jours d'essai gratuit</li>
+      </ul>
+      {% if o.lien_paiement %}<a class="btn" href="{{ o.lien_paiement }}">Commencer l'essai</a>{% else %}<a class="btn disabled" href="mailto:{{ biz.email_contact }}?subject=Essai%20{{ o.nom }}">Bientôt disponible : me prévenir</a>{% endif %}
+    </div>
+  {% endfor %}
+  </div>
+  <p class="muted">{{ biz.fiscalite.tva }}. Paiement sécurisé par Stripe. Résiliation à tout moment depuis votre espace client.</p>
+</section>
+
+<section class="wrap">
+  <h2>Métiers suivis</h2>
+  <p class="tags">{% for k, m in metiers.items() %}<a href="{{ root }}appels-offres/{{ k }}/">{{ m.libelle }}</a>{% endfor %}</p>
+</section>
+
+<section class="wrap faq">
+  <h2>Questions fréquentes</h2>
+  <details><summary>D'où viennent les annonces ?</summary><p>Du BOAMP, le Bulletin officiel des annonces des marchés publics, publié en open data par l'État. Nous lisons chaque avis publié.</p></details>
+  <details><summary>Est-ce que vous répondez aux appels d'offres à ma place ?</summary><p>Non. Nous repérons et résumons les opportunités ; vous décidez et répondez sur la plateforme de l'acheteur.</p></details>
+  <details><summary>Et si je reçois des alertes hors sujet ?</summary><p>Répondez à l'e-mail avec vos remarques, nous ajustons votre filtre.</p></details>
+  <details><summary>Puis-je arrêter quand je veux ?</summary><p>Oui, sans engagement. Aucun prélèvement pendant l'essai si vous résiliez avant la fin.</p></details>
+</section>
+{% endblock %}

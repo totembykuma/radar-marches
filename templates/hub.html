@@ -1,0 +1,9 @@
+{% extends "base.html" %}{% block main %}
+<section class="wrap">
+  <h1>Appels d'offres publics par métier</h1>
+  <p class="lead">Marchés publics en cours issus du BOAMP, classés automatiquement par métier et mis à jour chaque jour.</p>
+  <div class="grid3">{% for k, m in metiers.items() %}
+    <a class="card" href="{{ k }}/"><h3>{{ m.libelle }}</h3><p>{{ counts[k] }} appel{{ 's' if counts[k] > 1 }} d'offres en cours</p></a>
+  {% endfor %}</div>
+</section>
+{% endblock %}
