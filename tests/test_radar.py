@@ -323,3 +323,27 @@ def test_criteres_automatiques(monkeypatch, tmp_path):
     assert n == 1 and not err and maj == [("sub_1", {"metier": "carrelage-sols", "departements": "33, 47", "motscles": "crèche, gymnase"})]
     assert subs[0]["metiers"] == ["carrelage-sols"] and state["criteres_vus"] == ["e1"]
     assert criteres.traiter(subs, biz, metiers(), state, lambda s, m: "ok")[0] == 0   # pas de double traitement
+
+
+def test_film_accueil_donnees_reelles(tmp_path):
+    from datetime import timedelta
+    from radar import site
+
+    class H:
+        def fiche(self, siret, metier):
+            return {"n": 3, "mois": 24, "montant_median": 38000, "offres_median": 4,
+                    "derniers": [{"date": "2026-03-02", "objet": "Entretien des parcs", "montant": 41200, "offres": 5, "gagnant": "X"},
+                                 {"date": "2025-09-10", "objet": "Tonte", "montant": 36800, "offres": 3, "gagnant": "Y"}]}
+
+        def sauver(self):
+            pass
+
+    dl = (date.today() + timedelta(days=20)).isoformat()
+    avis = [{**a, "date_limite": dl, "acheteur_siret": "21330063500017"} for a in AVIS]
+    site.build(avis, business(), metiers(), M, tmp_path / "s", stats={"total": 548, "metiers_hits": 9}, histo=H())
+    html = (tmp_path / "s" / "index.html").read_text()
+    assert 'id="film"' in html and "41 200" in html and "38 000" in html and "Saint-Exemple" not in html
+    assert "{{" not in html and "static/film.mp3" in html
+    site.build(avis, business(), metiers(), M, tmp_path / "t", stats={"total": 548, "metiers_hits": 9})
+    sans = (tmp_path / "t" / "index.html").read_text()
+    assert 'id="film"' in sans and "Avant de répondre" not in sans.split('id="film"')[1].split("</script>")[0]

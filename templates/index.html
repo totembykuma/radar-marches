@@ -104,6 +104,19 @@
   <p class="kicker">Offre Pro · la fiche « avant de répondre »</p>
   <h2>Sachez en 30 secondes si un marché vaut le coup</h2>
   <p class="sub">Sous chaque appel d'offres, vous voyez ce que le même acheteur a déjà payé, combien d'entreprises ont répondu et qui a gagné. Voici à quoi elle ressemble dans votre e-mail :</p>
+  {% if film and film.fiche %}{% set av = film.avis %}{% set fi = film.fiche %}
+  <div style="max-width:560px;margin:18px 0 0;background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px;font-size:15px;line-height:1.5;text-align:left">
+    <span style="font-size:13px;color:#5a6478">{{ av.acheteur }} · Dép. {{ av.departements|join(', ') }}</span><br>
+    <b>{{ av.objet|truncate(110) }}</b><br>
+    <span style="font-size:13px">Réponse avant le {{ av.date_limite_fr }}{% if av.pme %} · <span style="color:#15803d">✔ Accessible PME</span>{% endif %}</span>
+    <div style="margin-top:10px;background:#f4f7fb;border-left:3px solid #2563eb;border-radius:6px;padding:10px 12px;font-size:14px">
+      <b>Avant de répondre</b> · cet acheteur a attribué {{ fi.n }} marché{{ "s" if fi.n > 1 }} « {{ metiers[film.metier].libelle|lower }} » en {{ fi.mois // 12 }} ans.<br>
+      Montant habituel : <b>{{ "{:,}".format(fi.montant_median).replace(",", " ") }} € HT</b>{% if fi.offres_median %} · en général <b>{{ fi.offres_median }} offres reçues</b>{% endif %}<br>
+      {% for d in fi.derniers if d.montant %}· {{ d.date_fr }} : {{ "{:,}".format(d.montant).replace(",", " ") }} €{% if d.offres %} ({{ d.offres }} offres){% endif %}<br>{% endfor %}
+    </div>
+    <p style="margin:10px 0 0;font-size:12.5px;color:#5a6478">Exemple réel, mis à jour chaque jour : avis BOAMP en cours et données officielles de la commande publique (DECP). Dans votre e-mail, la fiche indique aussi le nom des entreprises gagnantes.</p>
+  </div>
+  {% else %}
   <div style="max-width:560px;margin:18px 0 0;background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px;font-size:15px;line-height:1.5;text-align:left">
     <span style="font-size:13px;color:#5a6478">Commune de Saint-Exemple · Dép. 33</span><br>
     <b>Entretien des espaces verts des écoles et du cimetière</b><br>
@@ -116,6 +129,7 @@
     </div>
     <p style="margin:10px 0 0;font-size:12.5px;color:#5a6478">Exemple d'affichage avec des données fictives. Les vraies fiches viennent des données officielles de la commande publique.</p>
   </div>
+  {% endif %}
 </section>
 
 <section id="tarifs" class="soft"><div class="wrap block">

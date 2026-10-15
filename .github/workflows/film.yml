@@ -1,0 +1,20 @@
+name: Aperçu du film (MP4)
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/project-thread-ttpnkd]
+    paths: [templates/_film.html, scripts/film_video.py, static/film.mp3, .github/workflows/film.yml]
+jobs:
+  film:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt playwright && python -m playwright install --with-deps chromium && sudo apt-get install -y -qq ffmpeg >/dev/null
+      - name: Site avec les données réelles du jour (aucun e-mail envoyé)
+        run: python -m radar.cli essai | tail -5
+      - run: python scripts/film_video.py out/site out/film-explicatif.mp4
+      - uses: actions/upload-artifact@v4
+        with: { name: film, path: out/film-explicatif.mp4, retention-days: 7 }

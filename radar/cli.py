@@ -231,7 +231,7 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
     try:
         if avis_open is None:
             avis_open = boamp.fetch_open(days=30)
-        res = site.build(avis_open, biz, metiers, matcher, OUT / "site",
+        res = site.build(avis_open, biz, metiers, matcher, OUT / "site", histo=None if os.getenv("RADAR_DEMO") else histo,
                          stats={"total": len(avis_new), "metiers_hits": run["avis_metiers"]})
         run["pages_site"] = res["pages"]
     except Exception as exc:
@@ -473,7 +473,7 @@ def run_essai():
         hits = [a for a in appels if k in matcher.metiers_of(a)]
         report["par_metier"][k] = {"nombre": len(hits), "exemples": [a["objet"][:110] for a in hits[:4]]}
     avis_open = boamp.fetch_open(days=30)
-    res = site.build(avis_open, biz, metiers, matcher, OUT / "site",
+    res = site.build(avis_open, biz, metiers, matcher, OUT / "site", histo=historique.Historique(metiers),
                      stats={"total": len(avis), "metiers_hits": sum(v["nombre"] for v in report["par_metier"].values())})
     report["avis_ouverts_30_jours"] = len(avis_open)
     report["pages_site"] = res["pages"]

@@ -1,7 +1,9 @@
-{# Film explicatif animé (HTML/CSS, aucune vidéo à charger). Scène de 800x450 mise à l'échelle par le script. #}
+{# Film explicatif animé (HTML/CSS, aucune vidéo à charger), construit chaque jour avec un vrai avis BOAMP et l'historique DECP de son acheteur. #}
+{% import "_ui.html" as ui %}{% if film %}
+{% set av = film.avis %}{% set fi = film.fiche %}{% set lib = metiers[film.metier].libelle %}
+{% macro eur(v) %}{{ "{:,}".format(v|int).replace(",", " ") }}{% endmacro %}
 {% set logo %}<svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#0b1b33"/><circle cx="16" cy="16" r="10" fill="none" stroke="#ffb020" stroke-opacity=".35" stroke-width="1.6"/><circle cx="16" cy="16" r="6" fill="none" stroke="#ffb020" stroke-opacity=".7" stroke-width="1.6"/><path d="M16 16L24 9" stroke="#ffb020" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="16" r="2.4" fill="#ffb020"/></svg>{% endset %}
 {% set cur %}<svg class="cur-svg" viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d="M4 2l15 10-6.5 1.4L16 21l-3 1.4-3.6-7.5L4 19z" fill="#fff" stroke="#0b1b33" stroke-width="1.5" stroke-linejoin="round"/></svg>{% endset %}
-{% set leaf %}<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 19c0-8 5-13 15-14-1 10-6 15-14 15M5 19l7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>{% endset %}
 <div class="film" id="film" role="region" aria-label="Vidéo : le parcours d'un client, de l'inscription au marché terminé">
   <div class="film-view">
     <div class="film-stage" aria-hidden="true">
@@ -14,80 +16,79 @@
         <div class="card form a" style="--d:.15s">
           <h4>Créer ma veille</h4>
           <label>Votre métier</label>
-          <div class="field"><span class="f-ico">{{ leaf }}</span><span class="typed a" style="--an:type;--t:1.1s;--e:steps(13,end);--d:.8s">Espaces verts</span></div>
+          <div class="field"><span class="f-ico" style="--c:{{ ui.couleur(film.metier) }}">{{ ui.icone(film.metier, 20) }}</span><span class="typed a" style="--an:type;--t:1.1s;--e:steps({{ lib|length }},end);--d:.8s">{{ lib }}</span></div>
           <label>Votre département</label>
-          <div class="field"><span class="chip-b a" style="--an:pop;--d:2.1s">33 · Gironde</span></div>
+          <div class="field"><span class="chip-b a" style="--an:pop;--d:2.1s">Département {{ film.dep }}</span></div>
           <div class="fbtn"><span>Démarrer mes {{ biz.essai_gratuit_jours }} jours gratuits</span><span class="fbtn-ok a" style="--an:fade;--t:.3s;--d:3.85s">✓ Votre veille est active</span><i class="ripple a" style="--an:ripple;--t:.7s;--d:3.7s"></i></div>
         </div>
         <span class="cur a" style="--an:cur1;--t:1.5s;--d:2.4s;left:470px;top:352px">{{ cur }}</span>
       </section>
 
       {# 2. Le matin #}
-      <section class="sc" data-t="6500" data-titre="Chaque matin" data-cap="Chaque nuit, nous lisons tous les nouveaux avis du BOAMP. Le matin, seuls ceux de votre métier, près de chez vous, arrivent dans votre boîte mail.">
+      <section class="sc" data-t="6500" data-titre="Chaque matin" data-cap="Chaque nuit, nous lisons tous les nouveaux avis du BOAMP. Le matin, seuls ceux de votre métier, près de chez vous, arrivent dans votre boîte mail. Chiffres réels du {{ date_fr }}.">
         <div class="phone a" style="--an:up">
           <div class="ph-notch"></div>
-          <p class="ph-time">6:20</p><p class="ph-date">mardi 4 novembre</p>
+          <p class="ph-time">6:20</p><p class="ph-date">{{ date_fr }}</p>
           <div class="notif a" style="--an:drop;--d:3.6s">
             <span class="n-ico">{{ logo }}</span>
-            <div><small>{{ biz.nom }} · maintenant</small><b>2 nouveaux marchés « espaces verts » en Gironde</b></div>
+            <div><small>{{ biz.nom }} · maintenant</small><b>{{ film.n_dep }} marché{{ "s" if film.n_dep > 1 }} « {{ lib|lower }} » dans le {{ film.dep }}</b></div>
           </div>
         </div>
         <div class="funnel">
-          <p class="a" style="--d:.4s"><b class="big-n" data-n="548" data-d="500">548</b><span>avis publiés cette nuit au BOAMP</span></p>
+          <p class="a" style="--d:.4s"><b class="big-n" data-n="{{ stats.total }}" data-d="500">{{ stats.total }}</b><span>nouveaux avis BOAMP lus au dernier tri</span></p>
           <p class="arrow a" style="--an:fade;--d:2.2s">↓ triés pour vous</p>
-          <p class="a" style="--an:pop;--d:2.7s"><b class="big-n acc">2</b><span>pour vous, ce matin</span></p>
+          <p class="a" style="--an:pop;--d:2.7s"><b class="big-n acc">{{ film.n_dep }}</b><span>ouverts pour votre métier dans le {{ film.dep }}</span></p>
         </div>
       </section>
 
       {# 3. L'alerte #}
-      <section class="sc" data-t="6500" data-titre="L'alerte" data-cap="Un e-mail clair : objet, acheteur, lieu, date limite et lien vers l'avis officiel. Le badge « Accessible PME » repère les marchés à votre taille.">
+      <section class="sc" data-t="6500" data-titre="L'alerte" data-cap="Un e-mail clair : objet, acheteur, lieu, date limite et lien vers l'avis officiel. Un vrai avis publié au BOAMP, ouvert en ce moment.">
         <div class="win a" style="--an:up">
           <div class="win-bar"><span></span><span></span><span></span></div>
-          <div class="win-head">{{ logo }}<div><b>{{ biz.nom }}</b> <small>· aujourd'hui, 6h20</small><br><span>2 appels d'offres pour vous</span></div></div>
+          <div class="win-head">{{ logo }}<div><b>{{ biz.nom }}</b> <small>· aujourd'hui, 6h20</small><br><span>{{ film.n_dep }} appel{{ "s" if film.n_dep > 1 }} d'offres « {{ lib|lower }} »</span></div></div>
           <div class="item hl a" style="--d:.5s">
-            <div class="row"><span class="chip">Dép. 33</span><span class="due">Réponse avant le 12/11 · J-28</span></div>
-            <p>Entretien des espaces verts des écoles et du cimetière</p>
-            <small>Commune de Saint-Exemple</small>
-            <span class="pme a" style="--an:pop;--d:2s">✓ Accessible PME</span>
+            <div class="row"><span class="chip">Dép. {{ av.departements|join(', ') }}</span><span class="due">Réponse avant le {{ film.dl }} · J-{{ av.jours_restants }}</span></div>
+            <p>{{ av.objet|truncate(78) }}</p>
+            <small>{{ av.acheteur|truncate(48) }}</small>
+            {% if av.pme %}<span class="pme a" style="--an:pop;--d:2s">✓ Accessible PME</span>{% endif %}
           </div>
-          <div class="item a" style="--d:.8s">
-            <div class="row"><span class="chip">Dép. 33</span><span class="due">Réponse avant le 3/12 · J-19</span></div>
-            <p>Tonte et taille des haies du parc municipal</p>
-            <small>Communauté de communes Exemple</small>
-          </div>
+          {% if film.autre %}{% set b = film.autre %}<div class="item a" style="--d:.8s">
+            <div class="row"><span class="chip">Dép. {{ b.departements|join(', ') }}</span><span class="due">Réponse avant le {{ b.date_limite_fr }}</span></div>
+            <p>{{ b.objet|truncate(78) }}</p>
+            <small>{{ b.acheteur|truncate(48) }}</small>
+          </div>{% endif %}
         </div>
         <span class="cur a" style="--an:cur2;--t:1.4s;--d:3.4s;left:380px;top:200px">{{ cur }}</span>
       </section>
 
       {# 4. Avant de répondre #}
-      <section class="sc" data-t="7000" data-titre="Avant de répondre" data-cap="Avec l'offre Pro, vous voyez ce que cet acheteur a déjà payé, combien d'entreprises ont répondu et qui a gagné. (Exemple avec des données fictives.)">
+      {% if fi %}<section class="sc" data-t="7000" data-titre="Avant de répondre" data-cap="Avec l'offre Pro, vous voyez ce que cet acheteur a déjà payé et combien d'entreprises ont répondu. Données officielles de la commande publique (DECP).">
         <p class="tag a">Offre Pro</p>
         <div class="card fiche a" style="--d:.15s">
           <h4>Avant de répondre</h4>
-          <p class="sub2">Commune de Saint-Exemple · 3 marchés « espaces verts » en 2 ans</p>
+          <p class="sub2">{{ av.acheteur|truncate(46) }} · {{ fi.n }} marché{{ "s" if fi.n > 1 }} « {{ lib|lower }} » en {{ fi.mois // 12 }} ans</p>
           <div class="bars">
-            <div class="bar"><span>09/2025 · Entreprise B</span><i class="a" style="--an:growx;--t:.9s;--d:.9s;width:72%"></i><b>36 800 €</b></div>
-            <div class="bar"><span>03/2026 · Entreprise A</span><i class="a" style="--an:growx;--t:.9s;--d:1.3s;width:81%"></i><b>41 200 €</b></div>
-            <div class="bar you"><span>Montant habituel</span><i class="a" style="--an:growx;--t:.9s;--d:1.9s;width:75%"></i><b>38 000 €</b></div>
+            {% for d in fi.derniers if d.montant %}<div class="bar"><span>{{ d.date_fr }}{% if d.offres %} · {{ d.offres }} offre{{ "s" if d.offres > 1 }}{% endif %}</span><i class="a" style="--an:growx;--t:.9s;--d:{{ 0.9 + loop.index0 * 0.4 }}s;width:{{ d.pct }}%"></i><b>{{ eur(d.montant) }} €</b></div>
+            {% endfor %}<div class="bar you"><span>Montant habituel</span><i class="a" style="--an:growx;--t:.9s;--d:2.1s;width:{{ fi.median_pct }}%"></i><b>{{ eur(fi.montant_median) }} €</b></div>
           </div>
           <div class="kpis">
-            <p class="a" style="--an:pop;--d:2.9s"><b>4</b>offres reçues en général</p>
-            <p class="a" style="--an:pop;--d:3.3s"><b>38 k€</b>budget habituel HT</p>
-            <p class="a" style="--an:pop;--d:3.7s"><b>✓</b>accessible à une PME</p>
+            {% if fi.offres_median %}<p class="a" style="--an:pop;--d:2.9s"><b>{{ fi.offres_median }}</b>offres reçues en général</p>{% endif %}
+            <p class="a" style="--an:pop;--d:3.3s"><b>{{ eur(fi.montant_median) }} €</b>montant habituel HT</p>
+            {% if av.pme %}<p class="a" style="--an:pop;--d:3.7s"><b>✓</b>accessible à une PME</p>{% endif %}
           </div>
         </div>
-      </section>
+      </section>{% endif %}
 
       {# 5. Ça m'intéresse #}
       <section class="sc" data-t="7000" data-titre="Votre dossier" data-cap="Un clic sur « Ça m'intéresse » et la date limite s'ajoute à votre agenda. Vous préparez votre offre à votre rythme.">
         <div class="mini a" style="--an:left">
-          <small>Commune de Saint-Exemple</small>
-          <p>Entretien des espaces verts des écoles et du cimetière</p>
+          <small>{{ av.acheteur|truncate(40) }}</small>
+          <p>{{ av.objet|truncate(70) }}</p>
           <span class="ibtn">★ Ça m'intéresse</span>
         </div>
         <span class="cur a" style="--an:cur3;--t:1.3s;--d:.7s;left:170px;top:268px">{{ cur }}</span>
         <div class="cal a" style="--an:pop;--d:2s">
-          <div class="cal-top">NOV.</div><b>12</b><small>Date limite de réponse</small>
+          <div class="cal-top">{{ film.dl_mois|upper }}</div><b>{{ film.dl_jour }}</b><small>Date limite de réponse</small>
           <span class="cal-ok">✓ Rappel ajouté à l'agenda</span>
         </div>
         <ul class="docs">
@@ -102,21 +103,24 @@
         <div class="screen a" style="--an:up">
           <div class="scr-bar">Plateforme de l'acheteur</div>
           <div class="scr-drop"><span>Déposez votre offre ici</span></div>
-          <div class="stamp a" style="--an:stamp;--t:.5s;--d:2.6s">✓ Offre déposée<small>10/11 · 16h02</small></div>
+          <div class="stamp a" style="--an:stamp;--t:.5s;--d:2.6s">✓ Offre déposée<small>le {{ film.depot }}</small></div>
         </div>
         <div class="sheet a" style="--an:fly;--t:1.6s;--d:.6s"><b>Votre offre</b><i></i><i></i><i></i><i class="s"></i></div>
         <p class="tag t2 a" style="--an:fade;--d:3.4s">2 jours d'avance sur la date limite</p>
       </section>
 
       {# 7. Gagné #}
-      <section class="sc" data-t="6000" data-titre="Marché gagné" data-cap="L'acheteur retient votre offre. Un seul marché comme celui-ci peut rembourser des années d'abonnement.">
+      <section class="sc" data-t="6000" data-titre="Marché gagné" data-cap="{% if fi %}Ce même acheteur a déjà attribué un marché « {{ lib|lower }} » de {{ eur(fi.gagne.montant) }} € HT (données officielles). Le prochain peut être le vôtre, et il rembourse des années d'abonnement.{% else %}L'acheteur retient une offre. Un seul marché peut rembourser des années d'abonnement.{% endif %}">
         <div class="confetti">{% for c in range(18) %}<i style="--x:{{ [-330,-250,-190,-120,-60,0,70,130,200,260,330,-290,-160,-30,100,230,-210,290][c] }}px;--y:{{ [-150,-200,-90,-210,-140,-230,-170,-220,-110,-190,-130,60,90,110,70,100,140,150][c] }}px;--r:{{ c * 47 }}deg;--c:{{ ['#ffb020','#22c55e','#60a5fa','#ff8a00','#fff'][c % 5] }}"></i>{% endfor %}</div>
         <div class="win-card a" style="--an:pop;--d:.3s">
           <span class="trophy">🏆</span>
-          <small>Commune de Saint-Exemple · décision d'attribution</small>
+          {% if fi %}{% set g = fi.gagne %}<small>{{ av.acheteur|truncate(40) }} · attribué en {{ g.date_fr }}</small>
+          <h4>Marché attribué</h4>
+          <p class="amount"><b data-n="{{ g.montant }}" data-d="1100">{{ eur(g.montant) }}</b> € HT</p>
+          <p class="sub2">{{ g.objet|truncate(70) }}{% if g.offres %} · {{ g.offres }} offre{{ "s" if g.offres > 1 }} reçue{{ "s" if g.offres > 1 }}{% endif %}</p>
+          {% else %}<small>Décision d'attribution</small>
           <h4>Votre offre est retenue</h4>
-          <p class="amount"><b data-n="38000" data-d="1100">38 000</b> € HT</p>
-          <p class="sub2">Entretien des espaces verts des écoles et du cimetière</p>
+          <p class="sub2">{{ av.objet|truncate(70) }}</p>{% endif %}
         </div>
       </section>
 
@@ -129,12 +133,12 @@
           <i class="tree a" style="--an:growy;--d:.8s;left:600px;--h:130px"></i>
           <i class="tree a" style="--an:growy;--d:1s;left:690px;--h:95px"></i>
           <i class="hedge a" style="--an:growx;--d:1.2s"></i>
-          <div class="van a" style="--an:drive;--t:1.6s;--d:.8s"><span>Votre entreprise</span><i></i><i></i></div>
+          <div class="van a" style="--an:drive;--t:1.6s;--d:.8s"><span>Votre entreprise · {{ lib }}</span><i></i><i></i></div>
         </div>
         <div class="done">
           <p class="a" style="--an:pop;--d:2.4s">✓ Chantier terminé</p>
           <p class="a" style="--an:pop;--d:3s">✓ Facture payée</p>
-          <p class="a nxt" style="--an:pop;--d:3.8s">📬 Nouvelle alerte demain, 6h20</p>
+          <p class="a nxt" style="--an:pop;--d:3.8s">📬 Prochaine alerte demain matin</p>
         </div>
       </section>
 
@@ -152,6 +156,8 @@
   <div class="film-ctrl">
     <button class="film-play" type="button" aria-label="Lecture"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path class="i-play" d="M8 5v14l11-7z" fill="currentColor"/><path class="i-pause" d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor"/><path class="i-again" d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z" fill="currentColor"/></svg></button>
     <div class="film-segs"></div>
+    <button class="film-son" type="button" aria-pressed="false"><span class="on">🔊 Son activé</span><span class="off">🔇 Activer le son</span></button>
+    <audio class="film-audio" preload="none" src="{{ root }}static/film.mp3"></audio>
   </div>
   <p class="film-cap"><b></b> <span></span></p>
 </div>
@@ -160,20 +166,22 @@
   var f=document.getElementById('film');if(!f)return;
   var view=f.querySelector('.film-view'),stage=f.querySelector('.film-stage'),sc=[].slice.call(f.querySelectorAll('.sc')),
       box=f.querySelector('.film-segs'),capT=f.querySelector('.film-cap b'),capS=f.querySelector('.film-cap span'),
-      play=f.querySelector('.film-play'),big=f.querySelector('.film-big'),cta=f.querySelector('.film-cta'),
+      play=f.querySelector('.film-play'),son=f.querySelector('.film-son'),au=f.querySelector('.film-audio'),sound=false,muted=false,big=f.querySelector('.film-big'),cta=f.querySelector('.film-cta'),
       rm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches,
       i=0,timer=null,left=0,t0=0,playing=false,auto=false,started=false,segs=[];
   function fit(){stage.style.transform='scale('+(view.clientWidth/800)+')'}
   fit();window.addEventListener('resize',fit);if(window.ResizeObserver)new ResizeObserver(fit).observe(view);
   sc.forEach(function(s,n){var b=document.createElement('button');b.type='button';b.className='film-seg';
     b.setAttribute('aria-label','Chapitre '+(n+1)+' : '+s.dataset.titre);b.title=s.dataset.titre;b.innerHTML='<i></i>';
-    b.onclick=function(){started=true;go(n,true)};box.appendChild(b);segs.push(b)});
+    b.onclick=function(){started=true;if(!muted)sound=true;go(n,true)};box.appendChild(b);segs.push(b)});
   function count(el){var n=+el.dataset.n,d=+(el.dataset.d||0),s=null,fmt=function(v){return Math.round(v).toLocaleString('fr-FR')};
     el.textContent='0';if(rm){el.textContent=fmt(n);return}
     setTimeout(function step(ts){requestAnimationFrame(function(ts){if(s===null)s=ts;var p=Math.min(1,(ts-s)/1300);
       el.textContent=fmt(n*(1-Math.pow(1-p,3)));if(p<1)step()})},d)}
+  function off(n){var o=0;for(var k=0;k<n;k++)o+=+sc[k].dataset.t;return o/1000}
+  function music(){if(!au)return;if(sound&&(playing||i===sc.length-1)){var el=+sc[i].dataset.t?(+sc[i].dataset.t-left-(playing?Date.now()-t0:0))/1000:0;var want=off(i)+Math.max(0,el);if(Math.abs(au.currentTime-want)>.35&&i<sc.length-1)au.currentTime=want;var pr=au.play();pr&&pr.catch(function(){})}else au.pause();son.setAttribute('aria-pressed',sound);f.classList.toggle('son',sound)}
   function state(){f.classList.toggle('playing',playing);f.classList.toggle('started',started);f.classList.toggle('fin',i===sc.length-1);
-    play.setAttribute('aria-label',i===sc.length-1?'Revoir':playing?'Pause':'Lecture');cta.hidden=i!==sc.length-1}
+    play.setAttribute('aria-label',i===sc.length-1?'Revoir':playing?'Pause':'Lecture');cta.hidden=i!==sc.length-1;music()}
   function arm(ms){clearTimeout(timer);left=ms;t0=Date.now();if(playing&&ms>0)timer=setTimeout(function(){go(i+1,playing)},ms)}
   function go(n,run){clearTimeout(timer);sc.forEach(function(s){s.classList.remove('on')});void stage.offsetWidth;
     i=n;var s=sc[i],ms=+s.dataset.t;s.classList.add('on');capT.textContent=(i+1)+'/'+sc.length+' · '+s.dataset.titre;capS.textContent=s.dataset.cap;
@@ -181,12 +189,14 @@
     void box.offsetWidth;segs[i].className='film-seg s-cur'+(ms?' s-run':' s-done');
     [].forEach.call(s.querySelectorAll('[data-n]'),count);
     playing=!!run&&ms>0;f.classList.remove('paused');arm(ms);state()}
-  function toggle(){if(!started||i===sc.length-1){started=true;go(i===sc.length-1?0:i,true);return}
+  function toggle(user){if(user&&!muted)sound=true;if(!started||i===sc.length-1){started=true;if(i===sc.length-1&&au)au.currentTime=0;go(i===sc.length-1?0:i,true);return}
     if(playing){playing=false;clearTimeout(timer);left-=Date.now()-t0;f.classList.add('paused')}
     else{playing=true;f.classList.remove('paused');arm(left)}auto=false;state()}
-  play.onclick=toggle;big.onclick=function(){started=true;go(0,true)};
+  play.onclick=function(){toggle(true)};big.onclick=function(){started=true;if(!muted)sound=true;go(0,true)};
+  son.onclick=function(){sound=!sound;muted=!sound;if(sound&&!started){started=true;go(0,true)}else state()};
   go(0,false);f.classList.add('paused');
   if(!rm&&window.IntersectionObserver)new IntersectionObserver(function(e){var v=e[0].isIntersecting;
     if(v&&!started){started=true;go(0,true)}else if(v&&auto){auto=false;toggle()}else if(!v&&playing){toggle();auto=true}},{threshold:.55}).observe(view);
 })();
 </script>
+{% endif %}

@@ -1,7 +1,7 @@
 """Génère le site statique : page de vente + pages SEO par métier et département, mises à jour chaque jour."""
 import shutil
 from collections import Counter, defaultdict
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 import yaml
@@ -20,7 +20,43 @@ def _jours_restants(s, today):
         return None
 
 
-def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None):
+MOIS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."]
+
+
+def _film(by_metier, histo=None, essais=8):
+    """Données réelles du film de l'accueil : un vrai avis ouvert et, si possible, l'historique DECP de son acheteur."""
+    cands = [(k, a) for k, lst in by_metier.items() for a in lst
+             if (a.get("jours_restants") or 0) >= 7 and a.get("departements") and str(a.get("date_limite") or "")[:10]]
+    cands.sort(key=lambda c: (not c[1].get("pme"), not c[1].get("acheteur_siret"), -len(by_metier[c[0]])))
+    if not cands:
+        return None
+    key, a, fiche = cands[0][0], cands[0][1], None
+    if histo:
+        for k, x in [c for c in cands if c[1].get("acheteur_siret")][:essais]:
+            f = histo.fiche(x["acheteur_siret"], k)
+            if f and f.get("montant_median") and any(d.get("montant") for d in f["derniers"]):
+                key, a, fiche = k, x, f
+                break
+        histo.sauver()
+    dep = a["departements"][0]
+    autres = [x for x in by_metier[key] if x is not a and dep in (x.get("departements") or []) and (x.get("jours_restants") or 0) > 0]
+    try:
+        dl = date.fromisoformat(str(a["date_limite"])[:10])
+    except ValueError:
+        return None
+    if fiche:
+        top = max(d["montant"] or 0 for d in fiche["derniers"]) or 1
+        for d in fiche["derniers"]:
+            d["pct"] = round(100 * (d["montant"] or 0) / top)
+            d["date_fr"] = f"{d['date'][5:7]}/{d['date'][:4]}" if len(d["date"]) >= 7 else ""
+        fiche["median_pct"] = round(100 * fiche["montant_median"] / top)
+        fiche["gagne"] = next(d for d in fiche["derniers"] if d.get("montant"))
+    return {"metier": key, "dep": dep, "avis": a, "autre": autres[0] if autres else None, "n_dep": 1 + len(autres),
+            "fiche": fiche, "dl_jour": dl.day, "dl_mois": MOIS[dl.month - 1], "dl": dl.strftime("%d/%m"),
+            "depot": (dl - timedelta(days=2)).strftime("%d/%m")}
+
+
+def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=None):
     out_dir = Path(out_dir)
     if out_dir.exists():
         shutil.rmtree(out_dir)
@@ -56,8 +92,9 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None):
     # Aperçu « e-mail du matin » de la page d'accueil : de vrais avis du métier le plus fourni.
     ex_key = max(counts, key=counts.get) if counts else None
     exemple = [a for a in by_metier.get(ex_key, []) if (a.get("jours_restants") or 0) > 0][:3]
+    film = _film(by_metier, histo)
     write("index.html", render("index.html", root="", path="/", stats=stats, counts=counts,
-                               ex_key=ex_key, exemple=exemple,
+                               ex_key=ex_key, exemple=exemple, film=film,
                                title=f"{biz['nom']} · Appels d'offres publics par métier, triés" + (" par IA" if biz.get("ia_active") else ""),
                                description=biz["slogan"], **common))
     write("appels-offres/index.html", render(
