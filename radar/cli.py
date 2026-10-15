@@ -15,7 +15,7 @@ import traceback
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
-from . import criteres, ai, boamp, finance, historique, mailer, prospects, site, subscribers
+from . import avis, criteres, ai, parrainage, boamp, finance, historique, mailer, prospects, site, subscribers
 from .config import ROOT, business, metiers as load_metiers
 from .matching import Matcher
 from .render import date_fr, date_limite_fr, render
@@ -131,13 +131,31 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
     except Exception as exc:
         run["erreurs"].append(f"lecture des demandes de critères impossible : {safe(exc)}")
 
+    # 2a bis. Parrainage : 1 mois offert au filleul (dès l'inscription) et au parrain (quand le filleul devient payant)
+    try:
+        n, errs = parrainage.traiter(subs, biz, state)
+        if n:
+            run["mois_offerts_parrainage"] = n
+        run["erreurs"] += errs
+    except Exception as exc:
+        run["erreurs"].append(f"parrainage non traité : {safe(exc)}")
+
+    # 2a ter. Premier client payant : les résumés IA deviennent possibles (payés par ce client), on prévient le propriétaire.
+    if not state.get("premier_client_payant") and any(s.get("source") == "stripe" and s.get("statut") == "active" for s in subs):
+        state["premier_client_payant"] = date.today().isoformat()
+        run["premier_client_payant"] = True
+        if not os.getenv("ANTHROPIC_API_KEY", "").strip():
+            alert_owner(biz, "Premier client payant : vous pouvez activer les résumés IA", render("email_premier_client.html", biz=biz))
+    biz["ia_active"] = bool(os.getenv("ANTHROPIC_API_KEY", "").strip()) and bool(state.get("premier_client_payant"))
+
     # 2b. Message de bienvenue aux nouveaux abonnés
     known = set(state.setdefault("known", []))
     for s in subs:
         key = hashlib.sha256(s["email"].lower().encode()).hexdigest()[:16]
         if key in known:
             continue
-        html = render("email_bienvenue.html", biz=biz, criteres=criteres_txt(s, metiers), sub=s)
+        html = render("email_bienvenue.html", biz=biz, criteres=criteres_txt(s, metiers), sub=s,
+                      lien=parrainage.lien(biz, s))
         try:
             res = mailer.send(s["email"], f"Bienvenue sur {biz['nom']} : votre veille est active", html,
                               biz["email_expediteur"], reply_to=biz.get("email_proprietaire") or biz["email_contact"])
@@ -170,6 +188,19 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
             run["erreurs"].append(f"rappel de fin d'essai non envoyé : {safe(exc)}")
     state["rappel_essai"] = rappels[-500:]
 
+    # 2d. Avis clients : demande à 1 mois d'abonnement, publication des avis reçus via le formulaire du site
+    try:
+        n, errs = avis.demander(subs, biz, state, parrainage.lien)
+        if n:
+            run["demandes_avis"] = n
+        run["erreurs"] += errs
+        n, errs = avis.recevoir(subs, biz, metiers, state, lambda sujet, html: alert_owner(biz, sujet, html))
+        if n:
+            run["avis_publies"] = n
+        run["erreurs"] += errs
+    except Exception as exc:
+        run["erreurs"].append(f"avis clients non traités : {safe(exc)}")
+
     # 3. Sélection par abonné (sans renvoyer ce qui a déjà été envoyé)
     plans, to_enrich = {}, {}
     for s in subs:
@@ -185,7 +216,8 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
                 to_enrich[a["id"]] = a
 
     # 4. Résumés IA (une seule fois par avis, même s'il intéresse plusieurs abonnés)
-    ai.enrich(list(to_enrich.values()), model=biz["ia"]["modele"], batch=biz["ia"]["max_avis_par_appel"])
+    if biz["ia_active"]:
+        ai.enrich(list(to_enrich.values()), model=biz["ia"]["modele"], batch=biz["ia"]["max_avis_par_appel"])
 
     # 4b. Fiche « avant de répondre » : ce que l'acheteur a déjà attribué dans le métier de l'abonné
     histo = histo or historique.Historique(metiers)
@@ -208,7 +240,8 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
             a["fiche"] = histo.fiche(a.get("acheteur_siret"), m) if m and a.get("acheteur_siret") else None
             a["fiche_complete"] = s.get("plan") == "pro"
             a["metier_libelle"] = metiers[m]["libelle"].lower() if m else ""
-        html = render("email_digest.html", biz=biz, avis=sel, date_fr=date_fr(), criteres=criteres_txt(s, metiers))
+        html = render("email_digest.html", biz=biz, avis=sel, date_fr=date_fr(), criteres=criteres_txt(s, metiers),
+                      lien_parrainage=parrainage.lien(biz, s))
         subject = f"{len(sel)} appel{'s' if len(sel) > 1 else ''} d'offres : {sel[0]['objet'][:60]}"
         try:
             res = mailer.send(s["email"], subject, html, biz["email_expediteur"], reply_to=biz.get("email_proprietaire") or biz["email_contact"])
@@ -287,7 +320,7 @@ def run_weekly():
         decisions.append("Moins de 5 envois quotidiens cette semaine : vérifier l'onglet Actions de GitHub.")
     if kpi["resilies_7j"] > kpi["nouveaux_7j"] and kpi["resilies_7j"]:
         decisions.append("Plus de résiliations que de nouveaux clients : lire les réponses clients pour comprendre pourquoi.")
-    analyse = ai.ask(
+    analyse = biz["ia_active"] and ai.ask(
         "Tu es le directeur des opérations d'un petit service d'alertes d'appels d'offres par abonnement "
         f"({biz['offres']['essentiel']['prix_mensuel']}€ et {biz['offres']['pro']['prix_mensuel']}€/mois). "
         "Voici les indicateurs de la semaine (JSON). En 5 puces maximum, en français simple : "

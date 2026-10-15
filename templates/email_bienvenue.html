@@ -6,7 +6,9 @@
 <p>Pas d'e-mail un jour donné = aucun nouvel avis pertinent ce jour-là.</p>
 <p><b>Pour changer de métier, de départements ou ajouter des mots-clés</b>, remplissez <a href="{{ biz.site_url }}/criteres/">ce formulaire</a> (1 minute) ou répondez simplement à cet e-mail.</p>
 <p>Conseil : les petits marchés locaux ont souvent 3 à 4 semaines de délai de réponse. Préparez dès maintenant vos pièces administratives (Kbis, attestations URSSAF et fiscale, assurance, références) pour répondre vite.</p>
-<p>Avant la fin de votre essai gratuit, nous vous préviendrons par e-mail 3 jours à l'avance. Vous restez libre d'arrêter à tout moment.</p>
-<p>Bonne chasse aux marchés,<br>L'équipe {{ biz.nom }}</p>
+{% if sub.filleul %}<p><b>Vous avez été invité par un client : votre premier mois après l'essai est offert.</b> Il est déjà crédité sur votre compte, vous n'avez rien à faire.</p>
+{% endif %}<p>Avant la fin de votre essai gratuit, nous vous préviendrons par e-mail 3 jours à l'avance. Vous restez libre d'arrêter à tout moment.</p>
+{% if lien %}<p style="background:#f4f5f7;padding:12px;border-radius:8px"><b>Parrainage :</b> partagez votre lien personnel <a href="{{ lien }}">{{ lien }}</a> à un confrère. Quand il devient client, vous recevez chacun 1 mois offert.</p>
+{% endif %}<p>Bonne chasse aux marchés,<br>L'équipe {{ biz.nom }}</p>
 <p style="font-size:12px;color:#5a6478">{{ biz.site_url }} · {{ biz.fiscalite.tva }}</p>
 </body></html>

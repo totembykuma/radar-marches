@@ -86,7 +86,9 @@ def from_stripe(biz, metiers, session=None):
         out.append({"email": email, "plan": plan, "statut": sub["status"],
                     "metiers": [metier] if metier else [], "departements": deps,
                     "mots_cles": mots if plan == "pro" else [], "source": "stripe",
-                    "stripe_subscription": sub["id"], "fin_essai": sub.get("trial_end") if sub["status"] == "trialing" else None})
+                    "stripe_subscription": sub["id"], "debut": sub.get("start_date") or sub.get("created"),
+                    "customer": cs.get("customer") or sub.get("customer"), "ref": cs.get("client_reference_id"),
+                    "fin_essai": sub.get("trial_end") if sub["status"] == "trialing" else None})
     return out
 
 

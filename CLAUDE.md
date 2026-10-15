@@ -6,9 +6,11 @@ tout tourne dans GitHub Actions. Propriétaire non technique, en français, une 
 ## Où est quoi
 - `radar/cli.py` : commandes daily / weekly / prospection / audit / demo / essai / abonnes.
 - `radar/boamp.py` (avis + SIRET acheteur), `matching.py` (métiers), `historique.py` (fiche « avant de répondre », DECP),
-  `prospects.py` (gagnants de marchés), `subscribers.py` (clients = Stripe), `stripe_setup.py`, `mailer.py` (Resend), `site.py`.
+  `prospects.py` (gagnants de marchés), `avis.py` (avis clients : demande à 1 mois, formulaire /avis/ lu via Resend, data/avis.json), `parrainage.py` (?ami=CODE → client_reference_id Stripe, 1 mois crédité filleul + parrain), `subscribers.py` (clients = Stripe), `stripe_setup.py`, `mailer.py` (Resend), `site.py`.
 - `config/business.yaml` (offres, liens Stripe, prospection), `config/metiers.yaml` (mots, exclusions, cpv).
 - `templates/` (site + e-mails), `static/style.css`, `tests/test_radar.py` (`python3 -m pytest -q tests`).
+
+- Résumés IA : actifs seulement si secret ANTHROPIC_API_KEY ET `premier_client_payant` dans data/state.json (posé par daily, qui prévient le propriétaire).
 
 ## Règles pour économiser les tokens
 - Le réseau BOAMP/DECP/Stripe/Resend est bloqué en local : tester via un workflow, jamais par essais répétés.

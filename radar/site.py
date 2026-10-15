@@ -7,6 +7,7 @@ from pathlib import Path
 import yaml
 from markupsafe import Markup
 
+from . import avis as avis_mod
 from .config import ROOT
 from .render import date_fr, date_limite_fr, render, render_string
 
@@ -93,8 +94,9 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=Non
     ex_key = max(counts, key=counts.get) if counts else None
     exemple = [a for a in by_metier.get(ex_key, []) if (a.get("jours_restants") or 0) > 0][:3]
     film = _film(by_metier, histo)
+    avis_clients = avis_mod.resume(avis_mod.charger())
     write("index.html", render("index.html", root="", path="/", stats=stats, counts=counts,
-                               ex_key=ex_key, exemple=exemple, film=film,
+                               ex_key=ex_key, exemple=exemple, film=film, avis_clients=avis_clients,
                                title=f"{biz['nom']} · Appels d'offres publics par métier, triés" + (" par IA" if biz.get("ia_active") else ""),
                                description=biz["slogan"], **common))
     write("appels-offres/index.html", render(
@@ -131,6 +133,11 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=Non
 
     write("criteres/index.html", render("criteres.html", root="../", path="/criteres/", noindex=True,
                                         title=f"Modifier mes critères · {biz['nom']}", description="", **common))
+    write("avis/index.html", render("avis.html", root="../", path="/avis/", noindex=True,
+                                    title=f"Donner mon avis · {biz['nom']}", description="", **common))
+    write("parrainage/index.html", render("parrainage.html", root="../", path="/parrainage/",
+                                          title=f"Parrainage : 1 mois offert · {biz['nom']}",
+                                          description="Parrainez un confrère : 1 mois offert pour chacun, automatiquement.", **common))
     write("rappel/index.html", render("rappel.html", root="../", path="/rappel/", noindex=True,
                                       title=f"Ajouter un rappel · {biz['nom']}", description="", **common))
 
@@ -142,7 +149,7 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=Non
 
     base = biz["site_url"].rstrip("/")
     # Les pages légales (adresse de l'éditeur) restent accessibles mais hors Google.
-    pages = [p for p in pages if p not in ("mentions-legales.html", "cgv.html", "confidentialite.html", "rappel/index.html", "criteres/index.html")]
+    pages = [p for p in pages if p not in ("mentions-legales.html", "cgv.html", "confidentialite.html", "rappel/index.html", "criteres/index.html", "avis/index.html")]
     urls = "".join(f"<url><loc>{base}/{p.removesuffix('index.html')}</loc><lastmod>{date.today()}</lastmod></url>" for p in pages)
     (out_dir / "sitemap.xml").write_text(
         f'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>', encoding="utf-8")
