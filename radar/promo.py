@@ -1,5 +1,5 @@
-"""Promo de lancement : crée dans Stripe le coupon (une fois) et le code promo du jour, limité aux N premiers.
-Lancé à minuit (heure de Paris) par le workflow promo.yml pendant la période de la promo."""
+"""Promo mensuelle : crée dans Stripe le coupon (une fois) et le code promo du jour, limité aux N premiers.
+Lancé vers minuit (heure de Paris) du dimanche au jeudi soir par le workflow promo.yml."""
 import os
 from datetime import date, datetime, time, timedelta
 from zoneinfo import ZoneInfo
@@ -11,7 +11,14 @@ PARIS = ZoneInfo("Europe/Paris")
 
 
 def code_du_jour(jour: date):
-    return f"PRO{jour.day:02d}"
+    return f"PRO{jour.day:02d}{jour.month:02d}"
+
+
+def en_promo(jour: date, semaine: int = 3):
+    """Vrai du lundi au vendredi de la semaine du n-ième lundi du mois."""
+    premier = date(jour.year, jour.month, 1)
+    lundi = 1 + (7 - premier.weekday()) % 7 + 7 * (semaine - 1)
+    return lundi <= jour.day <= lundi + 4
 
 
 def run(jour: date | None = None):
@@ -21,18 +28,18 @@ def run(jour: date | None = None):
     if not p.get("publie"):
         print("Promo non publiée (promo.publie: false) : rien à faire.")
         return None
-    if not (date.fromisoformat(p["debut"]) <= jour <= date.fromisoformat(p["fin"])):
+    if not en_promo(jour, p.get("semaine", 3)):
         print(f"{jour} hors de la période de promo : rien à faire.")
         return None
     offre = biz["offres"][p["offre"]]
     product = _find_product(p["offre"])
     remise = int((offre["prix_mensuel"] - p["prix"]) * 100)
-    cid = f"radar-promo-{p['offre']}-{p['debut']}"
+    cid = f"radar-promo-{p['offre']}-{p['prix']}-{p['mois']}m"
     try:
         coupon = _call("GET", f"coupons/{cid}")
     except RuntimeError:
         coupon = _call("POST", "coupons", data={
-            "id": cid, "name": f"Lancement : {offre['nom']} à {p['prix']} € pendant {p['mois']} mois",
+            "id": cid, "name": f"Promo : {offre['nom']} à {p['prix']} € pendant {p['mois']} mois",
             "amount_off": remise, "currency": "eur", "duration": "repeating", "duration_in_months": p["mois"],
             "applies_to[products][0]": product["id"]})
     code = code_du_jour(jour)

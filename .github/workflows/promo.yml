@@ -1,7 +1,7 @@
 name: Promo du jour (code Stripe)
 on:
   schedule:
-    - cron: "1 22 18-22 10 *"   # minuit 01 heure de Paris, du 19 au 23 octobre
+    - cron: "5 23 * * 0-4"   # 0 h 05 (hiver) ou 1 h 05 (été) à Paris, du lundi au vendredi
   workflow_dispatch: {}
 jobs:
   promo:
