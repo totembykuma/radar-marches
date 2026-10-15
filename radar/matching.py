@@ -14,13 +14,15 @@ class Matcher:
         self._inc = {k: _compile(v.get("mots", [])) for k, v in metiers.items()}
         self._exc = {k: _compile(v.get("exclure", [])) for k, v in metiers.items()}
 
-    def haystack(self, avis):
-        return norm(f"{avis['objet']} {' '.join(avis['descripteurs'])} {avis.get('texte', '')[:400]}")
+    def haystack(self, avis, texte=True):
+        extra = avis.get("texte", "")[:400] if texte else ""
+        return norm(f"{avis['objet']} {' '.join(avis['descripteurs'])} {extra}")
 
     def metiers_of(self, avis):
-        text = self.haystack(avis)
+        full, court = self.haystack(avis), self.haystack(avis, texte=False)
         out = []
         for key in self.metiers:
+            text = full if self.metiers[key].get("texte", True) else court
             if any(p.search(text) for p in self._exc[key]):
                 continue
             if any(p.search(text) for p in self._inc[key]):

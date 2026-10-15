@@ -15,7 +15,7 @@ peinture:
 electricite:
   libelle: "Électricité"
   mots: ["electricite", "courants forts", "courants faibles", "eclairage", "installation electrique", "cfo", "cfa"]
-  exclure: ["fourniture d'electricite", "acheminement d'electricite", "energie electrique"]
+  exclure: ["fourniture d'electricite", "acheminement d'electricite", "energie electrique", "gaz naturel", "fourniture de gaz"]
 plomberie-cvc:
   libelle: "Plomberie, chauffage, ventilation"
   mots: ["plomberie", "chauffage", "ventilation", "climatisation", "cvc", "sanitaire", "chaufferie", "pompe a chaleur"]
@@ -39,10 +39,11 @@ restauration:
 formation:
   libelle: "Formation professionnelle"
   mots: ["formation", "formations", "accompagnement professionnel", "bilan de competences"]
-  exclure: ["formation de la voirie"]
+  exclure: ["formation de la voirie", "sirh", "systeme d'information"]
+  texte: false   # cherché seulement dans l'objet (trop de faux positifs dans le détail)
 communication-web:
   libelle: "Communication, web et graphisme"
-  mots: ["site internet", "site web", "communication", "graphisme", "graphique", "impression", "audiovisuel", "evenementiel", "reseaux sociaux"]
+  mots: ["site internet", "site web", "communication", "graphisme", "graphique", "impression de supports", "imprimerie", "supports de communication", "audiovisuel", "evenementiel", "reseaux sociaux"]
   exclure: ["communications electroniques", "telecommunications"]
 informatique:
   libelle: "Informatique et numérique"
