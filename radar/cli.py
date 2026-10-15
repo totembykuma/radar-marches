@@ -207,10 +207,28 @@ def run_demo():
     return run_daily(avis_new=avis, avis_open=[dict(a) for a in avis], subs=subs)
 
 
+def run_essai():
+    """Essai à blanc sur les vraies données : aucun e-mail, aucune clé requise. Montre ce que le tri donne."""
+    biz, metiers = business(), load_metiers()
+    matcher = Matcher(metiers)
+    avis = boamp.fetch_since(date.today() - timedelta(days=3))
+    appels = [a for a in avis if not matcher.is_award_notice(a)]
+    report = {"avis_3_jours": len(avis), "dont_appels_d_offres": len(appels), "par_metier": {}}
+    for k in metiers:
+        hits = [a for a in appels if k in matcher.metiers_of(a)]
+        report["par_metier"][k] = {"nombre": len(hits), "exemples": [a["objet"][:110] for a in hits[:4]]}
+    avis_open = boamp.fetch_open(days=30)
+    res = site.build(avis_open, biz, metiers, matcher, OUT / "site",
+                     stats={"total": len(avis), "metiers_hits": sum(v["nombre"] for v in report["par_metier"].values())})
+    report["avis_ouverts_30_jours"] = len(avis_open)
+    report["pages_site"] = res["pages"]
+    return report
+
+
 def main(argv=None):
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     p = argparse.ArgumentParser(prog="radar")
-    p.add_argument("cmd", choices=["daily", "weekly", "check-api", "demo"])
+    p.add_argument("cmd", choices=["daily", "weekly", "check-api", "demo", "essai"])
     args = p.parse_args(argv)
     try:
         if args.cmd == "daily":
@@ -223,6 +241,8 @@ def main(argv=None):
             missing = [k for k, cands in boamp.FIELDS.items() if not set(cands) & set(fields)]
             print("Champs logiques non trouvés :", missing or "aucun")
             sys.exit(1 if {"id", "objet", "date_parution"} & set(missing) else 0)
+        elif args.cmd == "essai":
+            print(json.dumps(run_essai(), ensure_ascii=False, indent=1))
         elif args.cmd == "demo":
             print(json.dumps(run_demo(), ensure_ascii=False, indent=1))
     except Exception:
