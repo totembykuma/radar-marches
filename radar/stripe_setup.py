@@ -55,10 +55,14 @@ def run():
     biz, metiers = business(), load_metiers()
     mode = "test" if os.environ["STRIPE_SECRET_KEY"].strip().split("_")[1] == "test" else "réel"
     results = {}
+    desc = "Alertes quotidiennes par e-mail des appels d'offres publics de votre métier et de vos départements."
     for key, offre in biz["offres"].items():
-        product = _find_product(key) or _call("POST", "products", data={
-            "name": f"{biz['nom']} {offre['nom']}", "metadata[radar_offre]": key,
-            "description": "Alertes quotidiennes d'appels d'offres publics, triées et résumées par IA."})
+        product = _find_product(key)
+        if not product:
+            product = _call("POST", "products", data={
+                "name": f"{biz['nom']} {offre['nom']}", "metadata[radar_offre]": key, "description": desc})
+        elif product.get("description") != desc:
+            product = _call("POST", f"products/{product['id']}", data={"description": desc})
         price = _price_for(product, int(offre["prix_mensuel"] * 100))
         link = None
         for pl in _call("GET", "payment_links", params={"active": "true", "limit": 100})["data"]:

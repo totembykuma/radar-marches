@@ -1,6 +1,6 @@
 # Paramètres du business. Modifiable sans toucher au code.
 nom: "Radar Marchés"
-slogan: "Les appels d'offres publics de votre métier, triés par l'IA, chaque matin."
+slogan: "Les appels d'offres publics de votre métier et de votre région, chaque matin dans votre boîte mail."
 site_url: "https://www.radar-marches.fr"
 email_contact: "contact@radar-marches.fr"     # adresse de support (Resend / boîte mail)
 email_expediteur: "Radar Marchés <alertes@radar-marches.fr>"

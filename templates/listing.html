@@ -11,6 +11,6 @@
     {% if a.date_limite %}<div class="meta">Date limite : <b>{{ a.date_limite_fr }}</b></div>{% endif %}
   </article>
   {% else %}<p>Aucun appel d'offres ouvert pour l'instant. Les nouveaux sont ajoutés chaque jour.</p>{% endfor %}
-  <div class="cta"><b>Ne ratez plus les prochains.</b> {{ biz.nom }} vous les envoie le matin même, résumés par l'IA. <a class="btn" href="{{ root }}#tarifs">Essai gratuit</a></div>
+  <div class="cta"><b>Ne ratez plus les prochains.</b> {{ biz.nom }} vous les envoie le matin même{% if biz.ia_active %}, résumés par l'IA{% endif %}. <a class="btn" href="{{ root }}#tarifs">Essai gratuit</a></div>
 </section>
 {% endblock %}

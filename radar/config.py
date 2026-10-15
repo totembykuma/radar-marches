@@ -14,6 +14,8 @@ def load_yaml(name):
 def business():
     cfg = load_yaml("business.yaml")
     # Les secrets / valeurs d'environnement ont priorité sur le fichier.
+    # Les promesses « IA » du site ne s'affichent que si la clé Claude est configurée.
+    cfg["ia_active"] = bool(os.getenv("ANTHROPIC_API_KEY", "").strip())
     cfg["email_proprietaire"] = os.getenv("OWNER_EMAIL") or cfg.get("email_proprietaire") or ""
     for key in ("essentiel", "pro"):
         env_link = os.getenv(f"STRIPE_LINK_{key.upper()}")

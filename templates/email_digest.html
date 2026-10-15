@@ -21,7 +21,7 @@
 {% endfor %}
 <tr><td style="padding:18px 24px;font-size:12px;color:#5a6478;line-height:1.5">
   Pour modifier vos critères, répondez simplement à cet e-mail.<br>
-  Résumés générés automatiquement par IA à partir des avis officiels du BOAMP : vérifiez toujours l'avis complet avant de répondre.<br>
+  {% if biz.ia_active %}Résumés générés automatiquement par IA à partir des avis officiels du BOAMP : vérifiez{% else %}Sélection automatique à partir des avis officiels du BOAMP : vérifiez{% endif %} toujours l'avis complet avant de répondre.<br>
   {{ biz.nom }} · {{ biz.site_url }} · Pour vous désabonner, répondez « STOP » ou résiliez {% if biz.portail_client %}<a href="{{ biz.portail_client }}">depuis votre espace client</a>{% else %}depuis votre espace client{% endif %}.
 </td></tr>
 </table></td></tr></table></body></html>

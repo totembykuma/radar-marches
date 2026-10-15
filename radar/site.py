@@ -38,7 +38,7 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None):
 
     stats = stats or {"total": len(avis_open), "metiers_hits": sum(len(v) for v in by_metier.values())}
     write("index.html", render("index.html", root="", path="/", stats=stats,
-                               title=f"{biz['nom']} · Appels d'offres publics par métier, triés par IA",
+                               title=f"{biz['nom']} · Appels d'offres publics par métier, triés" + (" par IA" if biz.get("ia_active") else ""),
                                description=biz["slogan"], **common))
     write("appels-offres/index.html", render(
         "hub.html", root="../", path="/appels-offres/", counts={k: len(by_metier[k]) for k in metiers},
