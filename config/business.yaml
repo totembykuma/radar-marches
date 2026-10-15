@@ -12,17 +12,17 @@ offres:
     prix_mensuel: 29
     metiers_max: 1
     departements_max: 3
-    lien_paiement: "https://buy.stripe.com/test_00w5kwbv79l6aH3bAdaVa00"   # Stripe Payment Link (rempli après création)
-    stripe_price_ids: ["price_1UQqY166spunX4agEpyDOtay"]
+    lien_paiement: "https://buy.stripe.com/eVqdR2eUg7HrdHj9H23F602"   # Stripe Payment Link (rempli après création)
+    stripe_price_ids: ["price_1UQrs879764n3f0zMVMks2Dq"]
   pro:
     nom: "Pro"
     prix_mensuel: 49
     metiers_max: 1
     departements_max: 101
-    lien_paiement: "https://buy.stripe.com/test_dRmcMY7eRbte4iF6fTaVa01"
-    stripe_price_ids: ["price_1UQqY266spunX4agVHWxw3gB"]
-portail_client: "https://billing.stripe.com/p/login/test_00w5kwbv79l6aH3bAdaVa00"
-stripe_mode: "test"
+    lien_paiement: "https://buy.stripe.com/00w8wI4fC1j36eRbPa3F603"
+    stripe_price_ids: ["price_1UQrs879764n3f0zbVlgAi7W"]
+portail_client: "https://billing.stripe.com/p/login/dRm8wIfYk1j39r3aL63F600"
+stripe_mode: "réel"
 essai_gratuit_jours: 14
 
 # Fiscalité micro-entreprise (taux 2026, BNC non réglementé, à vérifier sur urssaf.fr)
