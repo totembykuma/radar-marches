@@ -35,6 +35,8 @@ promo:
   places_par_jour: 5
   prix: 29
   mois: 3
+# Adresse de réception Resend (…@xxxx.resend.app) pour les changements de critères automatiques (vide = vers email_contact, traité à la main)
+criteres_adresse: ""
 portail_client: "https://billing.stripe.com/p/login/dRm8wIfYk1j39r3aL63F600"
 # Statistiques de visites sans cookie (GoatCounter) : nom du compte, ex. "radarmarches"
 statistiques_goatcounter: "radarmarches"

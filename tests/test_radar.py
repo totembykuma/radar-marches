@@ -303,3 +303,23 @@ def test_nouveaux_metiers_et_faux_amis():
     assert "carrelage-sols" not in m.metiers_of({"objet": "Restauration de la chapelle Saint-Jean", "descripteurs": []})
     assert "voirie-vrd" not in m.metiers_of({"objet": "Nettoyage de voirie et balayage mécanisé", "descripteurs": []})
     assert "voirie-vrd" in m.metiers_of({"objet": "Réfection de chaussée et trottoirs rue des Lilas", "descripteurs": []})
+
+
+def test_criteres_automatiques(monkeypatch, tmp_path):
+    from radar import criteres
+    monkeypatch.setenv("RESEND_INBOUND_KEY", "re_x")
+    monkeypatch.setenv("RADAR_DRY_RUN", "1")
+    monkeypatch.setattr("radar.mailer.OUTBOX", tmp_path)
+    biz = dict(business(), criteres_adresse="criteres@abc.resend.app")
+    corps = "Bonjour,\n\nMerci de modifier mes critères d'alerte :\n\nMétier : Carrelage et sols\nDépartements : 33, 47\nMots-clés : crèche, gymnase\n"
+    rec = [{"id": "e1", "from": "Jean <Jean@Exemple.fr>", "to": ["criteres@abc.resend.app"], "subject": "Modifier mes critères"},
+           {"id": "e2", "from": "x@y.fr", "to": ["autre@abc.resend.app"], "subject": "Modifier mes critères"}]
+    monkeypatch.setattr(criteres, "_resend", lambda path, key, session=None: {"data": rec} if "limit" in path else {"text": corps})
+    maj = []
+    monkeypatch.setattr(criteres, "_stripe_update", lambda sid, meta, session=None: maj.append((sid, meta)))
+    subs = [{"email": "jean@exemple.fr", "plan": "pro", "metiers": ["peinture"], "departements": ["91"], "mots_cles": [], "stripe_subscription": "sub_1"}]
+    state = {}
+    n, err = criteres.traiter(subs, biz, metiers(), state, lambda s, m: "ok")
+    assert n == 1 and not err and maj == [("sub_1", {"metier": "carrelage-sols", "departements": "33, 47", "motscles": "crèche, gymnase"})]
+    assert subs[0]["metiers"] == ["carrelage-sols"] and state["criteres_vus"] == ["e1"]
+    assert criteres.traiter(subs, biz, metiers(), state, lambda s, m: "ok")[0] == 0   # pas de double traitement

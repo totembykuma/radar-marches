@@ -15,7 +15,7 @@ import traceback
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
-from . import ai, boamp, finance, historique, mailer, prospects, site, subscribers
+from . import criteres, ai, boamp, finance, historique, mailer, prospects, site, subscribers
 from .config import ROOT, business, metiers as load_metiers
 from .matching import Matcher
 from .render import date_fr, date_limite_fr, render
@@ -121,6 +121,15 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
     if subs is None:
         subs = subscribers.load_all(biz, metiers)
     run["abonnes"] = len(subs)
+
+    # 2a. Changements de critères demandés via le formulaire du site (lecture automatique)
+    try:
+        n, errs = criteres.traiter(subs, biz, metiers, state, criteres_txt)
+        if n:
+            run["criteres_modifies"] = n
+        run["erreurs"] += errs
+    except Exception as exc:
+        run["erreurs"].append(f"lecture des demandes de critères impossible : {safe(exc)}")
 
     # 2b. Message de bienvenue aux nouveaux abonnés
     known = set(state.setdefault("known", []))
