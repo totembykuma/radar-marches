@@ -227,6 +227,10 @@ def run_weekly():
         "avis_moyens_jour": round(sum(r.get("avis_recuperes", 0) for r in runs) / max(1, len(runs))),
         "objectif_mensuel_ca": [800, 1300],
     }
+    pj = _load_json(DATA / "prospection.json", {}).get("journal", [])
+    debut = (today - timedelta(days=7)).isoformat()
+    kpi["prospects_contactes_7j"] = sum(j.get("envoyes", 0) for j in pj if j.get("date", "") >= debut)
+    kpi["prospects_contactes_total"] = sum(j.get("envoyes", 0) for j in pj)
     decisions = []
     if impayes:
         decisions.append(f"{len(impayes)} abonnement(s) impayé(s) : Stripe relance automatiquement, rien à faire sauf si cela dure.")
