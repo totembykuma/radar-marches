@@ -262,8 +262,7 @@ def run_prospection(apercu=False):
             n, zone, ex, lien = len(lst), "en France", (lst[0] if lst else None), base
         m = metiers[p["metier"]]
         subject = f"{n} marchés publics « {m['libelle'].lower()} » ouverts {zone.replace('dans le département', 'dans le')}"
-        html = render("email_prospect.html", p=p, n=n, zone=zone, ex=ex, lien=lien, metier=m, biz=biz,
-                      signature=conf.get("signature") or biz["editeur"]["nom"])
+        html = render("email_prospect.html", p=p, n=n, zone=zone, ex=ex, lien=lien, metier=m, biz=biz)
         return subject, html, n
 
     resume = {"prospects_trouves": len(cands), "par_metier": {}}

@@ -58,5 +58,4 @@ editeur:
 prospection:
   actif: false
   par_jour: 20
-  expediteur: ""          # ex. "William de Radar Marchés <william@domaine-secondaire.fr>" (domaine vérifié dans Resend)
-  signature: "William Barboutie"
+  expediteur: ""          # ex. "Radar Marchés <bonjour@domaine-secondaire.fr>" (domaine vérifié dans Resend)
