@@ -3,11 +3,11 @@
 nettoyage:
   libelle: "Nettoyage et propreté"
   mots: ["nettoyage", "proprete", "entretien des locaux", "vitrerie", "lavage des vitres", "menage", "desinfection"]
-  exclure: ["nettoyage de voirie", "balayage mecanise", "assainissement"]
+  exclure: ["nettoyage de voirie", "balayage mecanise", "assainissement", "ordures", "dechets", "deratisation"]
 espaces-verts:
   libelle: "Espaces verts et paysage"
   mots: ["espaces verts", "elagage", "paysag", "tonte", "fauchage", "debroussaillage", "plantation", "arboric"]
-  exclure: []
+  exclure: ["maitrise d'oeuvre"]
 peinture:
   libelle: "Peinture et revêtements"
   mots: ["peinture", "revetements de sols", "revetement de sol", "ravalement", "papier peint", "sols souples"]
@@ -15,7 +15,7 @@ peinture:
 electricite:
   libelle: "Électricité"
   mots: ["electricite", "courants forts", "courants faibles", "eclairage", "installation electrique", "cfo", "cfa"]
-  exclure: ["fourniture d'electricite", "acheminement d'electricite", "energie electrique", "gaz naturel", "fourniture de gaz"]
+  exclure: ["fourniture d'electricite", "acheminement d'electricite", "energie electrique", "gaz naturel", "fourniture de gaz", "carburant"]
 plomberie-cvc:
   libelle: "Plomberie, chauffage, ventilation"
   mots: ["plomberie", "chauffage", "ventilation", "climatisation", "cvc", "sanitaire", "chaufferie", "pompe a chaleur"]
