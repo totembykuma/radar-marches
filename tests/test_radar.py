@@ -100,7 +100,9 @@ def test_demo_end_to_end(tmp_path, monkeypatch):
     run = cli.run_demo()
     assert run["emails_envoyes"] == 2 and not run["erreurs"] or run["erreurs"] == []
     mails = sorted(m.name for m in (tmp_path / "outbox").glob("*.html"))
-    assert len(mails) == 4 and sum("Bienvenue" in m for m in mails) == 2   # 2 bienvenues + 2 alertes
+    assert len(mails) == 5 and sum("Bienvenue" in m for m in mails) == 2   # 2 bienvenues + 2 alertes + 1 rappel d'essai
+    assert run["rappels_essai"] == 1 and sum("essai" in m for m in mails) == 1
+    assert (tmp_path / "site" / "criteres" / "index.html").exists()
     assert (tmp_path / "site" / "appels-offres" / "nettoyage" / "33.html").exists()
     assert (tmp_path / "site" / "rappel" / "index.html").exists()
     g = (tmp_path / "site" / "guides" / "mapa-procedure-adaptee.html").read_text()
@@ -109,7 +111,7 @@ def test_demo_end_to_end(tmp_path, monkeypatch):
     assert "/rappel/?o=" in alerte
     # pas de doublon au 2e passage
     run2 = cli.run_demo()
-    assert run2["emails_envoyes"] == 0 and "bienvenues" not in run2
+    assert run2["emails_envoyes"] == 0 and "bienvenues" not in run2 and "rappels_essai" not in run2
 
 
 def test_stripe_setup_writes_config(tmp_path, monkeypatch):
@@ -292,3 +294,12 @@ def test_promo_hors_periode_ou_non_publiee(monkeypatch):
     assert promo.run(date(2026, 10, 20)) is None and not appels
     biz["promo"]["publie"] = True
     assert promo.run(date(2026, 10, 24)) is None and not appels
+
+
+def test_nouveaux_metiers_et_faux_amis():
+    from radar.matching import Matcher
+    m = Matcher(metiers())
+    assert "platrerie" in m.metiers_of({"objet": "Travaux de cloisons et faux plafonds au groupe scolaire", "descripteurs": []})
+    assert "carrelage-sols" not in m.metiers_of({"objet": "Restauration de la chapelle Saint-Jean", "descripteurs": []})
+    assert "voirie-vrd" not in m.metiers_of({"objet": "Nettoyage de voirie et balayage mécanisé", "descripteurs": []})
+    assert "voirie-vrd" in m.metiers_of({"objet": "Réfection de chaussée et trottoirs rue des Lilas", "descripteurs": []})
