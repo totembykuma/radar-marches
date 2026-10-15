@@ -1,7 +1,7 @@
 {% extends "base.html" %}{% import "_ui.html" as ui %}{% block main %}
 {% set promo = biz.promo if biz.promo and (biz.promo.publie or promo_apercu) and biz.offres[biz.promo.offre].lien_paiement else None %}
 {% if promo %}<div class="promo-bar" id="promo-bar" hidden data-semaine="{{ promo.semaine }}"><div class="wrap">
-  <b>Semaine promo</b> : aujourd'hui, les <b>{{ promo.places_par_jour }} premiers</b> abonnés {{ biz.offres[promo.offre].nom }} paient <b>{{ promo.prix }} €/mois au lieu de {{ biz.offres[promo.offre].prix_mensuel }} €</b> pendant {{ promo.mois }} mois.
+  <b>Cette semaine</b> : l'offre {{ biz.offres[promo.offre].nom }} à <b>{{ promo.prix }} €/mois au lieu de {{ biz.offres[promo.offre].prix_mensuel }} €</b> pendant {{ promo.mois }} mois ({{ promo.places_par_jour }} places par jour).
   <a href="#tarifs">J'en profite →</a>
 </div></div>{% endif %}
 <section class="hero">
@@ -98,10 +98,28 @@
   </div>
 </section>
 
+<section class="wrap block" id="fiche">
+  <p class="kicker">Offre Pro · la fiche « avant de répondre »</p>
+  <h2>Sachez en 30 secondes si un marché vaut le coup</h2>
+  <p class="sub">Sous chaque appel d'offres, vous voyez ce que le même acheteur a déjà payé, combien d'entreprises ont répondu et qui a gagné. Voici à quoi elle ressemble dans votre e-mail :</p>
+  <div style="max-width:560px;margin:18px 0 0;background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px;font-size:15px;line-height:1.5;text-align:left">
+    <span style="font-size:13px;color:#5a6478">Commune de Saint-Exemple · Dép. 33</span><br>
+    <b>Entretien des espaces verts des écoles et du cimetière</b><br>
+    <span style="font-size:13px">Réponse avant le 12/11 · <span style="color:#15803d">✔ Accessible PME</span></span>
+    <div style="margin-top:10px;background:#f4f7fb;border-left:3px solid #2563eb;border-radius:6px;padding:10px 12px;font-size:14px">
+      <b>Avant de répondre</b> · cet acheteur a attribué 3 marchés « espaces verts » en 2 ans.<br>
+      Montant habituel : <b>38 000 € HT</b> · en général <b>4 offres reçues</b><br>
+      · 03/2026 : Entreprise A, 41 200 € (5 offres)<br>
+      · 09/2025 : Entreprise B, 36 800 € (3 offres)
+    </div>
+    <p style="margin:10px 0 0;font-size:12.5px;color:#5a6478">Exemple d'affichage avec des données fictives. Les vraies fiches viennent des données officielles de la commande publique.</p>
+  </div>
+</section>
+
 <section id="tarifs" class="soft"><div class="wrap block">
   <p class="kicker">Tarifs</p>
   <h2>Simple, sans engagement, {{ biz.essai_gratuit_jours }} jours offerts</h2>
-  <p class="sub">Aucun prélèvement pendant l'essai. Vous arrêtez quand vous voulez, en un clic.</p>
+  <p class="sub">Aucun prélèvement pendant l'essai, et nous vous prévenons par e-mail 3 jours avant sa fin. Vous arrêtez quand vous voulez, en un clic.</p>
   {% set annuel = biz.offres.essentiel.lien_annuel and biz.offres.pro.lien_annuel and biz.stripe_mode == 'réel' %}
   {% if annuel %}<div class="periode" role="group" aria-label="Période de paiement"><button type="button" data-p="mois" class="on" aria-pressed="true">Mensuel</button><button type="button" data-p="an" aria-pressed="false">Annuel <em>2 mois offerts</em></button></div>{% endif %}
   <div class="prices">
@@ -123,7 +141,7 @@
       <span class="ribbon">Recommandé</span>
       <h3>{{ o.nom }}</h3>
       <p class="for">Pour décrocher plus de marchés et surveiller la concurrence</p>
-      <p class="amount" data-mois>{% if promo %}<s class="promo-old" hidden>{{ o.prix_mensuel }} €</s> <b class="promo-new" hidden>{{ promo.prix }} €</b><b class="promo-std">{{ o.prix_mensuel }} €</b>{% else %}{{ o.prix_mensuel }} €{% endif %}<span>/mois</span></p>{% if promo %}<p class="promo-note" hidden>Semaine promo : <b>{{ promo.prix }} €/mois pendant {{ promo.mois }} mois</b>, puis {{ o.prix_mensuel }} €. Réservée aux {{ promo.places_par_jour }} premiers du jour, code <b class="promo-code"></b> déjà appliqué. Si le code est refusé, les places du jour sont prises : revenez demain dès minuit.</p>{% endif %}{% if annuel %}<p class="amount" data-an hidden>{{ o.prix_annuel }} €<span>/an</span></p><p class="eco" data-an hidden>Soit {{ '%.2f'|format(o.prix_annuel / 12)|replace('.', ',') }} €/mois : vous économisez {{ o.prix_mensuel * 12 - o.prix_annuel }} €</p>{% endif %}
+      <p class="amount" data-mois>{% if promo %}<s class="promo-old" hidden>{{ o.prix_mensuel }} €</s> <b class="promo-new" hidden>{{ promo.prix }} €</b><b class="promo-std">{{ o.prix_mensuel }} €</b>{% else %}{{ o.prix_mensuel }} €{% endif %}<span>/mois</span></p>{% if promo %}<p class="promo-note" hidden>Semaine promo : <b>{{ promo.prix }} €/mois pendant {{ promo.mois }} mois</b>, puis {{ o.prix_mensuel }} €. Code <b class="promo-code"></b> déjà appliqué. {{ promo.places_par_jour }} places par jour : si elles sont prises, l'offre revient demain.</p>{% endif %}{% if annuel %}<p class="amount" data-an hidden>{{ o.prix_annuel }} €<span>/an</span></p><p class="eco" data-an hidden>Soit {{ '%.2f'|format(o.prix_annuel / 12)|replace('.', ',') }} €/mois : vous économisez {{ o.prix_mensuel * 12 - o.prix_annuel }} €</p>{% endif %}
       <ul class="checks">
         <li>Toute l'offre Essentiel, plus :</li>
         <li><b>Autant de départements que vous voulez</b>, ou toute la France</li>
@@ -179,7 +197,8 @@
   <details><summary>C'est quoi, la fiche « avant de répondre » ?</summary><p>Sous chaque appel d'offres, les abonnés Pro voient ce que le même acheteur a déjà attribué dans leur métier ces deux dernières années : le montant habituel, le nombre d'offres reçues (donc la concurrence à attendre) et les dernières entreprises retenues. De quoi décider en 30 secondes si le marché vaut le coup, et caler votre prix. Source : données essentielles de la commande publique, publiées par l'État.</p></details>
   <details><summary>C'est quoi, le bilan du lundi ?</summary><p>Chaque lundi, les abonnés Pro reçoivent la liste des marchés de leur métier attribués la semaine précédente dans leur secteur : l'acheteur, l'entreprise qui a gagné et le montant quand l'avis le publie. C'est le meilleur moyen de connaître ses concurrents et les prix du marché.</p></details>
   <details><summary>Et si je reçois des alertes hors sujet ?</summary><p>Répondez simplement à l'e-mail avec vos remarques : nous ajustons votre filtre.</p></details>
-  <details><summary>Puis-je arrêter quand je veux ?</summary><p>Oui, sans engagement. Aucun prélèvement pendant l'essai si vous résiliez avant la fin.</p></details>
+  <details><summary>Puis-je arrêter quand je veux ?</summary><p>Oui, sans engagement. Aucun prélèvement pendant l'essai si vous résiliez avant la fin, et nous vous prévenons par e-mail 3 jours avant. Pour changer de métier ou de départements, <a href="criteres/">un formulaire d'une minute</a>.</p></details>
+  <details><summary>Qui est derrière {{ biz.nom }} ?</summary><p>Un service français indépendant, édité par une micro-entreprise (voir les <a href="mentions-legales.html">mentions légales</a>). Pas de centre d'appels ni de robot au support : une vraie personne lit vos e-mails et vous répond, à <a href="mailto:{{ biz.email_contact }}">{{ biz.email_contact }}</a>. Votre adresse e-mail sert uniquement à vous envoyer vos alertes : elle n'est jamais revendue.</p></details>
 </section>
 
 <section class="final"><div class="wrap">

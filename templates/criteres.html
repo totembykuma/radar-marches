@@ -1,0 +1,24 @@
+{% extends "base.html" %}{% block main %}
+<section class="wrap rappel">
+  <p class="kicker">Espace abonné</p>
+  <h1>Modifier mes critères</h1>
+  <p class="lead">Choisissez vos nouveaux critères : votre messagerie s'ouvre avec la demande déjà rédigée, il ne reste qu'à l'envoyer. Le changement s'applique à partir du jour ouvré suivant.</p>
+  <form class="card" id="c-form">
+    <p><label>Adresse e-mail qui reçoit les alertes<br><input type="email" id="c-email" required style="width:100%"></label></p>
+    <p><label>Votre métier<br><select id="c-metier" style="width:100%">{% for k, m in metiers.items() %}<option>{{ m.libelle }}</option>{% endfor %}</select></label></p>
+    <p><label>Départements (ex. 33, 47) ou « France » avec l'offre Pro<br><input id="c-deps" style="width:100%"></label></p>
+    <p><label>Mots-clés en plus, séparés par des virgules (offre Pro, facultatif)<br><input id="c-mots" style="width:100%"></label></p>
+    <button class="btn btn-lg" type="submit">Préparer ma demande</button>
+  </form>
+  <p class="muted">Pour changer d'offre ou arrêter, utilisez {% if biz.portail_client %}<a href="{{ biz.portail_client }}">votre espace client</a>{% else %}votre espace client{% endif %}.</p>
+</section>
+<script>
+document.getElementById("c-form").addEventListener("submit", function (ev) {
+  ev.preventDefault();
+  function v(id) { return document.getElementById(id).value.trim(); }
+  var corps = "Bonjour,\n\nMerci de modifier mes critères d'alerte :\n\nE-mail abonné : " + v("c-email") + "\nMétier : " + v("c-metier") +
+    "\nDépartements : " + (v("c-deps") || "inchangés") + "\nMots-clés : " + (v("c-mots") || "aucun") + "\n";
+  location.href = "mailto:{{ biz.email_contact }}?subject=" + encodeURIComponent("Modifier mes critères") + "&body=" + encodeURIComponent(corps);
+});
+</script>
+{% endblock %}

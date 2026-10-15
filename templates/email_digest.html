@@ -33,7 +33,7 @@
 </td></tr>
 {% endfor %}
 <tr><td style="padding:18px 24px;font-size:12px;color:#5a6478;line-height:1.5">
-  Pour modifier vos critères, répondez simplement à cet e-mail.<br>
+  Pour modifier vos critères : <a href="{{ biz.site_url }}/criteres/">ce formulaire</a> ou répondez à cet e-mail.<br>
   {% if biz.ia_active %}Résumés générés automatiquement par IA à partir des avis officiels du BOAMP : vérifiez{% else %}Sélection automatique à partir des avis officiels du BOAMP : vérifiez{% endif %} toujours l'avis complet avant de répondre. Fiches « avant de répondre » : données essentielles de la commande publique (marchés notifiés depuis 2 ans).<br>
   {{ biz.nom }} · {{ biz.site_url }} · Pour vous désabonner, répondez « STOP » ou résiliez {% if biz.portail_client %}<a href="{{ biz.portail_client }}">depuis votre espace client</a>{% else %}depuis votre espace client{% endif %}.
 </td></tr>

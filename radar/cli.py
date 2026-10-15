@@ -138,6 +138,29 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
         except Exception as exc:
             run["erreurs"].append(f"bienvenue non envoyée : {safe(exc)}")
 
+    # 2c. Rappel 3 jours avant la fin de l'essai (une seule fois par essai)
+    rappels = state.setdefault("rappel_essai", [])
+    now_ts = datetime.now(timezone.utc).timestamp()
+    for s in subs:
+        fin = s.get("fin_essai")
+        if not fin or not 0 < fin - now_ts <= 3.5 * 86400:
+            continue
+        key = hashlib.sha256(f"{s['email'].lower()}|{fin}".encode()).hexdigest()[:16]
+        if key in rappels:
+            continue
+        offre = biz["offres"][s["plan"]]
+        fin_fr = datetime.fromtimestamp(fin, timezone.utc).strftime("%d/%m/%Y")
+        html = render("email_fin_essai.html", biz=biz, offre=offre, fin_fr=fin_fr, criteres=criteres_txt(s, metiers))
+        try:
+            res = mailer.send(s["email"], f"Votre essai {biz['nom']} se termine le {fin_fr}", html,
+                              biz["email_expediteur"], reply_to=biz.get("email_proprietaire") or biz["email_contact"])
+            if not res.get("simulated") or os.getenv("RADAR_DEMO") == "1":
+                rappels.append(key)
+            run["rappels_essai"] = run.get("rappels_essai", 0) + 1
+        except Exception as exc:
+            run["erreurs"].append(f"rappel de fin d'essai non envoyé : {safe(exc)}")
+    state["rappel_essai"] = rappels[-500:]
+
     # 3. Sélection par abonné (sans renvoyer ce qui a déjà été envoyé)
     plans, to_enrich = {}, {}
     for s in subs:
@@ -422,7 +445,8 @@ def run_demo():
     avis = [boamp.normalize(r) for r in sample]
     subs = [
         {"email": "demo-nettoyage@example.com", "plan": "essentiel", "metiers": ["nettoyage"], "departements": ["33", "47"], "mots_cles": []},
-        {"email": "demo-pro@example.com", "plan": "pro", "metiers": ["espaces-verts"], "departements": [], "mots_cles": ["aire de jeux"]},
+        {"email": "demo-pro@example.com", "plan": "pro", "metiers": ["espaces-verts"], "departements": [], "mots_cles": ["aire de jeux"],
+         "fin_essai": int(datetime.now(timezone.utc).timestamp()) + 2 * 86400},
     ]
     global DATA
     DATA = OUT / "demo-data"

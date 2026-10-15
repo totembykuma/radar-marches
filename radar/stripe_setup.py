@@ -60,7 +60,9 @@ def _link_for(key, price, biz, metiers, mode, offre):
         # Met à jour les champs (libellés, liste des métiers) si l'offre a changé.
         wanted = {k: v for k, v in _link_fields(key, metiers).items()}
         labels = [((f.get("label") or {}).get("custom")) for f in link.get("custom_fields") or []]
-        if labels != [v for k, v in wanted.items() if k.endswith("[label][custom]")]:
+        options = [o.get("value") for f in link.get("custom_fields") or [] for o in (f.get("dropdown") or {}).get("options") or []]
+        if labels != [v for k, v in wanted.items() if k.endswith("[label][custom]")] \
+                or options != [v for k, v in wanted.items() if k.endswith("][value]")]:
             link = _call("POST", f"payment_links/{link['id']}", data=wanted)
             print(f"[{mode}] {offre['nom']} : champs du lien mis à jour")
     if not link:

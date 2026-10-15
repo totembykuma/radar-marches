@@ -92,6 +92,8 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None):
         write(f"guides/{g['slug']}.html", render("guide.html", root="../", path=f"/guides/{g['slug']}.html", guide=g, guides=guides,
                                                  content=content, h1=g["titre"], title=g["titre"], description=g["description"], **common))
 
+    write("criteres/index.html", render("criteres.html", root="../", path="/criteres/", noindex=True,
+                                        title=f"Modifier mes critères · {biz['nom']}", description="", **common))
     write("rappel/index.html", render("rappel.html", root="../", path="/rappel/", noindex=True,
                                       title=f"Ajouter un rappel · {biz['nom']}", description="", **common))
 
@@ -103,7 +105,7 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None):
 
     base = biz["site_url"].rstrip("/")
     # Les pages légales (adresse de l'éditeur) restent accessibles mais hors Google.
-    pages = [p for p in pages if p not in ("mentions-legales.html", "cgv.html", "confidentialite.html", "rappel/index.html")]
+    pages = [p for p in pages if p not in ("mentions-legales.html", "cgv.html", "confidentialite.html", "rappel/index.html", "criteres/index.html")]
     urls = "".join(f"<url><loc>{base}/{p.removesuffix('index.html')}</loc><lastmod>{date.today()}</lastmod></url>" for p in pages)
     (out_dir / "sitemap.xml").write_text(
         f'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>', encoding="utf-8")

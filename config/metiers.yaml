@@ -42,6 +42,21 @@ couverture:
   cpv: ["45261"]   # codes des marchés attribués (données essentielles)
   mots: ["couverture", "charpente", "etancheite", "zinguerie", "toiture"]
   exclure: ["couverture assurance", "couverture des risques", "couverture mobile", "couverture reseau"]
+platrerie:
+  libelle: "Plâtrerie, plaquiste, isolation"
+  cpv: ["45410", "45324", "45321", "4542114"]   # codes des marchés attribués (données essentielles)
+  mots: ["platrerie", "plaquiste", "plaques de platre", "cloisons", "cloisonnement", "doublage", "faux plafond", "faux-plafond", "plafonds suspendus", "isolation thermique", "isolation des combles", "isolation acoustique"]
+  exclure: ["cloisons mobiles de bureau", "maitrise d'oeuvre"]
+carrelage-sols:
+  libelle: "Carrelage et sols"
+  cpv: ["45431", "45432", "454321"]   # codes des marchés attribués (données essentielles)
+  mots: ["carrelage", "faience", "chape fluide", "chape liquide", "chapes", "sols durs", "resine de sol", "sols resine", "pose de parquet", "parquets", "parquet massif", "sols sportifs"]
+  exclure: ["pavage", "dallage exterieur"]
+voirie-vrd:
+  libelle: "Voirie, VRD et travaux publics"
+  cpv: ["45233", "45232", "45112"]   # codes des marchés attribués (données essentielles)
+  mots: ["voirie", "vrd", "enrobe", "enrobes", "chaussee", "trottoir", "reseaux humides", "reseaux secs", "bordures et caniveaux", "amenagement de surface"]
+  exclure: ["nettoyage de voirie", "viabilite hivernale", "balayage", "maitrise d'oeuvre", "assistance a maitrise", "signalisation horizontale", "eclairage public"]
 restauration:
   libelle: "Restauration et traiteur"
   cpv: ["5551", "5552", "5532"]   # codes des marchés attribués (données essentielles)
