@@ -80,6 +80,9 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None):
                 title=f"Appels d'offres {m['libelle'].lower()} {d} : marchés publics en cours",
                 description=f"{len(sub)} marchés publics {m['libelle'].lower()} ouverts dans le département {d}.", **common))
 
+    write("rappel/index.html", render("rappel.html", root="../", path="/rappel/", noindex=True,
+                                      title=f"Ajouter un rappel · {biz['nom']}", description="", **common))
+
     for name in ("mentions-legales", "cgv", "confidentialite"):
         src = (ROOT / "templates" / "legal" / f"{name}.html").read_text(encoding="utf-8")
         content = Markup(render_string(src, e=biz["editeur"], **common))
@@ -88,7 +91,7 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None):
 
     base = biz["site_url"].rstrip("/")
     # Les pages légales (adresse de l'éditeur) restent accessibles mais hors Google.
-    pages = [p for p in pages if p not in ("mentions-legales.html", "cgv.html", "confidentialite.html")]
+    pages = [p for p in pages if p not in ("mentions-legales.html", "cgv.html", "confidentialite.html", "rappel/index.html")]
     urls = "".join(f"<url><loc>{base}/{p.removesuffix('index.html')}</loc><lastmod>{date.today()}</lastmod></url>" for p in pages)
     (out_dir / "sitemap.xml").write_text(
         f'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>', encoding="utf-8")

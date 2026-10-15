@@ -1,6 +1,7 @@
 """Récupération des avis du BOAMP (open data DILA, API Opendatasoft, gratuite, sans clé)."""
 import json
 import logging
+import re
 from datetime import date, timedelta
 
 import requests
@@ -120,6 +121,21 @@ def _siret_brut(donnees):
     return ""
 
 
+def _pme(rec):
+    """Badge « Accessible PME » : petits marchés (MAPA < 90 k€, national < seuils européens)
+    ou lot que l'acheteur déclare adapté aux PME. Renvoie la raison, ou "" si non."""
+    famille = str(rec.get("famille") or "").upper()
+    if famille == "MAPA":
+        return "Petit marché (moins de 90 000 €)"
+    if famille == "FNS":
+        return "Marché national (sous les seuils européens)"
+    d = rec.get("donnees")
+    txt = d if isinstance(d, str) else json.dumps(d or {})
+    if re.search(r'"cbc:SMESuitableIndicator"\s*:\s*"?true', txt, re.I):
+        return "Lot déclaré adapté aux PME par l'acheteur"
+    return ""
+
+
 def normalize(rec):
     avis_id = str(_first(rec, FIELDS["id"]) or "")
     url = _first(rec, FIELDS["url"]) or (f"https://www.boamp.fr/pages/avis/?q=idweb:%22{avis_id}%22" if avis_id else "")
@@ -136,6 +152,7 @@ def normalize(rec):
         "type_marche": " ".join(_as_list(_first(rec, FIELDS["type_marche"]))),
         "texte": _extract_text(rec.get("donnees")),
         "acheteur_siret": _siret_acheteur(rec.get("donnees")),
+        "pme": _pme(rec),
     }
 
 
