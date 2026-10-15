@@ -9,5 +9,5 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - run: pip install requests
-      - env: { RESEND_API_KEY: "${{ secrets.RESEND_API_KEY }}" }
+      - env: { RESEND_API_KEY: "${{ secrets.RESEND_API_KEY }}", RESEND_INBOUND_KEY: "${{ secrets.RESEND_INBOUND_KEY }}", STRIPE_SECRET_KEY: "${{ secrets.STRIPE_SECRET_KEY }}" }
         run: python scripts/sonde_resend.py
