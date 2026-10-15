@@ -4,6 +4,7 @@ from collections import Counter, defaultdict
 from datetime import date
 from pathlib import Path
 
+import yaml
 from markupsafe import Markup
 
 from .config import ROOT
@@ -79,6 +80,17 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None):
                 metier_key=key, dep=d, deps=[], dep_counts={}, h1=f"Appels d'offres {m['libelle'].lower()} · département {d}",
                 title=f"Appels d'offres {m['libelle'].lower()} {d} : marchés publics en cours",
                 description=f"{len(sub)} marchés publics {m['libelle'].lower()} ouverts dans le département {d}.", **common))
+
+    guides = yaml.safe_load((ROOT / "config" / "guides.yaml").read_text(encoding="utf-8"))
+    write("guides/index.html", render("guide.html", root="../", path="/guides/", guide=None, guides=guides,
+                                      h1="Guides : répondre à un appel d'offres public",
+                                      title=f"Guides pour répondre à un appel d'offres public · {biz['nom']}",
+                                      description="Guides gratuits et concrets pour répondre aux marchés publics : étapes, MAPA, documents, mémoire technique, prix.", **common))
+    for g in guides:
+        src = (ROOT / "templates" / "guides" / f"{g['slug']}.html").read_text(encoding="utf-8")
+        content = Markup(render_string(src, root="../", **common))
+        write(f"guides/{g['slug']}.html", render("guide.html", root="../", path=f"/guides/{g['slug']}.html", guide=g, guides=guides,
+                                                 content=content, h1=g["titre"], title=g["titre"], description=g["description"], **common))
 
     write("rappel/index.html", render("rappel.html", root="../", path="/rappel/", noindex=True,
                                       title=f"Ajouter un rappel · {biz['nom']}", description="", **common))

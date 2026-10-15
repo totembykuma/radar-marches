@@ -1,0 +1,25 @@
+# Guides pratiques (pages SEO). Le texte de chaque guide est dans templates/guides/<slug>.html
+- slug: repondre-appel-offres
+  titre: "Comment répondre à un appel d'offres public : le guide pas à pas"
+  court: "Répondre à un appel d'offres, étape par étape"
+  description: "Les 7 étapes pour répondre à un appel d'offres public quand on est artisan ou petite entreprise : lire le dossier, candidature, offre, prix, dépôt."
+- slug: mapa-procedure-adaptee
+  titre: "MAPA : répondre à un marché à procédure adaptée (petits marchés)"
+  court: "MAPA : les petits marchés, la meilleure porte d'entrée"
+  description: "Qu'est-ce qu'un MAPA, pourquoi c'est la meilleure porte d'entrée pour une TPE et comment y répondre simplement."
+- slug: documents-candidature
+  titre: "DC1, DC2, DUME, attestations : les documents à fournir"
+  court: "Les documents à fournir (DC1, DC2, DUME…)"
+  description: "La liste des documents demandés pour répondre à un marché public : candidature, offre et pièces à fournir si vous gagnez."
+- slug: memoire-technique
+  titre: "Le mémoire technique : comment le rédiger pour gagner des points"
+  court: "Rédiger un mémoire technique qui marque des points"
+  description: "Comment rédiger un mémoire technique clair qui colle aux critères de notation, avec un plan type réutilisable."
+- slug: fixer-son-prix
+  titre: "Fixer son prix dans un marché public sans se brader"
+  court: "Fixer son prix sans se brader"
+  description: "Comment chiffrer une offre de marché public : BPU, DPGF, prix des marchés précédents, offre anormalement basse."
+- slug: apres-la-reponse
+  titre: "Après la réponse : attribution, rejet, et comment progresser"
+  court: "Après la réponse : gagner ou apprendre"
+  description: "Ce qui se passe après le dépôt : négociation, attribution, lettre de rejet, demande des motifs et des notes pour faire mieux la prochaine fois."

@@ -103,6 +103,8 @@ def test_demo_end_to_end(tmp_path, monkeypatch):
     assert len(mails) == 4 and sum("Bienvenue" in m for m in mails) == 2   # 2 bienvenues + 2 alertes
     assert (tmp_path / "site" / "appels-offres" / "nettoyage" / "33.html").exists()
     assert (tmp_path / "site" / "rappel" / "index.html").exists()
+    g = (tmp_path / "site" / "guides" / "mapa-procedure-adaptee.html").read_text()
+    assert "Accessible PME" in g and "{{" not in g
     alerte = next(m for m in (tmp_path / "outbox").glob("*.html") if "Bienvenue" not in m.name).read_text()
     assert "/rappel/?o=" in alerte
     # pas de doublon au 2e passage

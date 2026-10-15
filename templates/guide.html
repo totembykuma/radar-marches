@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% block main %}
+<section class="page-head"><div class="wrap">
+  <p class="crumbs"><a href="{{ root }}">Accueil</a> › <a href="{{ root }}guides/">Guides</a>{% if guide %} › {{ guide.court }}{% endif %}</p>
+  <h1>{{ h1 }}</h1>
+</div></section>
+<section class="wrap listing">
+  <div class="guide">
+  {% if guide %}{{ content }}
+    <h2>Les autres guides</h2>
+    <ul>{% for g in guides if g.slug != guide.slug %}<li><a href="{{ root }}guides/{{ g.slug }}.html">{{ g.court }}</a></li>{% endfor %}</ul>
+  {% else %}
+    <p class="lead">Des guides courts et concrets pour répondre aux marchés publics quand on est artisan ou petite entreprise.</p>
+    <div class="guide-list">{% for g in guides %}<a class="guide-card" href="{{ root }}guides/{{ g.slug }}.html"><b>{{ g.court }}</b><span>{{ g.description }}</span></a>{% endfor %}</div>
+  {% endif %}
+  </div>
+  <aside class="side"><div class="cta-box">
+    <p class="kicker">Trouvez les marchés à votre taille</p>
+    <p><b>Chaque matin, les appels d'offres de votre métier et de votre département</b>, avec le badge « Accessible PME ».</p>
+    <a class="btn btn-block" href="{{ root }}#tarifs">Essai gratuit {{ biz.essai_gratuit_jours }} jours</a>
+    <small>Dès {{ biz.offres.essentiel.prix_mensuel }} €/mois ensuite · sans engagement</small>
+  </div></aside>
+</section>
+{% endblock %}
