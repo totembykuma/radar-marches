@@ -21,7 +21,9 @@ if n:
     e = next(e for e in data if e.get("subject") == "sonde reception")
     d = requests.get(f"https://api.resend.com/emails/receiving/{e['id']}", headers={"Authorization": f"Bearer {rk}"}, timeout=30)
     print("lecture corps", d.status_code, "texte lu", "Électricité" in (d.json().get("text") or ""))
-subs = requests.get("https://api.stripe.com/v1/subscriptions", params={"limit": 1}, auth=(stripe, ""), timeout=30).json().get("data") or []
+lst = requests.get("https://api.stripe.com/v1/subscriptions", params={"limit": 1, "status": "all"}, auth=(stripe, ""), timeout=30)
+print("lecture Stripe", lst.status_code, (lst.json().get("error") or {}).get("message", "")[:150])
+subs = lst.json().get("data") or []
 if subs:
     w = requests.post(f"https://api.stripe.com/v1/subscriptions/{subs[0]['id']}", data={"metadata[radar_sonde]": ""}, auth=(stripe, ""), timeout=30)
     print("écriture Stripe", w.status_code, (w.json().get("error") or {}).get("message", "")[:150])
