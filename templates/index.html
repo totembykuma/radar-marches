@@ -97,36 +97,50 @@
   <p class="kicker">Tarifs</p>
   <h2>Simple, sans engagement, {{ biz.essai_gratuit_jours }} jours offerts</h2>
   <p class="sub">Aucun prélèvement pendant l'essai. Vous arrêtez quand vous voulez, en un clic.</p>
+  {% set annuel = biz.offres.essentiel.lien_annuel and biz.offres.pro.lien_annuel and biz.stripe_mode == 'réel' %}
+  {% if annuel %}<div class="periode" role="group" aria-label="Période de paiement"><button type="button" data-p="mois" class="on" aria-pressed="true">Mensuel</button><button type="button" data-p="an" aria-pressed="false">Annuel <em>2 mois offerts</em></button></div>{% endif %}
   <div class="prices">
   {% set o = biz.offres.essentiel %}
     <div class="price">
       <h3>{{ o.nom }}</h3>
       <p class="for">Pour l'artisan qui travaille près de chez lui</p>
-      <p class="amount">{{ o.prix_mensuel }} €<span>/mois</span></p>
+      <p class="amount" data-mois>{{ o.prix_mensuel }} €<span>/mois</span></p>{% if annuel %}<p class="amount" data-an hidden>{{ o.prix_annuel }} €<span>/an</span></p><p class="eco" data-an hidden>Soit {{ '%.2f'|format(o.prix_annuel / 12)|replace('.', ',') }} €/mois : vous économisez {{ o.prix_mensuel * 12 - o.prix_annuel }} €</p>{% endif %}
       <ul class="checks">
         <li>1 métier</li>
         <li><b>1 département</b></li>
         <li>Alerte chaque jour ouvré{% if biz.ia_active %} avec résumé IA{% endif %}</li>
         <li>Filtre anti faux-positifs par métier</li>
       </ul>
-      {% if o.lien_paiement and biz.stripe_mode == 'réel' %}<a class="btn btn-lg btn-block btn-ghost-dark" href="{{ o.lien_paiement }}">Essayer gratuitement</a>{% else %}<a class="btn btn-lg btn-block disabled" href="mailto:{{ biz.email_contact }}">Bientôt disponible</a>{% endif %}
+      {% if o.lien_paiement and biz.stripe_mode == 'réel' %}<a class="btn btn-lg btn-block btn-ghost-dark" href="{{ o.lien_paiement }}" data-mois-href="{{ o.lien_paiement }}" data-an-href="{{ o.lien_annuel }}">Essayer gratuitement</a>{% else %}<a class="btn btn-lg btn-block disabled" href="mailto:{{ biz.email_contact }}">Bientôt disponible</a>{% endif %}
     </div>
   {% set o = biz.offres.pro %}
     <div class="price featured">
       <span class="ribbon">Recommandé</span>
       <h3>{{ o.nom }}</h3>
       <p class="for">Pour décrocher plus de marchés et surveiller la concurrence</p>
-      <p class="amount">{{ o.prix_mensuel }} €<span>/mois</span></p>
+      <p class="amount" data-mois>{{ o.prix_mensuel }} €<span>/mois</span></p>{% if annuel %}<p class="amount" data-an hidden>{{ o.prix_annuel }} €<span>/an</span></p><p class="eco" data-an hidden>Soit {{ '%.2f'|format(o.prix_annuel / 12)|replace('.', ',') }} €/mois : vous économisez {{ o.prix_mensuel * 12 - o.prix_annuel }} €</p>{% endif %}
       <ul class="checks">
         <li>Toute l'offre Essentiel, plus :</li>
         <li><b>Autant de départements que vous voulez</b>, ou toute la France</li>
         <li><b>Vos mots-clés</b> en plus du métier (ex. « crèche », « vitrerie », « toiture-terrasse »)</li>
         <li><b>Le bilan du lundi</b> : qui a gagné les marchés de votre métier dans votre secteur, et à quel prix quand il est publié</li>
       </ul>
-      {% if o.lien_paiement and biz.stripe_mode == 'réel' %}<a class="btn btn-lg btn-block" href="{{ o.lien_paiement }}">Essayer gratuitement</a>{% else %}<a class="btn btn-lg btn-block disabled" href="mailto:{{ biz.email_contact }}">Bientôt disponible</a>{% endif %}
+      {% if o.lien_paiement and biz.stripe_mode == 'réel' %}<a class="btn btn-lg btn-block" href="{{ o.lien_paiement }}" data-mois-href="{{ o.lien_paiement }}" data-an-href="{{ o.lien_annuel }}">Essayer gratuitement</a>{% else %}<a class="btn btn-lg btn-block disabled" href="mailto:{{ biz.email_contact }}">Bientôt disponible</a>{% endif %}
     </div>
   </div>
   <p class="fine"><b>{{ biz.essai_gratuit_jours }} jours d'essai gratuit sur les deux offres.</b> Le bilan du lundi vous montre vos concurrents, leurs clients et les prix pratiqués : de quoi ajuster vos devis et viser les bons acheteurs.</p>
+  {% if annuel %}<script>
+  (function () {
+    var t = document.getElementById("tarifs"), bs = t.querySelectorAll(".periode button");
+    bs.forEach(function (b) { b.onclick = function () {
+      var an = b.dataset.p === "an";
+      bs.forEach(function (x) { x.classList.toggle("on", x === b); x.setAttribute("aria-pressed", x === b); });
+      t.querySelectorAll("[data-an]").forEach(function (e) { e.hidden = !an; });
+      t.querySelectorAll("[data-mois]").forEach(function (e) { e.hidden = an; });
+      t.querySelectorAll("[data-an-href]").forEach(function (a) { a.href = an ? a.dataset.anHref : a.dataset.moisHref; });
+    }; });
+  })();
+  </script>{% endif %}
   <p class="fine">{{ biz.fiscalite.tva }}. Paiement sécurisé par Stripe. Résiliation à tout moment depuis {% if biz.portail_client %}<a href="{{ biz.portail_client }}">votre espace client</a>{% else %}votre espace client{% endif %}.</p>
 </div></section>
 

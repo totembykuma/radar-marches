@@ -5,4 +5,4 @@
 <p><b>Sous-traitants :</b> Stripe (paiement), Resend (envoi d'e-mails), {% if biz.ia_active %}Anthropic (génération des résumés : seuls les textes publics des avis sont transmis, jamais vos données), {% endif %}GitHub (hébergement du site et exécution des traitements).</p>
 <p><b>Durée de conservation :</b> pendant l'abonnement puis 3 ans pour la prospection B2B, et 10 ans pour les pièces comptables.</p>
 <p><b>Vos droits :</b> accès, rectification, effacement, opposition, limitation, portabilité, par e-mail à {{ biz.email_contact }}. Réclamation possible auprès de la CNIL (cnil.fr).</p>
-<p>Le site n'utilise pas de cookies publicitaires ni de traceurs.</p>
+<p>Le site n'utilise pas de cookies publicitaires ni de traceurs.{% if biz.statistiques_goatcounter %} Il compte les visites de façon anonyme et sans cookie avec GoatCounter (pages vues, site d'origine, type d'appareil ; aucune adresse IP conservée).{% endif %}</p>

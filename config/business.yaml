@@ -10,18 +10,24 @@ offres:
   essentiel:
     nom: "Essentiel"
     prix_mensuel: 29
+    prix_annuel: 290   # 2 mois offerts
     metiers_max: 1
     departements_max: 1
     lien_paiement: "https://buy.stripe.com/eVqdR2eUg7HrdHj9H23F602"   # Stripe Payment Link (rempli après création)
+    lien_annuel: ""
     stripe_price_ids: ["price_1UQrs879764n3f0zMVMks2Dq"]
   pro:
     nom: "Pro"
     prix_mensuel: 49
+    prix_annuel: 490   # 2 mois offerts
     metiers_max: 1
     departements_max: 101
     lien_paiement: "https://buy.stripe.com/00w8wI4fC1j36eRbPa3F603"
+    lien_annuel: ""
     stripe_price_ids: ["price_1UQrs879764n3f0zbVlgAi7W"]
 portail_client: "https://billing.stripe.com/p/login/dRm8wIfYk1j39r3aL63F600"
+# Statistiques de visites sans cookie (GoatCounter) : nom du compte, ex. "radarmarches"
+statistiques_goatcounter: ""
 google_verification: "SZybI2SsjlqSJ8IoP4km9vdFVcCDOwgf5n3LTYSsxe4"
 stripe_mode: "réel"
 essai_gratuit_jours: 14

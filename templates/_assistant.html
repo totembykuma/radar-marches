@@ -11,7 +11,7 @@
 (function () {
   var Q = [
     ["Comment ça marche ?", "Chaque matin à 6h20, nous lisons tous les nouveaux appels d'offres publiés au BOAMP. Vous recevez par e-mail uniquement ceux de votre métier, dans votre secteur : objet, acheteur, lieu, date limite et lien vers l'avis officiel."],
-    ["Combien ça coûte ?", "Essentiel : {{ biz.offres.essentiel.prix_mensuel }} €/mois (1 métier, 1 département). Pro : {{ biz.offres.pro.prix_mensuel }} €/mois (départements illimités ou toute la France, vos mots-clés, et le bilan du lundi : qui a gagné les marchés de votre métier, et à quel prix). Les deux commencent par {{ biz.essai_gratuit_jours }} jours gratuits."],
+    ["Combien ça coûte ?", "Essentiel : {{ biz.offres.essentiel.prix_mensuel }} €/mois (1 métier, 1 département). Pro : {{ biz.offres.pro.prix_mensuel }} €/mois (départements illimités ou toute la France, vos mots-clés, et le bilan du lundi : qui a gagné les marchés de votre métier, et à quel prix). Les deux commencent par {{ biz.essai_gratuit_jours }} jours gratuits.{% if biz.offres.pro.lien_annuel %} En payant à l'année, vous avez 2 mois offerts.{% endif %}"],
     ["Quelle offre choisir ?", "Vous travaillez dans un seul département ? L'offre Essentiel suffit. Vous intervenez sur plusieurs départements, ou vous voulez surveiller vos concurrents et les prix ? Prenez Pro. Vous pouvez changer d'offre à tout moment."],
     ["L'essai est-il vraiment gratuit ?", "Oui. Rien n'est prélevé pendant {{ biz.essai_gratuit_jours }} jours. Si vous résiliez avant la fin, vous ne payez rien. La carte sert seulement à éviter une coupure à la fin de l'essai."],
     ["Comment résilier ?", "En un clic, depuis votre espace client, sans nous écrire. Il n'y a aucun engagement."],

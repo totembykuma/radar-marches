@@ -125,21 +125,23 @@ def test_stripe_setup_writes_config(tmp_path, monkeypatch):
         if path == "products":
             return {"id": f"prod_{data['metadata[radar_offre]']}"}
         if path == "prices":
-            return {"id": f"price_{data['unit_amount']}", "unit_amount": data["unit_amount"], "recurring": {"interval": "month"}}
+            return {"id": f"price_{data['unit_amount']}", "unit_amount": data["unit_amount"],
+                    "recurring": {"interval": data["recurring[interval]"]}}
         if path == "payment_links":
             assert data["custom_fields[0][dropdown][options][1][value]"] == "espacesverts"
             assert data["subscription_data[trial_period_days]"] == 14
-            return {"url": f"https://buy.stripe.com/test_{data['metadata[radar_offre]']}"}
+            return {"url": f"https://buy.stripe.com/test_{data['metadata[radar_offre]']}_{data['line_items[0][price]']}"}
         if path == "billing_portal/configurations":
             return {"login_page": {"url": "https://billing.stripe.com/p/login/test_x"}}
     monkeypatch.setattr(stripe_setup, "_call", fake)
     stripe_setup.run()
     biz = config.business()
-    assert biz["offres"]["pro"]["lien_paiement"] == "https://buy.stripe.com/test_pro"
-    assert biz["offres"]["essentiel"]["stripe_price_ids"] == ["price_2900"]
+    assert biz["offres"]["pro"]["lien_paiement"] == "https://buy.stripe.com/test_pro_price_4900"
+    assert biz["offres"]["pro"]["lien_annuel"] == "https://buy.stripe.com/test_pro_price_49000"
+    assert biz["offres"]["essentiel"]["stripe_price_ids"] == ["price_2900", "price_29000"]
     assert biz["stripe_mode"] == "test" and biz["portail_client"].endswith("test_x")
     stripe_setup.run()  # relancer ne casse pas le fichier
-    assert config.business()["offres"]["pro"]["stripe_price_ids"] == ["price_4900"]
+    assert config.business()["offres"]["pro"]["stripe_price_ids"] == ["price_4900", "price_49000"]
 
 
 def test_secrets_never_logged(monkeypatch):

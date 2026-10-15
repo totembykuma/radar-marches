@@ -26,12 +26,12 @@ def _find_product(offre_key):
     return None
 
 
-def _price_for(product, amount_cents):
+def _price_for(product, amount_cents, interval="month"):
     for pr in _call("GET", "prices", params={"product": product["id"], "active": "true", "limit": 100})["data"]:
-        if pr["unit_amount"] == amount_cents and (pr.get("recurring") or {}).get("interval") == "month":
+        if pr["unit_amount"] == amount_cents and (pr.get("recurring") or {}).get("interval") == interval:
             return pr
     return _call("POST", "prices", data={"product": product["id"], "currency": "eur", "unit_amount": amount_cents,
-                                         "recurring[interval]": "month", "tax_behavior": "inclusive"})
+                                         "recurring[interval]": interval, "tax_behavior": "inclusive"})
 
 
 def _link_fields(offre_key, metiers):
@@ -51,6 +51,31 @@ def _link_fields(offre_key, metiers):
     return d
 
 
+def _link_for(key, price, biz, metiers, mode, offre):
+    link = None
+    for pl in _call("GET", "payment_links", params={"active": "true", "limit": 100})["data"]:
+        if (pl.get("metadata") or {}).get("radar_offre") == key and (pl.get("metadata") or {}).get("radar_price") == price["id"]:
+            link = pl
+    if link:
+        # Met à jour les champs (libellés, liste des métiers) si l'offre a changé.
+        wanted = {k: v for k, v in _link_fields(key, metiers).items()}
+        labels = [((f.get("label") or {}).get("custom")) for f in link.get("custom_fields") or []]
+        if labels != [v for k, v in wanted.items() if k.endswith("[label][custom]")]:
+            link = _call("POST", f"payment_links/{link['id']}", data=wanted)
+            print(f"[{mode}] {offre['nom']} : champs du lien mis à jour")
+    if not link:
+        data = {"line_items[0][price]": price["id"], "line_items[0][quantity]": 1,
+                "subscription_data[trial_period_days]": biz["essai_gratuit_jours"],
+                "allow_promotion_codes": "true", "billing_address_collection": "auto",
+                "tax_id_collection[enabled]": "true",
+                "after_completion[type]": "hosted_confirmation",
+                "after_completion[hosted_confirmation][custom_message]":
+                    f"Merci ! Votre veille {biz['nom']} est active : vous recevrez un e-mail de bienvenue puis vos premières alertes dès le prochain matin ouvré.",
+                "metadata[radar_offre]": key, "metadata[radar_price]": price["id"], **_link_fields(key, metiers)}
+        link = _call("POST", "payment_links", data=data)
+    return link
+
+
 def run():
     biz, metiers = business(), load_metiers()
     mode = "test" if os.environ["STRIPE_SECRET_KEY"].strip().split("_")[1] == "test" else "réel"
@@ -63,30 +88,16 @@ def run():
                 "name": f"{biz['nom']} {offre['nom']}", "metadata[radar_offre]": key, "description": desc})
         elif product.get("description") != desc:
             product = _call("POST", f"products/{product['id']}", data={"description": desc})
-        price = _price_for(product, int(offre["prix_mensuel"] * 100))
-        link = None
-        for pl in _call("GET", "payment_links", params={"active": "true", "limit": 100})["data"]:
-            if (pl.get("metadata") or {}).get("radar_offre") == key and (pl.get("metadata") or {}).get("radar_price") == price["id"]:
-                link = pl
-        if link:
-            # Met à jour les champs (libellés, liste des métiers) si l'offre a changé.
-            wanted = {k: v for k, v in _link_fields(key, metiers).items()}
-            labels = [((f.get("label") or {}).get("custom")) for f in link.get("custom_fields") or []]
-            if labels != [v for k, v in wanted.items() if k.endswith("[label][custom]")]:
-                link = _call("POST", f"payment_links/{link['id']}", data=wanted)
-                print(f"[{mode}] {offre['nom']} : champs du lien mis à jour")
-        if not link:
-            data = {"line_items[0][price]": price["id"], "line_items[0][quantity]": 1,
-                    "subscription_data[trial_period_days]": biz["essai_gratuit_jours"],
-                    "allow_promotion_codes": "true", "billing_address_collection": "auto",
-                    "tax_id_collection[enabled]": "true",
-                    "after_completion[type]": "hosted_confirmation",
-                    "after_completion[hosted_confirmation][custom_message]":
-                        f"Merci ! Votre veille {biz['nom']} est active : vous recevrez un e-mail de bienvenue puis vos premières alertes dès le prochain matin ouvré.",
-                    "metadata[radar_offre]": key, "metadata[radar_price]": price["id"], **_link_fields(key, metiers)}
-            link = _call("POST", "payment_links", data=data)
-        results[key] = {"lien": link["url"], "price": price["id"]}
-        print(f"[{mode}] {offre['nom']} : {link['url']} (prix {price['id']})")
+        results[key] = {}
+        periodes = [("month", offre["prix_mensuel"], "lien_paiement")]
+        if offre.get("prix_annuel"):
+            periodes.append(("year", offre["prix_annuel"], "lien_annuel"))
+        for interval, prix, champ in periodes:
+            price = _price_for(product, int(prix * 100), interval)
+            link = _link_for(key, price, biz, metiers, mode, offre)
+            results[key][champ] = link["url"]
+            results[key].setdefault("prices", []).append(price["id"])
+            print(f"[{mode}] {offre['nom']} ({'an' if interval == 'year' else 'mois'}) : {link['url']} (prix {price['id']})")
 
     portal = None
     try:
@@ -108,8 +119,12 @@ def run():
     text = path.read_text(encoding="utf-8")
     for key, r in results.items():
         block = re.search(rf"\n  {key}:\n(?:    .*\n)+", text).group(0)
-        new = re.sub(r'lien_paiement: ".*?"', f'lien_paiement: "{r["lien"]}"', block)
-        new = re.sub(r"stripe_price_ids: \[.*?\]", f'stripe_price_ids: ["{r["price"]}"]', new)
+        new = block
+        for champ in ("lien_paiement", "lien_annuel"):
+            if r.get(champ):
+                new = re.sub(rf'{champ}: ".*?"', f'{champ}: "{r[champ]}"', new)
+        ids = ", ".join(f'"{i}"' for i in r["prices"])
+        new = re.sub(r"stripe_price_ids: \[.*?\]", f"stripe_price_ids: [{ids}]", new)
         text = text.replace(block, new)
     if portal:
         text = re.sub(r'portail_client: ".*?"', f'portail_client: "{portal}"', text) if "portail_client:" in text \
