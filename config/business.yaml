@@ -46,8 +46,8 @@ ia:
 
 # Mentions légales (obligatoires avant la mise en vente)
 editeur:
-  nom: "[Prénom Nom]"
+  nom: "William Barboutie"
   statut: "Entrepreneur individuel (micro-entreprise)"
-  siret: "[SIRET]"
-  adresse: "[Adresse postale]"
+  siret: "911 661 932 00036"
+  adresse: "42 chemin Royal, 91310 Linas"
   hebergeur: "GitHub Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, USA"

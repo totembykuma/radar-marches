@@ -2,7 +2,7 @@
 <html lang="fr"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{{ title }}</title>
-<meta name="description" content="{{ description }}">
+<meta name="description" content="{{ description }}">{% if noindex %}<meta name="robots" content="noindex">{% endif %}
 <link rel="canonical" href="{{ biz.site_url }}{{ path }}">
 <link rel="stylesheet" href="{{ root }}static/style.css">
 </head><body>
