@@ -95,7 +95,7 @@ def run_daily(avis_new=None, avis_open=None, subs=None):
         html = render("email_bienvenue.html", biz=biz, criteres=criteres_txt(s, metiers), sub=s)
         try:
             res = mailer.send(s["email"], f"Bienvenue sur {biz['nom']} : votre veille est active", html,
-                              biz["email_expediteur"], reply_to=biz["email_contact"])
+                              biz["email_expediteur"], reply_to=biz.get("email_proprietaire") or biz["email_contact"])
             if not res.get("simulated") or os.getenv("RADAR_DEMO") == "1":  # en simulation, ne pas marquer comme envoyé
                 state["known"].append(key)
             run["bienvenues"] = run.get("bienvenues", 0) + 1
@@ -128,7 +128,7 @@ def run_daily(avis_new=None, avis_open=None, subs=None):
         html = render("email_digest.html", biz=biz, avis=sel, date_fr=date_fr(), criteres=criteres_txt(s, metiers))
         subject = f"{len(sel)} appel{'s' if len(sel) > 1 else ''} d'offres : {sel[0]['objet'][:60]}"
         try:
-            res = mailer.send(s["email"], subject, html, biz["email_expediteur"], reply_to=biz["email_contact"])
+            res = mailer.send(s["email"], subject, html, biz["email_expediteur"], reply_to=biz.get("email_proprietaire") or biz["email_contact"])
             if not res.get("simulated") or os.getenv("RADAR_DEMO") == "1":
                 state["sent"][key] = (state["sent"].get(key, []) + [a["id"] for a in sel])[-500:]
             sent += 1
