@@ -78,9 +78,10 @@ def run_daily(avis_new=None, avis_open=None, subs=None):
             continue
         html = render("email_bienvenue.html", biz=biz, criteres=criteres_txt(s, metiers), sub=s)
         try:
-            mailer.send(s["email"], f"Bienvenue sur {biz['nom']} : votre veille est active", html,
-                        biz["email_expediteur"], reply_to=biz["email_contact"])
-            state["known"].append(key)
+            res = mailer.send(s["email"], f"Bienvenue sur {biz['nom']} : votre veille est active", html,
+                              biz["email_expediteur"], reply_to=biz["email_contact"])
+            if not res.get("simulated") or os.getenv("RADAR_DEMO") == "1":  # en simulation, ne pas marquer comme envoyé
+                state["known"].append(key)
             run["bienvenues"] = run.get("bienvenues", 0) + 1
         except Exception as exc:
             run["erreurs"].append(f"bienvenue non envoyée : {exc}")
@@ -111,8 +112,9 @@ def run_daily(avis_new=None, avis_open=None, subs=None):
         html = render("email_digest.html", biz=biz, avis=sel, date_fr=date_fr(), criteres=criteres_txt(s, metiers))
         subject = f"{len(sel)} appel{'s' if len(sel) > 1 else ''} d'offres : {sel[0]['objet'][:60]}"
         try:
-            mailer.send(s["email"], subject, html, biz["email_expediteur"], reply_to=biz["email_contact"])
-            state["sent"][key] = (state["sent"].get(key, []) + [a["id"] for a in sel])[-500:]
+            res = mailer.send(s["email"], subject, html, biz["email_expediteur"], reply_to=biz["email_contact"])
+            if not res.get("simulated") or os.getenv("RADAR_DEMO") == "1":
+                state["sent"][key] = (state["sent"].get(key, []) + [a["id"] for a in sel])[-500:]
             sent += 1
         except Exception as exc:
             run["erreurs"].append(f"envoi échoué : {exc}")
@@ -193,9 +195,23 @@ def run_weekly():
     return {"kpi": kpi, "finance": bilan, "decisions": decisions, "analyse": analyse}
 
 
+def run_abonnes():
+    """Vérification : liste les abonnés lus dans Stripe (e-mails masqués, pour des journaux publics)."""
+    biz, metiers = business(), load_metiers()
+    subs = subscribers.load_all(biz, metiers)
+
+    def mask(e):
+        u, _, d = e.partition("@")
+        return f"{u[:2]}***@{d}"
+    return {"mode_stripe": biz.get("stripe_mode"), "nombre": len(subs),
+            "abonnes": [{"email": mask(s["email"]), "plan": s["plan"], "statut": s["statut"], "metiers": s["metiers"],
+                         "departements": s["departements"], "mots_cles": s["mots_cles"]} for s in subs]}
+
+
 def run_demo():
     """Test bout-en-bout sans réseau : avis d'exemple + 2 abonnés fictifs, e-mails écrits dans out/outbox."""
     os.environ["RADAR_DRY_RUN"] = "1"
+    os.environ["RADAR_DEMO"] = "1"
     sample = _load_json(ROOT / "tests" / "fixtures" / "boamp_sample.json", [])
     avis = [boamp.normalize(r) for r in sample]
     subs = [
@@ -228,7 +244,7 @@ def run_essai():
 def main(argv=None):
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     p = argparse.ArgumentParser(prog="radar")
-    p.add_argument("cmd", choices=["daily", "weekly", "check-api", "demo", "essai"])
+    p.add_argument("cmd", choices=["daily", "weekly", "check-api", "demo", "essai", "abonnes"])
     args = p.parse_args(argv)
     try:
         if args.cmd == "daily":
@@ -241,6 +257,8 @@ def main(argv=None):
             missing = [k for k, cands in boamp.FIELDS.items() if not set(cands) & set(fields)]
             print("Champs logiques non trouvés :", missing or "aucun")
             sys.exit(1 if {"id", "objet", "date_parution"} & set(missing) else 0)
+        elif args.cmd == "abonnes":
+            print(json.dumps(run_abonnes(), ensure_ascii=False, indent=1))
         elif args.cmd == "essai":
             print(json.dumps(run_essai(), ensure_ascii=False, indent=1))
         elif args.cmd == "demo":
