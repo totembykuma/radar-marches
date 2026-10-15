@@ -1,30 +1,21 @@
-"""Sonde : où se trouve la ville de l'acheteur dans les avis BOAMP, et GoatCounter est-il lisible ? (compteurs seulement)"""
-import json, re, sys, collections, requests
+"""Sonde : pages par ville construites sur les vrais avis BOAMP (compteurs seulement)."""
+import sys, tempfile, collections
+from pathlib import Path
 sys.path.insert(0, ".")
-API = "https://boamp-datadila.opendatasoft.com/api/explore/v2.1/catalog/datasets/boamp"
-rows = requests.get(f"{API}/records", params={"limit": 100, "order_by": "dateparution desc"}, timeout=60).json()["results"]
-paths = collections.Counter()
-ex = {}
-for r in rows:
-    try:
-        d = json.loads(r.get("donnees") or "{}")
-    except ValueError:
-        continue
-    fmt = next(iter(d), "?")
-    def walk(n, p):
-        if isinstance(n, dict):
-            for k, v in n.items(): walk(v, p + "/" + k)
-        elif isinstance(n, list):
-            for v in n[:3]: walk(v, p + "[]")
-        elif re.search(r"ville|city|cp$|postal|commune|town", p.split("/")[-1], re.I):
-            key = re.sub(r"\[\]", "", p)
-            paths[key] += 1
-            ex.setdefault(key, str(n)[:40])
-    walk(d, fmt)
-for k, n in paths.most_common(25):
-    print(n, k, "=>", ex[k])
-for u in ("https://radarmarches.goatcounter.com/counter/TOTAL.json", "https://radarmarches.goatcounter.com/api/v0/stats/total"):
-    try:
-        x = requests.get(u, timeout=20); print("goat", u.split(".com")[1], x.status_code, x.text[:120])
-    except Exception as e:
-        print("goat erreur", e)
+from radar import boamp, site
+from radar.config import business, metiers as load_metiers
+from radar.matching import Matcher
+
+biz, metiers = business(), load_metiers()
+m = Matcher(metiers)
+avis = boamp.fetch_open(days=30)
+ok = [a for a in avis if not m.is_award_notice(a) and m.metiers_of(a)]
+print("avis ouverts de nos métiers :", len(ok), "· avec ville :", sum(1 for a in ok if a["ville"]))
+out = Path(tempfile.mkdtemp())
+res = site.build(avis, biz, metiers, m, out)
+villes = sorted((out / "appels-offres" / "villes").glob("*.html"))
+print("pages du site :", res["pages"], "· pages ville :", len(villes) - 1)
+print("exemples :", ", ".join(p.stem for p in villes[:12]))
+print("plus petite page (avis) :", min(p.read_text().count('class="avis"') for p in villes if p.name != "index.html"))
+sm = (out / "sitemap.xml").read_text()
+print("sitemap : urls", sm.count("<loc>"), "· villes", sm.count("/villes/"))

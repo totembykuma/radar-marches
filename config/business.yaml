@@ -75,5 +75,5 @@ editeur:
 # Reste inactive tant que « actif » est false ou qu'aucun expéditeur dédié n'est configuré.
 prospection:
   actif: true
-  par_jour: 10
+  par_jour: 20        # plafonné automatiquement pour rester dans l'offre gratuite Resend (100/jour, 3 000/mois)
   expediteur: "Radar Marchés <bonjour@radar-marches.fr>"

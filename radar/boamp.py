@@ -121,6 +121,66 @@ def _siret_brut(donnees):
     return ""
 
 
+def _ville_acheteur(donnees, departements=()):
+    """Ville de l'acheteur (ou du lieu d'exécution), lue dans le détail de l'avis : « Lyon », ou "".
+    Gardée seulement si son code postal tombe dans un département de l'avis (pages cohérentes)."""
+    try:
+        return _ville_brute(donnees, departements)
+    except Exception:
+        return ""
+
+
+def _nom_ville(v):
+    v = re.sub(r"\bcedex\b.*$|\d+", "", str(v or ""), flags=re.I).strip(" -,")
+    if not v or len(v) > 40:
+        return ""
+    return "-".join(w[:1].upper() + w[1:].lower() if w.lower() not in ("sur", "en", "le", "la", "les", "de", "du", "des", "et", "lès", "sous") or i == 0
+                    else w.lower() for i, w in enumerate(re.split(r"[- ]+", v)))
+
+
+def _ville_brute(donnees, departements):
+    data = json.loads(donnees) if isinstance(donnees, str) else (donnees or {})
+    deps = {str(d) for d in departements}
+
+    def txt(v):
+        if isinstance(v, list):
+            v = v[0] if v else ""
+        return (v.get("#text") or "") if isinstance(v, dict) else str(v or "")
+
+    cands = []
+    for fmt in ("FNSimple", "MAPA"):
+        org = (data.get(fmt) or {}).get("organisme") or {}
+        if isinstance(org, dict):
+            adr = org.get("adr") if isinstance(org.get("adr"), dict) else org
+            cands.append((adr.get("ville"), adr.get("cp")))
+    ef = data.get("EFORMS") if isinstance(data.get("EFORMS"), dict) else {}
+    root = next((v for v in ef.values() if isinstance(v, dict)), {})
+    if root:
+        party = _one(root.get("cac:ContractingParty"))
+        ref = txt(_one(_one(party.get("cac:Party")).get("cac:PartyIdentification")).get("cbc:ID"))
+        try:
+            orgs = root["ext:UBLExtensions"]["ext:UBLExtension"]["ext:ExtensionContent"]["efext:EformsExtension"][
+                "efac:Organizations"]["efac:Organization"]
+        except (KeyError, TypeError):
+            orgs = []
+        for org in orgs if isinstance(orgs, list) else [orgs]:
+            comp = _one(_one(org).get("efac:Company"))
+            if ref and txt(_one(comp.get("cac:PartyIdentification")).get("cbc:ID")) != ref:
+                continue
+            adr = _one(comp.get("cac:PostalAddress"))
+            cands.append((txt(adr.get("cbc:CityName")), txt(adr.get("cbc:PostalZone"))))
+            break
+    for ville, cp in cands:
+        cp = "".join(c for c in txt(cp) if c.isdigit())
+        nom = _nom_ville(txt(ville))
+        if not nom or len(cp) != 5:
+            continue
+        dep = cp[:3] if cp[:2] in ("97", "98") else ("2A" if cp[:3] in ("200", "201") else "2B" if cp[:2] == "20" else cp[:2])
+        if not deps or dep in deps or cp[:2] in deps:
+            return nom
+    return ""
+
+
 def _pme(rec):
     """Badge « Accessible PME » : petits marchés (MAPA < 90 k€, national < seuils européens)
     ou lot que l'acheteur déclare adapté aux PME. Renvoie la raison, ou "" si non."""
@@ -139,7 +199,7 @@ def _pme(rec):
 def normalize(rec):
     avis_id = str(_first(rec, FIELDS["id"]) or "")
     url = _first(rec, FIELDS["url"]) or (f"https://www.boamp.fr/pages/avis/?q=idweb:%22{avis_id}%22" if avis_id else "")
-    return {
+    out = {
         "id": avis_id,
         "objet": (_first(rec, FIELDS["objet"]) or "").strip(),
         "acheteur": (_first(rec, FIELDS["acheteur"]) or "").strip(),
@@ -154,6 +214,8 @@ def normalize(rec):
         "acheteur_siret": _siret_acheteur(rec.get("donnees")),
         "pme": _pme(rec),
     }
+    out["ville"] = _ville_acheteur(rec.get("donnees"), out["departements"])
+    return out
 
 
 def fetch_since(since: date, until: date | None = None, session=None, limit=None):
