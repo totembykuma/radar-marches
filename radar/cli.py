@@ -355,6 +355,28 @@ def run_prospection(apercu=False):
     return resume
 
 
+def run_audit():
+    """Qualité du tri : pour chaque métier, d'où vient la correspondance (titre, descripteurs BOAMP ou texte)."""
+    metiers = load_metiers()
+    matcher = Matcher(metiers)
+    avis = [a for a in boamp.fetch_open(days=30) if not matcher.is_award_notice(a)]
+    out = {}
+    for k in metiers:
+        res = {"titre": 0, "descripteurs": [], "texte": []}
+        for a in avis:
+            if k not in matcher.metiers_of(a):
+                continue
+            if k in matcher.metiers_of({**a, "descripteurs": [], "texte": ""}):
+                res["titre"] += 1
+            elif k in matcher.metiers_of({**a, "texte": ""}):
+                res["descripteurs"].append(f"{a['objet'][:90]} || {', '.join(a['descripteurs'])[:120]}")
+            else:
+                res["texte"].append(a["objet"][:110])
+        out[k] = {"titre": res["titre"], "descripteurs": len(res["descripteurs"]), "texte": len(res["texte"]),
+                  "ex_descripteurs": res["descripteurs"][:15], "ex_texte": res["texte"][:25]}
+    return out
+
+
 def run_demo():
     """Test bout-en-bout sans réseau : avis d'exemple + 2 abonnés fictifs, e-mails écrits dans out/outbox."""
     os.environ["RADAR_DRY_RUN"] = "1"
@@ -391,7 +413,7 @@ def run_essai():
 def main(argv=None):
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     p = argparse.ArgumentParser(prog="radar")
-    p.add_argument("cmd", choices=["daily", "weekly", "check-api", "demo", "essai", "abonnes", "prospection"])
+    p.add_argument("cmd", choices=["daily", "weekly", "check-api", "demo", "essai", "abonnes", "prospection", "audit"])
     p.add_argument("--apercu", action="store_true", help="prospection : envoie un aperçu au propriétaire")
     args = p.parse_args(argv)
     try:
@@ -411,6 +433,8 @@ def main(argv=None):
             print(json.dumps(run_essai(), ensure_ascii=False, indent=1))
         elif args.cmd == "prospection":
             print(json.dumps(run_prospection(apercu=args.apercu), ensure_ascii=False, indent=1))
+        elif args.cmd == "audit":
+            print(json.dumps(run_audit(), ensure_ascii=False, indent=1))
         elif args.cmd == "demo":
             print(json.dumps(run_demo(), ensure_ascii=False, indent=1))
     except Exception:
