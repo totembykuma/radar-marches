@@ -19,4 +19,6 @@ jobs:
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           OWNER_EMAIL: ${{ secrets.OWNER_EMAIL }}
-        run: python -m radar.cli weekly | python -c "import sys,json; d=json.load(sys.stdin)['kpi']; print({k: d[k] for k in ('visites_7j','prospects_contactes_7j','prospects_clics_7j','essais_commences_7j','ventes_7j','abonnes_payants','mrr')})"
+        run: |
+          python -m radar.cli weekly > bilan.json
+          python -c "import json; d=json.load(open('bilan.json'))['kpi']; print({k: d[k] for k in ('visites_7j','prospects_contactes_7j','prospects_clics_7j','essais_commences_7j','ventes_7j','abonnes_payants','mrr')})"
