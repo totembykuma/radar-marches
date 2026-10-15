@@ -495,3 +495,28 @@ def test_quota_prospection(tmp_path, monkeypatch):
     for d in range(4, 10):
         (tmp_path / "runs" / f"2026-11-{d:02d}.json").write_text(json.dumps({"emails_envoyes": 300}))
     assert cli.quota_prospection(20, [], date(2026, 11, 10)) == 0      # le mois serait dépassé
+
+
+def test_emails_habillage_commun():
+    """Tous les e-mails portent le logo hébergé (avec texte de secours) et la signature de l'entreprise."""
+    from radar import render
+    biz = business()
+    offre = biz["offres"]["essentiel"]
+    p = {"marche_gagne": "Nettoyage", "nom": "X"}
+    cas = {
+        "email_bienvenue.html": {"criteres": "nettoyage", "sub": {}},
+        "email_fin_essai.html": {"criteres": "nettoyage", "offre": offre, "fin_fr": "1 mai"},
+        "email_avis.html": {"offre": offre},
+        "email_parrainage.html": {"offre": offre, "lien": "https://x"},
+        "email_criteres.html": {"ok": True, "criteres": "nettoyage"},
+        "email_digest.html": {"avis": [], "date_fr": "", "criteres": ""},
+        "email_resultats.html": {"items": [], "criteres": ""},
+        "email_interne.html": {"contenu": "<p>Test</p>"},
+        "email_prospect.html": {"p": p, "n": 3, "zone": "", "ex": None, "lien": "https://x", "metier": {"libelle": "Nettoyage"}},
+    }
+    for nom, ctx in cas.items():
+        html = render.render(nom, biz=biz, **ctx)
+        assert f"{biz['site_url']}/static/logo-email.png" in html and f'alt="{biz["nom"]}"' in html, nom
+        assert f"L'équipe {biz['nom']}" in html, nom
+        assert html.count("L'équipe") == 1, nom
+        assert biz["editeur"]["nom"] not in html, nom  # jamais le nom de la personne

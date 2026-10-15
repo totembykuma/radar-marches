@@ -14,6 +14,7 @@ import sys
 import traceback
 
 import requests
+from markupsafe import Markup
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
@@ -55,7 +56,8 @@ def safe(msg):
 def alert_owner(biz, subject, body_html):
     if biz["email_proprietaire"]:
         try:
-            mailer.send(biz["email_proprietaire"].strip(), f"[{biz['nom']}] {subject}", body_html, biz["email_expediteur"])
+            html = render("email_interne.html", biz=biz, contenu=Markup(body_html))
+            mailer.send(biz["email_proprietaire"].strip(), f"[{biz['nom']}] {subject}", html, biz["email_expediteur"])
         except Exception as exc:  # une alerte ratée ne doit pas faire échouer la tâche
             log.error("Alerte propriétaire non envoyée : %s", safe(exc))
     else:
@@ -572,10 +574,30 @@ def run_essai():
     return report
 
 
+def run_apercu_emails():
+    """Envoie au propriétaire un exemplaire des principaux e-mails (données fictives) pour vérifier leur présentation."""
+    biz = business()
+    to = biz["email_proprietaire"].strip()
+    if not to:
+        return {"envoyes": 0, "raison": "pas d'e-mail propriétaire"}
+    a = {"objet": "Exemple : nettoyage des locaux de la mairie", "acheteur": "Commune fictive", "departements": ["33"],
+         "url": biz["site_url"], "date_limite": "", "date_limite_fr": "12 novembre 2026"}
+    crit = "Nettoyage · Gironde (33)"
+    mails = {
+        "Bienvenue": render("email_bienvenue.html", biz=biz, criteres=crit, sub={}, lien=biz["site_url"] + "/?ami=EXEMPLE"),
+        "Alerte du matin": render("email_digest.html", biz=biz, avis=[a], date_fr=date_fr(), criteres=crit),
+        "Prospection": render("email_prospect.html", p={"marche_gagne": "Exemple de marché"}, n=7, zone="en Gironde",
+                              ex=a, lien=biz["site_url"], metier={"libelle": "Nettoyage"}, biz=biz),
+    }
+    for nom, html in mails.items():
+        mailer.send(to, f"[Aperçu {biz['nom']}] {nom} (données fictives)", html, biz["email_expediteur"])
+    return {"envoyes": len(mails)}
+
+
 def main(argv=None):
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     p = argparse.ArgumentParser(prog="radar")
-    p.add_argument("cmd", choices=["daily", "weekly", "check-api", "demo", "essai", "abonnes", "prospection", "audit"])
+    p.add_argument("cmd", choices=["daily", "weekly", "check-api", "demo", "essai", "abonnes", "prospection", "audit", "apercu-emails"])
     p.add_argument("--apercu", action="store_true", help="prospection : envoie un aperçu au propriétaire")
     args = p.parse_args(argv)
     try:
@@ -597,6 +619,8 @@ def main(argv=None):
             print(json.dumps(run_prospection(apercu=args.apercu), ensure_ascii=False, indent=1))
         elif args.cmd == "audit":
             print(json.dumps(run_audit(), ensure_ascii=False, indent=1))
+        elif args.cmd == "apercu-emails":
+            print(json.dumps(run_apercu_emails(), ensure_ascii=False))
         elif args.cmd == "demo":
             print(json.dumps(run_demo(), ensure_ascii=False, indent=1))
     except Exception:
