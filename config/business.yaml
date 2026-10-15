@@ -22,6 +22,7 @@ offres:
     lien_paiement: "https://buy.stripe.com/00w8wI4fC1j36eRbPa3F603"
     stripe_price_ids: ["price_1UQrs879764n3f0zbVlgAi7W"]
 portail_client: "https://billing.stripe.com/p/login/dRm8wIfYk1j39r3aL63F600"
+google_verification: "SZybI2SsjlqSJ8IoP4km9vdFVcCDOwgf5n3LTYSsxe4"
 stripe_mode: "réel"
 essai_gratuit_jours: 14
 
