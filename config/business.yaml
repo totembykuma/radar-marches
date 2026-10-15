@@ -14,8 +14,8 @@ offres:
     metiers_max: 1
     departements_max: 1
     lien_paiement: "https://buy.stripe.com/eVqdR2eUg7HrdHj9H23F602"   # Stripe Payment Link (rempli après création)
-    lien_annuel: ""
-    stripe_price_ids: ["price_1UQrs879764n3f0zMVMks2Dq"]
+    lien_annuel: "https://buy.stripe.com/8x23cocM82n7cDfdXi3F604"
+    stripe_price_ids: ["price_1UQrs879764n3f0zMVMks2Dq", "price_1UQtSV79764n3f0zjjYuho8o"]
   pro:
     nom: "Pro"
     prix_mensuel: 49
@@ -23,8 +23,8 @@ offres:
     metiers_max: 1
     departements_max: 101
     lien_paiement: "https://buy.stripe.com/00w8wI4fC1j36eRbPa3F603"
-    lien_annuel: ""
-    stripe_price_ids: ["price_1UQrs879764n3f0zbVlgAi7W"]
+    lien_annuel: "https://buy.stripe.com/28E9AM6nK8Lvbzb06s3F605"
+    stripe_price_ids: ["price_1UQrs879764n3f0zbVlgAi7W", "price_1UQtSW79764n3f0zcOnqqpEh"]
 portail_client: "https://billing.stripe.com/p/login/dRm8wIfYk1j39r3aL63F600"
 # Statistiques de visites sans cookie (GoatCounter) : nom du compte, ex. "radarmarches"
 statistiques_goatcounter: ""
