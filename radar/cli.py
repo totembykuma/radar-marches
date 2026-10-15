@@ -14,7 +14,7 @@ import traceback
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
-from . import ai, boamp, finance, mailer, site, subscribers
+from . import ai, boamp, finance, mailer, prospects, site, subscribers
 from .config import ROOT, business, metiers as load_metiers
 from .matching import Matcher
 from .render import date_fr, date_limite_fr, render
@@ -224,6 +224,92 @@ def run_abonnes():
                          "departements": s["departements"], "mots_cles": s["mots_cles"]} for s in subs]}
 
 
+def _mask(e):
+    u, _, d = e.partition("@")
+    return f"{u[:2]}***@{d}"
+
+
+def run_prospection(apercu=False):
+    """Écrit une seule fois aux entreprises qui viennent de gagner un marché de leur métier.
+    Inactif par défaut : sans « prospection.actif » ni expéditeur dédié, compte seulement les prospects
+    (et, avec apercu=True, envoie au propriétaire l'e-mail tel que le premier prospect le recevrait)."""
+    biz, metiers = business(), load_metiers()
+    conf = biz.get("prospection") or {}
+    matcher = Matcher(metiers)
+    state_path = DATA / "prospection.json"
+    state = _load_json(state_path, {"contactes": [], "journal": []})
+    deja = set(state["contactes"])
+    try:
+        clients = [s["email"] for s in subscribers.load_all(biz, metiers)]
+    except Exception as exc:
+        log.warning("Clients Stripe non lus (%s) : prospection annulée par prudence", safe(exc))
+        return {"erreur": "clients non lus"}
+    cands = prospects.candidates(prospects.fetch_results(days=7), matcher, deja, clients)
+    avis_open = [a for a in boamp.fetch_open(days=30) if not matcher.is_award_notice(a)]
+    par_metier = {}
+    for a in avis_open:
+        a["date_limite_fr"] = date_limite_fr(a["date_limite"])
+        for m in matcher.metiers_of(a):
+            par_metier.setdefault(m, []).append(a)
+
+    def compose(p):
+        lst = par_metier.get(p["metier"], [])
+        local = [a for a in lst if p["dep"] and p["dep"] in a["departements"]]
+        base = biz["site_url"].rstrip("/") + f"/appels-offres/{p['metier']}/"
+        if len(local) >= 2:
+            n, zone, ex, lien = len(local), f"dans le département {p['dep']}", local[0], base + f"{p['dep']}.html"
+        else:
+            n, zone, ex, lien = len(lst), "en France", (lst[0] if lst else None), base
+        m = metiers[p["metier"]]
+        subject = f"{n} marchés publics « {m['libelle'].lower()} » ouverts {zone.replace('dans le département', 'dans le')}"
+        html = render("email_prospect.html", p=p, n=n, zone=zone, ex=ex, lien=lien, metier=m, biz=biz,
+                      signature=conf.get("signature") or biz["editeur"]["nom"])
+        return subject, html, n
+
+    resume = {"prospects_trouves": len(cands), "par_metier": {}}
+    for c in cands:
+        resume["par_metier"][c["metier"]] = resume["par_metier"].get(c["metier"], 0) + 1
+    cands = [c for c in cands if compose(c)[2] >= 2]
+    resume["avec_au_moins_2_marches"] = len(cands)
+    actif = bool(conf.get("actif")) and bool((conf.get("expediteur") or "").strip())
+    resume["mode"] = "envoi" if actif else "inactif"
+
+    if not actif:
+        if apercu and cands and biz["email_proprietaire"]:
+            c = cands[0]
+            subject, html, _ = compose(c)
+            bandeau = (f"<p style='background:#fff4d6;padding:10px;border-radius:8px;font-family:Arial'>"
+                       f"<b>Aperçu, rien n'a été envoyé au prospect.</b> Destinataire prévu : {_mask(c['email'])} "
+                       f"({c['nom'] or 'entreprise'}). Prospects trouvés cette semaine : {len(cands)}.<br>"
+                       f"Objet : <b>{subject}</b></p>")
+            mailer.send(biz["email_proprietaire"].strip(), f"[Aperçu prospection] {subject}", bandeau + html,
+                        biz["email_expediteur"])
+            resume["apercu_envoye"] = True
+        return resume
+
+    envoyes = 0
+    for c in cands[: int(conf.get("par_jour") or 20)]:
+        subject, html, _ = compose(c)
+        reply = biz.get("email_proprietaire") or biz["email_contact"]
+        try:
+            res = mailer.send(c["email"], subject, html, conf["expediteur"], reply_to=reply,
+                              headers={"List-Unsubscribe": f"<mailto:{reply}?subject=STOP>"})
+        except Exception as exc:
+            log.error("Envoi prospect refusé : %s", safe(exc))
+            continue
+        if res.get("simulated"):
+            continue
+        state["contactes"].append(prospects.h(c["email"]))
+        if c.get("dom_key"):
+            state["contactes"].append(prospects.h(c["dom_key"]))
+        envoyes += 1
+    state["journal"].append({"date": date.today().isoformat(), "envoyes": envoyes})
+    state["journal"] = state["journal"][-120:]
+    _save_json(state_path, state)
+    resume["envoyes"] = envoyes
+    return resume
+
+
 def run_demo():
     """Test bout-en-bout sans réseau : avis d'exemple + 2 abonnés fictifs, e-mails écrits dans out/outbox."""
     os.environ["RADAR_DRY_RUN"] = "1"
@@ -260,7 +346,8 @@ def run_essai():
 def main(argv=None):
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     p = argparse.ArgumentParser(prog="radar")
-    p.add_argument("cmd", choices=["daily", "weekly", "check-api", "demo", "essai", "abonnes"])
+    p.add_argument("cmd", choices=["daily", "weekly", "check-api", "demo", "essai", "abonnes", "prospection"])
+    p.add_argument("--apercu", action="store_true", help="prospection : envoie un aperçu au propriétaire")
     args = p.parse_args(argv)
     try:
         if args.cmd == "daily":
@@ -277,6 +364,8 @@ def main(argv=None):
             print(json.dumps(run_abonnes(), ensure_ascii=False, indent=1))
         elif args.cmd == "essai":
             print(json.dumps(run_essai(), ensure_ascii=False, indent=1))
+        elif args.cmd == "prospection":
+            print(json.dumps(run_prospection(apercu=args.apercu), ensure_ascii=False, indent=1))
         elif args.cmd == "demo":
             print(json.dumps(run_demo(), ensure_ascii=False, indent=1))
     except Exception:

@@ -1,0 +1,9 @@
+<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55;color:#1d2433;max-width:560px">
+<p>Bonjour,</p>
+<p>Félicitations pour le marché « {{ p.marche_gagne|truncate(110) }} »{% if p.acheteur %} ({{ p.acheteur }}){% endif %}, dont le résultat vient d'être publié au BOAMP.</p>
+<p>En ce moment, <b>{{ n }} autres appels d'offres « {{ metier.libelle|lower }} »</b> sont ouverts {{ zone }}{% if ex %}, par exemple « {{ ex.objet|truncate(100) }} »{% if ex.date_limite_fr %} (réponse avant le {{ ex.date_limite_fr }}){% endif %}{% endif %}.</p>
+<p>La liste complète est consultable gratuitement ici :<br><a href="{{ lien }}">{{ lien }}</a></p>
+<p>Si vous voulez les recevoir chaque matin à 6h20 sans avoir à chercher, {{ biz.nom }} propose {{ biz.essai_gratuit_jours }} jours d'essai gratuit (puis {{ biz.offres.essentiel.prix_mensuel }} €/mois, sans engagement).</p>
+<p>Bonne journée,<br>{{ signature }}<br>{{ biz.nom }} · <a href="{{ biz.site_url }}">{{ biz.site_url|replace('https://', '') }}</a></p>
+<p style="font-size:12px;color:#6b7280;margin-top:28px">Vous recevez ce message unique parce que l'adresse de votre entreprise figure dans un avis de résultat de marché public publié au BOAMP. Vous ne serez pas recontacté. Pour toute question, ou pour que nous supprimions vos données, répondez simplement à ce message.</p>
+</div>

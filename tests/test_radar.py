@@ -146,3 +146,28 @@ def test_secrets_never_logged(monkeypatch):
     from radar.cli import safe
     monkeypatch.setenv("RESEND_API_KEY", " re_abcdef123456\n")
     assert "re_abcdef123456" not in safe("Invalid header value: 'Bearer re_abcdef123456'")
+
+
+def _award(donnees, objet="Nettoyage des locaux de la mairie", dep="91"):
+    return {"idweb": "26-9", "objet": objet, "nomacheteur": "Ville X", "code_departement": [dep],
+            "dateparution": "2026-10-14", "nature_libelle": "Résultat de marché", "donnees": json.dumps(donnees)}
+
+
+def test_prospects_winners_and_dedupe():
+    from radar import prospects
+    org = lambda i, mail, cp: {"efac:Company": {"cac:PartyIdentification": {"cbc:ID": {"#text": i}},
+                                                 "cac:PartyName": {"cbc:Name": "Soc " + i},
+                                                 "cac:Contact": {"cbc:ElectronicMail": mail},
+                                                 "cac:PostalAddress": {"cbc:PostalZone": cp}}}
+    eforms = {"EFORMS": {"ContractAwardNotice": {"ext": {"efac:Organizations": {"efac:Organization": [
+        org("ORG-1", "achats@mairie-x.fr", "91000"), org("ORG-2", "Contact@Propre-Net.fr", "91310"),
+        org("ORG-3", "jean@propre-net.fr", "75001")]},
+        "efac:NoticeResult": {"efac:TenderingParty": [{"efac:Tenderer": [{"cbc:ID": "ORG-2"}, {"cbc:ID": "ORG-3"}]}]}}}}}
+    mapa = {"MAPA": {"attribution": {"titulaire": {"denomination": "Clean SARL", "coord": {"mel": "info@clean.fr", "cp": "33000"}}}}}
+    recs = [_award(eforms), _award(mapa), _award(mapa, objet="Fourniture de carburant")]
+    assert [w["email"] for w in prospects.winners(recs[0])] == ["contact@propre-net.fr", "jean@propre-net.fr"]
+    c = prospects.candidates(recs, M, set())
+    assert [x["email"] for x in c] == ["contact@propre-net.fr", "info@clean.fr"]   # 1 par domaine, métier requis
+    assert c[0]["dep"] == "91" and c[0]["metier"] == "nettoyage" and c[1]["dep"] == "33"
+    done = {prospects.h("dom:clean.fr")}
+    assert [x["email"] for x in prospects.candidates(recs, M, done, ["contact@propre-net.fr"])] == []

@@ -1,0 +1,28 @@
+name: Prospection (aperçu, lancement manuel)
+# Pour l'instant : lancement manuel uniquement. Tant que prospection.actif est false dans business.yaml,
+# aucun e-mail ne part vers un prospect ; seul un aperçu est envoyé au propriétaire.
+on:
+  workflow_dispatch:
+    inputs:
+      apercu:
+        description: "Envoyer un aperçu au propriétaire (aucun envoi au prospect)"
+        type: boolean
+        default: true
+permissions:
+  contents: write
+concurrency: { group: radar-prospection, cancel-in-progress: false }
+jobs:
+  prospection:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - name: Prospection
+        env:
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          OWNER_EMAIL: ${{ secrets.OWNER_EMAIL }}
+        run: python -m radar.cli prospection ${{ inputs.apercu && '--apercu' || '' }}
