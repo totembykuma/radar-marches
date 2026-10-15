@@ -1,9 +1,26 @@
-<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#1d2433;max-width:540px">
-<p>Bonjour,</p>
-<p>Vous venez de remporter le marché « {{ p.marche_gagne|truncate(80) }} ». Bravo !</p>
-<p><b>{{ n }} autres marchés « {{ metier.libelle|lower }} » sont ouverts en ce moment {{ zone }}.</b>{% if ex %} Par exemple : « {{ ex.objet|truncate(80) }} »{% if ex.date_limite_fr %}, réponse avant le {{ ex.date_limite_fr }}{% endif %}.{% endif %}</p>
-<p><a href="{{ lien }}" style="font-weight:bold">Voir les {{ n }} marchés →</a></p>
-<p>{{ biz.nom }} vous les envoie chaque matin, triés pour votre métier : vous ne cherchez plus, et vous répondez avant vos concurrents. Essai gratuit {{ biz.essai_gratuit_jours }} jours.</p>
-<p>L'équipe {{ biz.nom }}</p>
-<p style="font-size:12px;color:#8a919e;margin-top:24px">Message unique, envoyé car l'adresse de votre entreprise figure dans un résultat de marché publié au BOAMP. Vous ne serez pas recontacté. Pour faire supprimer vos données, répondez à ce message.</p>
-</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff"><tr><td style="padding:8px 0">
+<table role="presentation" cellpadding="0" cellspacing="0" style="max-width:540px;width:100%;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#1d2433">
+<tr><td>
+<p style="margin:0 0 14px">Bonjour,</p>
+<p style="margin:0 0 14px">Vous venez de remporter le marché « {{ p.marche_gagne|truncate(80) }} ». Bravo !</p>
+<p style="margin:0 0 14px"><b>{{ n }} autres marchés « {{ metier.libelle|lower }} » sont ouverts en ce moment {{ zone }}.</b>{% if ex %} Par exemple : « {{ ex.objet|truncate(80) }} »{% if ex.date_limite_fr %}, réponse avant le {{ ex.date_limite_fr }}{% endif %}.{% endif %}</p>
+<p style="margin:0 0 18px">{{ biz.nom }} vous les envoie chaque matin, triés pour votre métier : vous ne cherchez plus, et vous répondez avant vos concurrents.</p>
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 22px"><tr><td style="background:#0b1b33;border-radius:8px">
+<a href="{{ lien }}" style="display:inline-block;padding:12px 20px;color:#ffffff;font-weight:bold;text-decoration:none;font-size:15px">Voir les {{ n }} marchés ouverts</a>
+</td></tr></table>
+<p style="margin:0 0 4px">Bonne journée,</p>
+<p style="margin:0 0 18px">L'équipe {{ biz.nom }}</p>
+</td></tr>
+<tr><td style="border-top:1px solid #e6e9ef;padding-top:16px">
+<table role="presentation" cellpadding="0" cellspacing="0"><tr>
+<td style="padding-right:14px;vertical-align:middle"><a href="{{ biz.site_url }}"><img src="{{ biz.site_url }}/static/logo-email.png" width="163" height="32" alt="{{ biz.nom }}" style="display:block;border:0"></a></td>
+<td style="border-left:2px solid #ffb020;padding-left:14px;font-size:13px;line-height:1.5;color:#5b6679;vertical-align:middle">
+Les appels d'offres de votre métier, chaque matin<br>
+<a href="{{ biz.site_url }}" style="color:#0b1b33;font-weight:bold;text-decoration:none">{{ biz.site_url|replace('https://', '') }}</a> · Essai gratuit {{ biz.essai_gratuit_jours }} jours
+</td></tr></table>
+</td></tr>
+<tr><td style="font-size:11.5px;line-height:1.5;color:#9aa1ad;padding-top:20px">
+Message unique, envoyé car l'adresse de votre entreprise figure dans un résultat de marché publié au BOAMP. Vous ne serez pas recontacté. Pour faire supprimer vos données, répondez à ce message.
+</td></tr>
+</table>
+</td></tr></table>
