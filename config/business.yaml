@@ -25,6 +25,16 @@ offres:
     lien_paiement: "https://buy.stripe.com/00w8wI4fC1j36eRbPa3F603"
     lien_annuel: "https://buy.stripe.com/28E9AM6nK8Lvbzb06s3F605"
     stripe_price_ids: ["price_1UQrs879764n3f0zbVlgAi7W", "price_1UQtSW79764n3f0zcOnqqpEh"]
+# Promo de lancement : chaque jour du « debut » au « fin », les N premiers abonnés Pro (mensuel) paient « prix » € pendant « mois » mois.
+# Le code du jour (ex. PRO19) est créé dans Stripe à minuit (workflow promo.yml), limité à N utilisations, valable jusqu'à 23 h 59.
+promo:
+  publie: false        # true = bandeau visible sur le site et codes créés dans Stripe
+  offre: "pro"
+  debut: "2026-10-19"
+  fin: "2026-10-23"
+  places_par_jour: 5
+  prix: 29
+  mois: 3
 portail_client: "https://billing.stripe.com/p/login/dRm8wIfYk1j39r3aL63F600"
 # Statistiques de visites sans cookie (GoatCounter) : nom du compte, ex. "radarmarches"
 statistiques_goatcounter: "radarmarches"

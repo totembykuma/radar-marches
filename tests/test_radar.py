@@ -275,3 +275,17 @@ def test_badge_pme():
     assert _pme({"famille": "JOUE", "donnees": '{"cbc:SMESuitableIndicator": "true"}'})
     assert _pme({"famille": "JOUE", "donnees": '{"cbc:SMESuitableIndicator": true}'})
     assert not _pme({"famille": "JOUE", "donnees": '{"cbc:SMESuitableIndicator": "false"}'})
+
+
+def test_promo_hors_periode_ou_non_publiee(monkeypatch):
+    from datetime import date
+    import radar.promo as promo
+    appels = []
+    monkeypatch.setattr(promo, "_call", lambda *a, **k: appels.append(a) or {})
+    assert promo.code_du_jour(date(2026, 10, 19)) == "PRO19"
+    biz = promo.business()
+    biz["promo"]["publie"] = False
+    monkeypatch.setattr(promo, "business", lambda: biz)
+    assert promo.run(date(2026, 10, 20)) is None and not appels
+    biz["promo"]["publie"] = True
+    assert promo.run(date(2026, 10, 24)) is None and not appels
