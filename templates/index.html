@@ -132,7 +132,17 @@
   {% endif %}
 </section>
 
-<section id="tarifs" class="soft"><div class="wrap block">
+{% if avis_clients %}<section class="wrap block" id="avis">
+  <p class="kicker">Avis clients vérifiés</p>
+  <h2>{{ avis_clients.moyenne|string|replace(".", ",") }}/5 sur {{ avis_clients.nombre }} avis de nos abonnés</h2>
+  <div class="tiles avis-clients">{% for a in avis_clients.liste[:6] %}
+    <figure class="avis-client"><div class="etoiles" aria-label="{{ a.note }} sur 5">{{ "★" * a.note }}<span>{{ "★" * (5 - a.note) }}</span></div>
+      <blockquote>{{ a.texte }}</blockquote>
+      <figcaption><b>{{ a.nom }}</b>{% if a.activite %} · {{ a.activite }}{% endif %}<br><small>Abonné{% if a.depuis %} depuis {{ a.depuis }}{% endif %} · avis du {{ a.date[8:10] }}/{{ a.date[5:7] }}/{{ a.date[:4] }}</small></figcaption></figure>{% endfor %}
+  </div>
+  <p class="muted">Avis publiés uniquement par des abonnés (adresse vérifiée), sans tri sur la note et sans contrepartie. <a href="cgv.html">En savoir plus</a>.</p>
+</section>
+{% endif %}<section id="tarifs" class="soft"><div class="wrap block">
   <p class="kicker">Tarifs</p>
   <h2>Simple, sans engagement, {{ biz.essai_gratuit_jours }} jours offerts</h2>
   <p class="sub">Aucun prélèvement pendant l'essai, et nous vous prévenons par e-mail 3 jours avant sa fin. Vous arrêtez quand vous voulez, en un clic.</p>
@@ -214,6 +224,7 @@
   <details><summary>C'est quoi, le bilan du lundi ?</summary><p>Chaque lundi, les abonnés Pro reçoivent la liste des marchés de leur métier attribués la semaine précédente dans leur secteur : l'acheteur, l'entreprise qui a gagné et le montant quand l'avis le publie. C'est le meilleur moyen de connaître ses concurrents et les prix du marché.</p></details>
   <details><summary>Et si je reçois des alertes hors sujet ?</summary><p>Répondez simplement à l'e-mail avec vos remarques : nous ajustons votre filtre.</p></details>
   <details><summary>Puis-je arrêter quand je veux ?</summary><p>Oui, sans engagement. Aucun prélèvement pendant l'essai si vous résiliez avant la fin, et nous vous prévenons par e-mail 3 jours avant. Pour changer de métier ou de départements, <a href="criteres/">un formulaire d'une minute</a>.</p></details>
+  <details><summary>Y a-t-il un parrainage ?</summary><p>Oui. Chaque abonné a un lien personnel (dans ses alertes). Le confrère qui s'inscrit par ce lien a son premier mois après l'essai offert, et le parrain reçoit un mois offert dès que le confrère devient client. Sans limite, tout est automatique. <a href="parrainage/">Comment ça marche</a>.</p></details>
   <details><summary>Qui est derrière {{ biz.nom }} ?</summary><p>Un service français indépendant, édité par une micro-entreprise (voir les <a href="mentions-legales.html">mentions légales</a>). Pas de centre d'appels ni de robot au support : une vraie personne lit vos e-mails et vous répond, à <a href="mailto:{{ biz.email_contact }}">{{ biz.email_contact }}</a>. Votre adresse e-mail sert uniquement à vous envoyer vos alertes : elle n'est jamais revendue.</p></details>
 </section>
 

@@ -1,3 +1,4 @@
+import json
 import os
 from pathlib import Path
 
@@ -11,11 +12,24 @@ def load_yaml(name):
         return yaml.safe_load(f)
 
 
+def premier_client_payant(state_path=None):
+    """Date du premier client payant (hors essai), notée par l'envoi quotidien dans data/state.json."""
+    try:
+        with open(state_path or ROOT / "data" / "state.json", encoding="utf-8") as f:
+            return json.load(f).get("premier_client_payant")
+    except (OSError, ValueError):
+        return None
+
+
+def ia_autorisee(state_path=None):
+    return bool(os.getenv("ANTHROPIC_API_KEY", "").strip()) and bool(premier_client_payant(state_path))
+
+
 def business():
     cfg = load_yaml("business.yaml")
     # Les secrets / valeurs d'environnement ont priorité sur le fichier.
-    # Les promesses « IA » du site ne s'affichent que si la clé Claude est configurée.
-    cfg["ia_active"] = bool(os.getenv("ANTHROPIC_API_KEY", "").strip())
+    # Résumés IA : seulement avec la clé Claude ET après le premier client payant (aucune dépense avant).
+    cfg["ia_active"] = ia_autorisee()
     cfg["email_proprietaire"] = os.getenv("OWNER_EMAIL") or cfg.get("email_proprietaire") or ""
     for key in ("essentiel", "pro"):
         env_link = os.getenv(f"STRIPE_LINK_{key.upper()}")

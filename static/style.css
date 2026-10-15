@@ -341,3 +341,6 @@ footer .logo{color:#fff}footer p{margin:12px 0 0;max-width:420px;line-height:1.5
 .film-son .on,.film.son .film-son .off{display:none}.film.son .film-son .on{display:inline}
 .film.son .film-son{background:var(--navy);color:#fff;box-shadow:none}
 @media (max-width:600px){.film-son{padding:8px 10px;font-size:12.5px}}
+.avis-client{margin:0;background:#fff;border:1px solid #e3e7ef;border-radius:14px;padding:18px 20px}
+.avis-client .etoiles{color:#ffb020;letter-spacing:2px}.avis-client .etoiles span{color:#d9dee8}
+.avis-client blockquote{margin:10px 0;font-size:15px;line-height:1.55}.avis-client figcaption{font-size:14px;color:#5a6478}

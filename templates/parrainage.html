@@ -1,0 +1,18 @@
+{% extends "base.html" %}{% block main %}
+<section class="wrap rappel">
+  <p class="kicker">Parrainage</p>
+  <h1>1 mois offert pour vous et pour votre confrère</h1>
+  <p class="lead" id="p-invite" hidden><b>Vous avez été invité par un client de {{ biz.nom }}.</b> Démarrez votre essai gratuit de {{ biz.essai_gratuit_jours }} jours depuis ce site : votre premier mois après l'essai vous sera offert, automatiquement.</p>
+  <div class="card">
+    <p><b>Vous êtes client ?</b> Votre lien personnel figure en bas de chacune de vos alertes et dans l'e-mail de bienvenue. Partagez-le à un artisan ou une PME de votre réseau.</p>
+    <ol>
+      <li>Votre confrère s'inscrit en passant par votre lien : <b>son premier mois après l'essai est offert</b>.</li>
+      <li>Dès qu'il devient client payant (fin de son essai), <b>un mois de votre offre vous est offert</b>, déduit de votre prochaine facture.</li>
+      <li>Pas de limite : 3 confrères parrainés, 3 mois offerts. Vous êtes prévenu par e-mail à chaque fois.</li>
+    </ol>
+  </div>
+  <p><a class="btn btn-lg" href="{{ root }}#tarifs">Voir les offres et démarrer l'essai</a></p>
+  <p class="muted">Le parrain et le filleul doivent être deux entreprises différentes. Le mois offert prend la forme d'un crédit sur le compte client, déduit de la facture suivante ; il n'est pas convertible en argent.</p>
+</section>
+<script>if (/[?&]ami=/.test(location.search)) document.getElementById("p-invite").hidden = false;</script>
+{% endblock %}

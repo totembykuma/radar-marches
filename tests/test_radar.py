@@ -347,3 +347,105 @@ def test_film_accueil_donnees_reelles(tmp_path):
     site.build(avis, business(), metiers(), M, tmp_path / "t", stats={"total": 548, "metiers_hits": 9})
     sans = (tmp_path / "t" / "index.html").read_text()
     assert 'id="film"' in sans and "Avant de répondre" not in sans.split('id="film"')[1].split("</script>")[0]
+
+
+def test_parrainage_mois_offerts(monkeypatch, tmp_path):
+    from radar import parrainage
+    monkeypatch.setenv("RADAR_DRY_RUN", "1")
+    monkeypatch.setattr("radar.mailer.OUTBOX", tmp_path)
+    appels = []
+
+    def fake_call(method, path, data=None, params=None):
+        appels.append((method, path, data))
+        return {}
+    monkeypatch.setattr(parrainage, "_call", fake_call)
+    biz = business()
+    parrain = {"email": "p@x.fr", "plan": "pro", "statut": "active", "stripe_subscription": "sub_p", "customer": "cus_p"}
+    c = parrainage.code("sub_p")
+    assert len(c) == 6 and c.isalnum() and parrainage.lien(biz, parrain).endswith(f"/parrainage/?ami={c}")
+    filleul = {"email": "f@y.fr", "plan": "essentiel", "statut": "trialing", "stripe_subscription": "sub_f", "customer": "cus_f", "ref": c.lower()}
+    tricheur = {"email": "P@x.fr", "plan": "pro", "statut": "active", "stripe_subscription": "sub_t", "customer": "cus_t", "ref": c}
+    state = {}
+    n, err = parrainage.traiter([parrain, filleul, tricheur], biz, state)
+    assert n == 1 and not err and appels[0][1] == "customers/cus_f/balance_transactions" and appels[0][2]["amount"] == -2900
+    assert filleul["filleul"]
+    filleul["statut"] = "active"                      # fin de l'essai : le parrain est récompensé, une seule fois
+    n, err = parrainage.traiter([parrain, filleul, tricheur], biz, state)
+    assert n == 1 and appels[-1][1] == "customers/cus_p/balance_transactions" and appels[-1][2]["amount"] == -4900
+    assert parrainage.traiter([parrain, filleul, tricheur], biz, state)[0] == 0
+    assert sum("filleul" in m.name for m in tmp_path.glob("*.html")) == 1
+
+
+def test_parrainage_repli_bon_de_reduction(monkeypatch):
+    from radar import parrainage
+    appels = []
+
+    def fake_call(method, path, data=None, params=None):
+        appels.append((method, path, data))
+        if "balance_transactions" in path or path.startswith("coupons/"):
+            raise RuntimeError("Stripe 403")
+        return {"discounts": ["di_promo"]} if method == "GET" else {}
+    monkeypatch.setattr(parrainage, "_call", fake_call)
+    s = {"email": "a@x.fr", "plan": "essentiel", "stripe_subscription": "sub_1", "customer": "cus_1"}
+    assert parrainage.crediter(s, business(), "test") == "bon"
+    assert appels[-1] == ("POST", "subscriptions/sub_1", {"discounts[0][discount]": "di_promo", "discounts[1][coupon]": "radar-parrainage-essentiel"})
+
+
+def test_avis_clients(monkeypatch, tmp_path):
+    from radar import avis
+    monkeypatch.setenv("RESEND_INBOUND_KEY", "re_x")
+    monkeypatch.setenv("RADAR_DRY_RUN", "1")
+    monkeypatch.setattr("radar.mailer.OUTBOX", tmp_path)
+    biz = dict(business(), criteres_adresse="criteres@abc.resend.app")
+    corps = {"e1": "Bonjour,\n\nNote : 4/5\nNom affiché : Julien M.\nActivité : Paysagiste, Agen\nPublication : oui\nAvis : Très utile, "
+                   "j'ai trouvé 2 marchés.\nAppelez-moi au 06 12 34 56 78 ou www.moi.fr\n\nLe 3 nov. 2026, Julien a écrit :\n> vieux",
+             "e2": "Note : 1/5\nNom affiché : X\nPublication : oui\nAvis : bande de connards",
+             "e3": "Note : 2/5\nNom affiché : Y\nPublication : oui\nAvis : Trop d'alertes hors sujet."}
+    rec = [{"id": "e1", "from": "Julien <julien@ex.fr>", "to": ["criteres@abc.resend.app"], "subject": "Mon avis"},
+           {"id": "e2", "from": "b@ex.fr", "to": ["criteres@abc.resend.app"], "subject": "Mon avis"},
+           {"id": "e3", "from": "inconnu@ex.fr", "to": ["criteres@abc.resend.app"], "subject": "Mon avis"},
+           {"id": "e4", "from": "julien@ex.fr", "to": ["criteres@abc.resend.app"], "subject": "Modifier mes critères"}]
+    monkeypatch.setattr(avis, "_resend", lambda path, key, session=None: {"data": rec} if "limit" in path else {"text": corps[path.rsplit("/", 1)[1]]})
+    subs = [{"email": "julien@ex.fr", "plan": "essentiel", "statut": "active", "metiers": ["espaces-verts"], "debut": 1790000000,
+             "stripe_subscription": "sub_1"}, {"email": "b@ex.fr", "plan": "pro", "statut": "active", "metiers": []}]
+    alertes, state, f = [], {}, tmp_path / "avis.json"
+    n, err = avis.recevoir(subs, biz, metiers(), state, lambda s, h: alertes.append(s), path=f)
+    pub = avis.charger(f)
+    assert n == 1 and not err and len(pub) == 1 and pub[0]["note"] == 4 and pub[0]["nom"] == "Julien M."
+    assert pub[0]["texte"] == "Très utile, j'ai trouvé 2 marchés. Appelez-moi au ou" and pub[0]["depuis"]
+    assert len(alertes) == 2 and "non publié" in alertes[1] and state["avis_vus"] == ["e1", "e2", "e3"]
+    assert avis.recevoir(subs, biz, metiers(), state, lambda s, h: None, path=f)[0] == 0
+    # demande d'avis : seulement après 1 mois d'abonnement payant, une seule fois
+    now = 1790000000 + 31 * 86400
+    monkeypatch.delenv("RADAR_DEMO", raising=False)
+    assert avis.demander(subs, biz, state, lambda b, s: "https://lien", now_ts=now)[0] == 1   # simulé : envoyé mais non marqué ; b sans date de début ignoré
+    monkeypatch.setenv("RADAR_DEMO", "1")
+    assert avis.demander(subs, biz, state, lambda b, s: "https://lien", now_ts=now)[0] == 1
+    assert avis.demander(subs, biz, state, lambda b, s: "https://lien", now_ts=now)[0] == 0
+    assert avis.resume(pub)["moyenne"] == 4
+
+
+def test_ia_attend_le_premier_client_payant(monkeypatch, tmp_path):
+    import radar.cli as cli
+    from radar.config import ia_autorisee
+    monkeypatch.setattr("radar.mailer.OUTBOX", tmp_path / "outbox")
+    monkeypatch.setattr(cli, "OUT", tmp_path)
+    monkeypatch.setenv("OWNER_EMAIL", "owner@example.com")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "")
+    st = tmp_path / "state.json"
+    st.write_text("{}")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-x")
+    assert not ia_autorisee(st)
+    st.write_text('{"premier_client_payant": "2026-11-01"}')
+    assert ia_autorisee(st)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "")
+    appels = []
+    monkeypatch.setattr(cli.ai, "enrich", lambda *a, **k: appels.append(1))
+    run = cli.run_demo()                                   # abonnés de démo : aucun payant Stripe
+    assert "premier_client_payant" not in run and not appels
+    subs = [{"email": "c@example.com", "plan": "essentiel", "statut": "active", "source": "stripe", "metiers": ["nettoyage"],
+             "departements": ["33"], "mots_cles": []}]
+    run = cli.run_daily(avis_new=[dict(a) for a in AVIS], avis_open=[], subs=subs)
+    assert run["premier_client_payant"] and not appels    # pas de clé : rien n'est dépensé, le propriétaire est prévenu
+    assert any("Premier_client_payant" in m.name for m in (tmp_path / "outbox").glob("*.html"))
+    assert json.loads((tmp_path / "demo-data" / "state.json").read_text())["premier_client_payant"]
