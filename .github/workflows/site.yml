@@ -1,0 +1,39 @@
+name: Publier le site (sans e-mail)
+# Régénère le site sur les vraies données dès qu'une page change, sans attendre l'envoi du matin. Aucun e-mail.
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths: ["templates/**", "static/**", "radar/site.py", "config/carte_france.json", "config/guides.yaml"]
+permissions:
+  contents: write
+concurrency: { group: radar-daily, cancel-in-progress: false }
+jobs:
+  site:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - name: Polices du site (facultatif)
+        run: |
+          mkdir -p static/fonts
+          curl -fsSL -o static/fonts/inter.woff2 https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/files/inter-latin-wght-normal.woff2 || rm -f static/fonts/inter.woff2
+          curl -fsSL -o static/fonts/jakarta.woff2 https://cdn.jsdelivr.net/npm/@fontsource-variable/plus-jakarta-sans@5/files/plus-jakarta-sans-latin-wght-normal.woff2 || rm -f static/fonts/jakarta.woff2
+      - name: Générer le site (vraies données)
+        run: python -m radar.cli essai | tail -c 600
+      - name: Vérifier les pages clés
+        run: |
+          test -f out/site/appels-offres/index.html && grep -q 'class="carte"' out/site/appels-offres/index.html
+          echo "pages départements : $(ls out/site/appels-offres/departements | wc -l)"
+      - name: Publier (branche gh-pages)
+        run: |
+          cd out/site
+          touch .nojekyll
+          git init -q -b gh-pages
+          git config user.name "radar-bot"
+          git config user.email "radar-bot@users.noreply.github.com"
+          git add -A && git commit -qm "Site du $(date -I) (mise à jour des pages)"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" gh-pages

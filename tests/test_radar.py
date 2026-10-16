@@ -1,5 +1,5 @@
 import json
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 from radar import boamp, finance, subscribers
@@ -107,7 +107,7 @@ def test_demo_end_to_end(tmp_path, monkeypatch):
     assert (tmp_path / "site" / "rappel" / "index.html").exists()
     g = (tmp_path / "site" / "guides" / "mapa-procedure-adaptee.html").read_text()
     assert "Accessible PME" in g and "{{" not in g
-    alerte = next(m for m in (tmp_path / "outbox").glob("*.html") if "Bienvenue" not in m.name).read_text()
+    alerte = next(m for m in (tmp_path / "outbox").glob("*.html") if "Bienvenue" not in m.name and "essai" not in m.name).read_text()
     assert "/rappel/?o=" in alerte
     # pas de doublon au 2e passage
     run2 = cli.run_demo()
@@ -520,3 +520,24 @@ def test_emails_habillage_commun():
         assert f"L'équipe {biz['nom']}" in html, nom
         assert html.count("L'équipe") == 1, nom
         assert biz["editeur"]["nom"] not in html, nom  # jamais le nom de la personne
+
+
+def test_recents_reserves_et_carte(tmp_path):
+    from radar import site
+    from radar.config import business, metiers as load_metiers
+    from radar.matching import Matcher
+    biz, metiers = business(), load_metiers()
+    auj, vieux = date.today().isoformat(), (date.today() - timedelta(days=5)).isoformat()
+    avis = [{"id": str(i), "objet": f"Nettoyage lot {i}", "acheteur": "Mairie", "departements": [dep], "descripteurs": [],
+             "date_parution": parution, "date_limite": "2099-02-01", "url": f"https://x/{i}", "nature": "", "type_marche": "",
+             "texte": "", "pme": "", "ville": "", "metiers": ["nettoyage"]}
+            for i, (dep, parution) in enumerate([("33", auj), ("33", vieux), ("971", vieux), ("2A", auj)])]
+    site.build(avis, biz, metiers, Matcher(metiers), tmp_path)
+    p = (tmp_path / "appels-offres" / "nettoyage" / "33.html").read_text()
+    assert "https://x/1" in p and "https://x/0" not in p and "réservé aux abonnés" in p and "Gironde (33)" in p
+    m = (tmp_path / "appels-offres" / "nettoyage" / "index.html").read_text()
+    assert 'class="carte"' in m and 'href="971.html"' in m and 'data-code="2B"' in m and "https://x/3" not in m
+    hub = (tmp_path / "appels-offres" / "index.html").read_text()
+    assert 'href="departements/971.html"' in hub
+    d = (tmp_path / "appels-offres" / "departements" / "2A.html").read_text()
+    assert "Corse-du-Sud" in d and "https://x/3" not in d and "réservé aux abonnés" in d
