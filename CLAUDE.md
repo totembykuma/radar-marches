@@ -14,7 +14,7 @@ tout tourne dans GitHub Actions. Propriétaire non technique, en français, une 
 - Prospection : par_jour 20, plafonnée par `quota_prospection` (Resend gratuit 100/jour, 3 000/mois, alertes clients prioritaires).
 - Pages ville `/appels-offres/villes/<ville>-<dep>.html` (ville de l'acheteur lue dans `donnees`, ≥ 5 avis sinon pas de page).
 - Pages publiques : les avis publiés depuis < 3 jours (`RECENTS_JOURS`, site.py) sont masqués et remplacés par un encart « réservé aux abonnés ». Carte de France cliquable (`templates/_carte.html`, tracés `config/carte_france.json` faits par `scripts/carte_france.py`) sur le hub (→ `/appels-offres/departements/<d>.html`, tous métiers) et chaque page métier. `site.yml` republie le site sans e-mail dès qu'un template change.
-- Alerte gratuite (`gratuit.py`, page /alerte-gratuite/, mailto → alerte@…resend.app lu par daily) : 3 marchés/semaine, adresses chiffrées (Fernet, clé tirée de RESEND_INBOUND_KEY) dans data/alerte_gratuite.json, sortie auto si client, STOP = désinscription.
+- Alerte gratuite (RETIRÉE le 2026-10-16, code dormant tant que `alerte_gratuite` absent de business.yaml ; `gratuit.py`, page /alerte-gratuite/, mailto → alerte@…resend.app lu par daily) : 3 marchés/semaine, adresses chiffrées (Fernet, clé tirée de RESEND_INBOUND_KEY) dans data/alerte_gratuite.json, sortie auto si client, STOP = désinscription.
 - Relance prospects (`cli.relancer`) : 1 seule, 5 à 12 j après, si Resend dit « clicked » et pas client/inscrit gratuit ; seulement les envois avec champ `suivi` (pied de page annonçant le rappel). IndexNow (Bing) le lundi.
 - Résumés IA : actifs seulement si secret ANTHROPIC_API_KEY ET `premier_client_payant` dans data/state.json (posé par daily, qui prévient le propriétaire).
 

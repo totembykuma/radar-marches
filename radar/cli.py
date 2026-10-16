@@ -380,7 +380,7 @@ def run_weekly():
               + ligne("Entreprises prospectées", kpi["prospects_contactes_7j"], "1 seul e-mail par entreprise")
               + ligne("Clics dans ces e-mails", kpi["prospects_clics_7j"], "")
               + ligne("Relances (prospects qui avaient cliqué)", kpi["prospects_relances_7j"], "1 seule relance, 5 jours après")
-              + ligne("Inscrits à l'alerte gratuite", kpi["alerte_gratuite_inscrits"], "3 marchés par semaine")
+              + (ligne("Inscrits à l'alerte gratuite", kpi["alerte_gratuite_inscrits"], "3 marchés par semaine") if biz.get("alerte_gratuite") else "")
               + ligne("Essais gratuits commencés", kpi["essais_commences_7j"], "")
               + ligne("Ventes (passés payants)", kpi["ventes_7j"], "")
               + ligne("Résiliations", kpi["resilies_7j"], "")
