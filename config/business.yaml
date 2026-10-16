@@ -40,9 +40,9 @@ dossier:
   nom: "Dossier prêt à signer"
   prix: 199
   prix_pro: 149
-  lien_paiement: ""     # rempli par le workflow stripe.yml
-  lien_pro: ""
-  stripe_link_ids: []
+  lien_paiement: "https://buy.stripe.com/14AcMYeUg9Pz7iVdXi3F606"     # rempli par le workflow stripe.yml
+  lien_pro: "https://buy.stripe.com/aFa4gsdQc0eZav7dXi3F607"
+  stripe_link_ids: ["plink_1UR6bR79764n3f0z06tqO6sM", "plink_1UR6bS79764n3f0zSJod1CIZ"]
   adresse: "dossier@elkaurtel.resend.app"   # réception Resend des pièces envoyées par le client
   modele: "claude-opus-5-5"
   delai_min_jours: 5    # en dessous : remboursement automatique
