@@ -235,6 +235,13 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=Non
     write("rappel/index.html", render("rappel.html", root="../", path="/rappel/", noindex=True,
                                       title=f"Ajouter un rappel · {biz['nom']}", description="", **common))
 
+    if biz.get("dossier_actif"):
+        write("dossier/index.html", render("dossier.html", root="../", path="/dossier/",
+                                           title=f"{biz['dossier']['nom']} : réponse aux appels d'offres rédigée pour vous · {biz['nom']}",
+                                           description="Mémoire technique, lettre de candidature et DUME préparés sous 24 h : vous relisez, chiffrez, signez.", **common))
+        write("dossier/envoyer/index.html", render("dossier_envoyer.html", root="../../", path="/dossier/envoyer/", noindex=True,
+                                                   title=f"Envoyer mon dossier · {biz['nom']}", description="", **common))
+
     for name in ("mentions-legales", "cgv", "confidentialite"):
         src = (ROOT / "templates" / "legal" / f"{name}.html").read_text(encoding="utf-8")
         content = Markup(render_string(src, e=biz["editeur"], **common))
@@ -243,7 +250,7 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=Non
 
     base = biz["site_url"].rstrip("/")
     # Les pages légales (adresse de l'éditeur) restent accessibles mais hors Google.
-    pages = [p for p in pages if p not in ("mentions-legales.html", "cgv.html", "confidentialite.html", "rappel/index.html", "criteres/index.html", "avis/index.html")]
+    pages = [p for p in pages if p not in ("mentions-legales.html", "cgv.html", "confidentialite.html", "rappel/index.html", "criteres/index.html", "avis/index.html", "dossier/envoyer/index.html")]
     urls = "".join(f"<url><loc>{base}/{p.removesuffix('index.html')}</loc><lastmod>{date.today()}</lastmod></url>" for p in pages)
     (out_dir / "sitemap.xml").write_text(
         f'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>', encoding="utf-8")

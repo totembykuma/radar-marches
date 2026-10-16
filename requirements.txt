@@ -1,3 +1,6 @@
 requests>=2.31
 PyYAML>=6.0
 Jinja2>=3.1
+anthropic>=0.70
+pypdf>=4.0
+python-docx>=1.1

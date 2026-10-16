@@ -18,8 +18,8 @@ from markupsafe import Markup
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
-from . import avis, criteres, ai, parrainage, boamp, finance, historique, mailer, prospects, site, subscribers
-from .config import ROOT, business, metiers as load_metiers
+from . import avis, criteres, ai, dossier, parrainage, boamp, finance, historique, mailer, prospects, site, subscribers
+from .config import ROOT, business, dossier_actif, metiers as load_metiers
 from .matching import Matcher
 from .render import date_fr, date_limite_fr, render
 
@@ -62,6 +62,16 @@ def alert_owner(biz, subject, body_html):
             log.error("Alerte propriétaire non envoyée : %s", safe(exc))
     else:
         log.warning("Alerte non envoyée (pas d'e-mail propriétaire) : %s", subject)
+
+
+def lien_dossier(biz, sub):
+    """Bouton « Préparer ma réponse » des alertes : prix abonné Pro pour les Pro, sinon prix normal ; rien si l'option est inactive."""
+    if not biz.get("dossier_actif"):
+        return None
+    d = biz["dossier"]
+    pro = sub.get("plan") == "pro" and d.get("lien_pro")
+    return {"url": d["lien_pro"] if pro else d["lien_paiement"], "prix": d["prix_pro"] if pro else d["prix"],
+            "email": sub.get("email") or ""}
 
 
 def criteres_txt(sub, metiers):
@@ -151,6 +161,7 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
         if not os.getenv("ANTHROPIC_API_KEY", "").strip():
             alert_owner(biz, "Premier client payant : vous pouvez activer les résumés IA", render("email_premier_client.html", biz=biz))
     biz["ia_active"] = bool(os.getenv("ANTHROPIC_API_KEY", "").strip()) and bool(state.get("premier_client_payant"))
+    biz["dossier_actif"] = dossier_actif(biz)
 
     # 2b. Message de bienvenue aux nouveaux abonnés
     known = set(state.setdefault("known", []))
@@ -245,7 +256,7 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
             a["fiche_complete"] = s.get("plan") == "pro"
             a["metier_libelle"] = metiers[m]["libelle"].lower() if m else ""
         html = render("email_digest.html", biz=biz, avis=sel, date_fr=date_fr(), criteres=criteres_txt(s, metiers),
-                      lien_parrainage=parrainage.lien(biz, s))
+                      lien_parrainage=parrainage.lien(biz, s), lien_dossier=lien_dossier(biz, s))
         subject = f"{len(sel)} appel{'s' if len(sel) > 1 else ''} d'offres : {sel[0]['objet'][:60]}"
         try:
             res = mailer.send(s["email"], subject, html, biz["email_expediteur"], reply_to=biz.get("email_proprietaire") or biz["email_contact"])
@@ -316,6 +327,8 @@ def run_weekly():
         "objectif_mensuel_ca": [800, 1300],
         "essais_commences_7j": sum(1 for s in nouveaux if s.get("trial_end")),
         "ventes_7j": len(ventes),
+        "dossiers_livres_7j": sum(1 for x in _load_json(DATA / "dossiers.json", {}).get("dossiers", {}).values()
+                                  if (x.get("livre") or "") >= (today - timedelta(days=7)).isoformat()),
     }
     kpi["visites_7j"] = visites(biz, today - timedelta(days=7), today)
     pj = _load_json(DATA / "prospection.json", {}).get("journal", [])
@@ -350,6 +363,7 @@ def run_weekly():
               + ligne("Essais gratuits commencés", kpi["essais_commences_7j"], "")
               + ligne("Ventes (passés payants)", kpi["ventes_7j"], "")
               + ligne("Résiliations", kpi["resilies_7j"], "")
+              + (ligne("Dossiers prêts à signer livrés", kpi["dossiers_livres_7j"], f"{biz['dossier']['prix']} € l'unité") if biz.get("dossier_actif") else "")
               + ligne("Clients payants", kpi["abonnes_payants"], f"revenu mensuel récurrent {kpi['mrr']} €")
               + "</table>")
     html = (f"<h2>{biz['nom']} · bilan de la semaine ({date_fr(today)})</h2>" + resume
@@ -594,10 +608,24 @@ def run_apercu_emails():
     return {"envoyes": len(mails)}
 
 
+def run_dossiers():
+    """Option « Dossier prêt à signer » : traite paiements et pièces reçues (workflow dossier.yml, toutes les heures)."""
+    biz = business()
+    if not biz["dossier_actif"]:
+        return {"actif": False}
+    path = DATA / "dossiers.json"
+    state = _load_json(path, {})
+    livres, erreurs = dossier.traiter(biz, state, alerte=lambda sujet, html: alert_owner(biz, sujet, html))
+    _save_json(path, state)
+    if erreurs:
+        log.warning("Dossiers : %s", [safe(e) for e in erreurs])
+    return {"actif": True, "livres": livres, "erreurs": len(erreurs)}
+
+
 def main(argv=None):
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     p = argparse.ArgumentParser(prog="radar")
-    p.add_argument("cmd", choices=["daily", "weekly", "check-api", "demo", "essai", "abonnes", "prospection", "audit", "apercu-emails"])
+    p.add_argument("cmd", choices=["daily", "weekly", "check-api", "demo", "essai", "abonnes", "prospection", "audit", "apercu-emails", "dossiers"])
     p.add_argument("--apercu", action="store_true", help="prospection : envoie un aperçu au propriétaire")
     args = p.parse_args(argv)
     try:
@@ -621,6 +649,8 @@ def main(argv=None):
             print(json.dumps(run_audit(), ensure_ascii=False, indent=1))
         elif args.cmd == "apercu-emails":
             print(json.dumps(run_apercu_emails(), ensure_ascii=False))
+        elif args.cmd == "dossiers":
+            print(json.dumps(run_dossiers(), ensure_ascii=False))
         elif args.cmd == "demo":
             print(json.dumps(run_demo(), ensure_ascii=False, indent=1))
     except Exception:

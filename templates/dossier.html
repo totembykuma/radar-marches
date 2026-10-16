@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% block main %}
+<section class="wrap rappel">
+  <p class="kicker">Option</p>
+  <h1>{{ biz.dossier.nom }} : votre réponse à un appel d'offres, rédigée pour vous</h1>
+  <p class="lead">Un marché vous intéresse ? Envoyez-nous son dossier de consultation et la présentation de votre entreprise. Sous 24 heures ouvrées, vous recevez votre réponse au format Word : il ne reste qu'à relire, mettre vos prix, signer et déposer.</p>
+  <div class="card">
+    <p><b>Ce que vous recevez</b></p>
+    <ul>
+      <li>L'analyse du marché : ce que veut l'acheteur, comment il note, la date limite, les pièges du règlement.</li>
+      <li>Le <b>mémoire technique</b>, rédigé point par point selon les critères de l'acheteur.</li>
+      <li>La lettre de candidature et les réponses du DUME, préremplies.</li>
+      <li>Le tableau de vos références et la liste des pièces à joindre (Kbis, URSSAF, assurances…).</li>
+    </ul>
+    <p>Les informations qui manquent sont surlignées en jaune : rien n'est inventé sur votre entreprise.</p>
+  </div>
+  <div class="card">
+    <p style="font-size:1.3em"><b>{{ biz.dossier.prix }} €</b> par dossier · <b>{{ biz.dossier.prix_pro }} €</b> pour les abonnés Pro (lien dans vos alertes)</p>
+    <p><a class="btn btn-lg" href="{{ biz.dossier.lien_paiement }}">Commander mon dossier</a></p>
+    <p class="muted">Paiement sécurisé par Stripe. Délai trop court (moins de {{ biz.dossier.delai_min_jours }} jours avant la date limite) ou pièces non reçues sous 7 jours : remboursement automatique. Dossier inutile pour vous : remboursé sur simple demande.</p>
+  </div>
+  <p class="muted">Ce service est une aide à la rédaction préparée par intelligence artificielle. Vous relisez, chiffrez, signez et déposez votre offre : vous en restez seul responsable, et aucun résultat n'est garanti. Les documents envoyés ne sont pas conservés. Voir les <a href="{{ root }}cgv.html">conditions de vente</a>.</p>
+</section>
+{% endblock %}

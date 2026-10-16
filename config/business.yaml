@@ -35,6 +35,17 @@ promo:
   places_par_jour: 5
   prix: 29
   mois: 3
+# Option « Dossier prêt à signer » (radar/dossier.py) : visible sur le site et dans les alertes seulement quand l'IA est active.
+dossier:
+  nom: "Dossier prêt à signer"
+  prix: 199
+  prix_pro: 149
+  lien_paiement: ""     # rempli par le workflow stripe.yml
+  lien_pro: ""
+  stripe_link_ids: []
+  adresse: "dossier@elkaurtel.resend.app"   # réception Resend des pièces envoyées par le client
+  modele: "claude-opus-5-5"
+  delai_min_jours: 5    # en dessous : remboursement automatique
 # Adresse de réception Resend (…@xxxx.resend.app) pour les changements de critères automatiques (vide = vers email_contact, traité à la main)
 criteres_adresse: "criteres@elkaurtel.resend.app"
 portail_client: "https://billing.stripe.com/p/login/dRm8wIfYk1j39r3aL63F600"

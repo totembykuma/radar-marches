@@ -35,7 +35,14 @@ def business():
         env_link = os.getenv(f"STRIPE_LINK_{key.upper()}")
         if env_link:
             cfg["offres"][key]["lien_paiement"] = env_link
+    cfg["dossier_actif"] = dossier_actif(cfg)
     return cfg
+
+
+def dossier_actif(cfg):
+    """Option « Dossier prêt à signer » : seulement avec l'IA active et les liens de paiement créés."""
+    d = cfg.get("dossier") or {}
+    return bool(cfg.get("ia_active") and d.get("lien_paiement") and d.get("adresse"))
 
 
 def metiers():
