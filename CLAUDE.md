@@ -19,6 +19,7 @@ tout tourne dans GitHub Actions. Propriétaire non technique, en français, une 
 - Posts LinkedIn : le site publie `/linkedin/semaine.json` et `/linkedin/flux.xml` (`linkedin.py`, 1 article RSS par jour lun-ven dès sa date) ; un Zap Zapier gratuit (RSS → LinkedIn « Create Company Update ») publie sur la page Radar Marchés. Metricool écarté : LinkedIn payant.
 - Alerte gratuite (RETIRÉE le 2026-10-16, code dormant tant que `alerte_gratuite` absent de business.yaml ; `gratuit.py`, page /alerte-gratuite/, mailto → alerte@…resend.app lu par daily) : 3 marchés/semaine, adresses chiffrées (Fernet, clé tirée de RESEND_INBOUND_KEY) dans data/alerte_gratuite.json, sortie auto si client, STOP = désinscription.
 - Relance prospects (`cli.relancer`) : 1 seule, 5 à 12 j après, si Resend dit « clicked » et pas client/inscrit gratuit ; seulement les envois avec champ `suivi` (pied de page annonçant le rappel). IndexNow (Bing) le lundi.
+- Après paiement : liens Stripe → `/merci/` (stripe.yml) ; bienvenue.yml toutes les 10 min envoie la bienvenue aux nouveaux abonnés (`cli bienvenue`).
 - Résumés IA : actifs seulement si secret ANTHROPIC_API_KEY ET `premier_client_payant` dans data/state.json (posé par daily, qui prévient le propriétaire).
 
 ## Règles pour économiser les tokens

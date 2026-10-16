@@ -238,6 +238,8 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=Non
     write("parrainage/index.html", render("parrainage.html", root="../", path="/parrainage/",
                                           title=f"Parrainage : 1 mois offert · {biz['nom']}",
                                           description="Parrainez un confrère : 1 mois offert pour chacun, automatiquement.", **common))
+    write("merci/index.html", render("merci.html", root="../", path="/merci/", noindex=True,
+                                     title=f"Merci, votre veille est active · {biz['nom']}", description="", **common))
     write("rappel/index.html", render("rappel.html", root="../", path="/rappel/", noindex=True,
                                       title=f"Ajouter un rappel · {biz['nom']}", description="", **common))
 
@@ -267,7 +269,7 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=Non
 
     base = biz["site_url"].rstrip("/")
     # Les pages légales (adresse de l'éditeur) restent accessibles mais hors Google.
-    pages = [p for p in pages if p not in ("mentions-legales.html", "cgv.html", "confidentialite.html", "rappel/index.html", "criteres/index.html", "avis/index.html", "dossier/envoyer/index.html")]
+    pages = [p for p in pages if p not in ("mentions-legales.html", "cgv.html", "confidentialite.html", "rappel/index.html", "merci/index.html", "criteres/index.html", "avis/index.html", "dossier/envoyer/index.html")]
     urls = "".join(f"<url><loc>{base}/{p.removesuffix('index.html')}</loc><lastmod>{date.today()}</lastmod></url>" for p in pages)
     (out_dir / "sitemap.xml").write_text(
         f'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>', encoding="utf-8")

@@ -116,6 +116,39 @@ def envoyer_resultats(subs, biz, metiers, matcher, state, records=None):
     return envoyes
 
 
+def envoyer_bienvenues(subs, biz, metiers, state, run):
+    """Envoie le message de bienvenue aux abonnés pas encore connus (clé = empreinte de l'e-mail)."""
+    known = set(state.setdefault("known", []))
+    for s in subs:
+        key = hashlib.sha256(s["email"].lower().encode()).hexdigest()[:16]
+        if key in known:
+            continue
+        html = render("email_bienvenue.html", biz=biz, criteres=criteres_txt(s, metiers), sub=s,
+                      lien=parrainage.lien(biz, s))
+        try:
+            res = mailer.send(s["email"], f"Bienvenue sur {biz['nom']} : votre veille est active", html,
+                              biz["email_expediteur"], reply_to=biz.get("email_proprietaire") or biz["email_contact"])
+            if not res.get("simulated") or os.getenv("RADAR_DEMO") == "1":  # en simulation, ne pas marquer comme envoyé
+                state["known"].append(key)
+                known.add(key)
+            run["bienvenues"] = run.get("bienvenues", 0) + 1
+        except Exception as exc:
+            run["erreurs"].append(f"bienvenue non envoyée : {safe(exc)}")
+
+
+def run_bienvenue():
+    """Passage rapide (toutes les 10 min) : bienvenue aux nouveaux abonnés sans attendre le lendemain matin."""
+    biz, metiers = business(), load_metiers()
+    state = _load_json(DATA / "state.json", {"sent": {}})
+    biz["ia_active"] = bool(os.getenv("ANTHROPIC_API_KEY", "").strip()) and bool(state.get("premier_client_payant"))
+    biz["dossier_actif"] = dossier_actif(biz)
+    run = {"erreurs": []}
+    envoyer_bienvenues(subscribers.load_all(biz, metiers), biz, metiers, state, run)
+    if run.get("bienvenues"):
+        _save_json(DATA / "state.json", state)
+    return {"bienvenues": run.get("bienvenues", 0), "erreurs": run["erreurs"]}
+
+
 def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, histo=None):
     biz, metiers = business(), load_metiers()
     matcher = Matcher(metiers)
@@ -163,22 +196,8 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
     biz["ia_active"] = bool(os.getenv("ANTHROPIC_API_KEY", "").strip()) and bool(state.get("premier_client_payant"))
     biz["dossier_actif"] = dossier_actif(biz)
 
-    # 2b. Message de bienvenue aux nouveaux abonnés
-    known = set(state.setdefault("known", []))
-    for s in subs:
-        key = hashlib.sha256(s["email"].lower().encode()).hexdigest()[:16]
-        if key in known:
-            continue
-        html = render("email_bienvenue.html", biz=biz, criteres=criteres_txt(s, metiers), sub=s,
-                      lien=parrainage.lien(biz, s))
-        try:
-            res = mailer.send(s["email"], f"Bienvenue sur {biz['nom']} : votre veille est active", html,
-                              biz["email_expediteur"], reply_to=biz.get("email_proprietaire") or biz["email_contact"])
-            if not res.get("simulated") or os.getenv("RADAR_DEMO") == "1":  # en simulation, ne pas marquer comme envoyé
-                state["known"].append(key)
-            run["bienvenues"] = run.get("bienvenues", 0) + 1
-        except Exception as exc:
-            run["erreurs"].append(f"bienvenue non envoyée : {safe(exc)}")
+    # 2b. Message de bienvenue aux nouveaux abonnés (aussi envoyé toutes les 10 min par bienvenue.yml)
+    envoyer_bienvenues(subs, biz, metiers, state, run)
 
     # 2c. Rappel 3 jours avant la fin de l'essai (une seule fois par essai)
     rappels = state.setdefault("rappel_essai", [])
@@ -747,7 +766,7 @@ def run_dossiers():
 def main(argv=None):
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     p = argparse.ArgumentParser(prog="radar")
-    p.add_argument("cmd", choices=["daily", "weekly", "check-api", "demo", "essai", "abonnes", "prospection", "audit", "apercu-emails", "dossiers", "entreprises", "barometre"])
+    p.add_argument("cmd", choices=["daily", "weekly", "check-api", "demo", "essai", "abonnes", "prospection", "audit", "apercu-emails", "dossiers", "entreprises", "barometre", "bienvenue"])
     p.add_argument("--mois", help="baromètre : mois AAAA-MM (par défaut le mois écoulé)")
     p.add_argument("--budget", type=int, default=6000, help="entreprises : nombre maximum d'appels à l'annuaire")
     p.add_argument("--apercu", action="store_true", help="prospection : envoie un aperçu au propriétaire")
@@ -763,6 +782,8 @@ def main(argv=None):
             missing = [k for k, cands in boamp.FIELDS.items() if not set(cands) & set(fields)]
             print("Champs logiques non trouvés :", missing or "aucun")
             sys.exit(1 if {"id", "objet", "date_parution"} & set(missing) else 0)
+        elif args.cmd == "bienvenue":
+            print(json.dumps(run_bienvenue(), ensure_ascii=False))
         elif args.cmd == "abonnes":
             print(json.dumps(run_abonnes(), ensure_ascii=False, indent=1))
         elif args.cmd == "essai":

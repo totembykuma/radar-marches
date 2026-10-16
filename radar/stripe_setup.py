@@ -51,6 +51,12 @@ def _link_fields(offre_key, metiers):
     return d
 
 
+def _apres_paiement(biz):
+    """Après le paiement, le client arrive sur la page « Merci, voici ce qui se passe » du site."""
+    return {"after_completion[type]": "redirect",
+            "after_completion[redirect][url]": biz["site_url"].rstrip("/") + "/merci/"}
+
+
 def _link_for(key, price, biz, metiers, mode, offre):
     link = None
     for pl in _call("GET", "payment_links", params={"active": "true", "limit": 100})["data"]:
@@ -65,14 +71,15 @@ def _link_for(key, price, biz, metiers, mode, offre):
                 or options != [v for k, v in wanted.items() if k.endswith("][value]")]:
             link = _call("POST", f"payment_links/{link['id']}", data=wanted)
             print(f"[{mode}] {offre['nom']} : champs du lien mis à jour")
+        if (link.get("after_completion") or {}).get("type") != "redirect":
+            link = _call("POST", f"payment_links/{link['id']}", data=_apres_paiement(biz))
+            print(f"[{mode}] {offre['nom']} : redirection vers /merci/ après paiement")
     if not link:
         data = {"line_items[0][price]": price["id"], "line_items[0][quantity]": 1,
                 "subscription_data[trial_period_days]": biz["essai_gratuit_jours"],
                 "allow_promotion_codes": "true", "billing_address_collection": "auto",
                 "tax_id_collection[enabled]": "true",
-                "after_completion[type]": "hosted_confirmation",
-                "after_completion[hosted_confirmation][custom_message]":
-                    f"Merci ! Votre veille {biz['nom']} est active : vous recevrez un e-mail de bienvenue puis vos premières alertes dès le prochain matin ouvré.",
+                **_apres_paiement(biz),
                 "metadata[radar_offre]": key, "metadata[radar_price]": price["id"], **_link_fields(key, metiers)}
         link = _call("POST", "payment_links", data=data)
     return link
