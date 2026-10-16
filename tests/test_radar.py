@@ -103,7 +103,7 @@ def test_demo_end_to_end(tmp_path, monkeypatch):
     assert len(mails) == 5 and sum("Bienvenue" in m for m in mails) == 2   # 2 bienvenues + 2 alertes + 1 rappel d'essai
     assert run["rappels_essai"] == 1 and sum("essai" in m for m in mails) == 1
     assert (tmp_path / "site" / "criteres" / "index.html").exists()
-    assert "mailto:alerte@" in (tmp_path / "site" / "alerte-gratuite" / "index.html").read_text()
+    assert not (tmp_path / "site" / "alerte-gratuite").exists()   # alerte gratuite retirée
     assert (tmp_path / "site" / "appels-offres" / "nettoyage" / "33.html").exists()
     assert (tmp_path / "site" / "rappel" / "index.html").exists()
     g = (tmp_path / "site" / "guides" / "mapa-procedure-adaptee.html").read_text()
