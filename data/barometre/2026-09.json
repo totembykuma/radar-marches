@@ -1,0 +1,698 @@
+{
+"mois": "2026-09",
+"avis_boamp": 9437,
+"appels": 2696,
+"par_metier": {
+"nettoyage": {
+"n": 190,
+"pme": 85,
+"top_deps": [
+[
+"75",
+18
+],
+[
+"91",
+13
+],
+[
+"94",
+13
+],
+[
+"92",
+13
+],
+[
+"93",
+12
+]
+]
+},
+"espaces-verts": {
+"n": 231,
+"pme": 142,
+"top_deps": [
+[
+"69",
+15
+],
+[
+"92",
+12
+],
+[
+"33",
+11
+],
+[
+"13",
+10
+],
+[
+"01",
+9
+]
+]
+},
+"peinture": {
+"n": 231,
+"pme": 192,
+"top_deps": [
+[
+"75",
+25
+],
+[
+"69",
+18
+],
+[
+"92",
+17
+],
+[
+"93",
+17
+],
+[
+"91",
+14
+]
+]
+},
+"electricite": {
+"n": 412,
+"pme": 322,
+"top_deps": [
+[
+"75",
+35
+],
+[
+"69",
+25
+],
+[
+"78",
+25
+],
+[
+"92",
+25
+],
+[
+"59",
+24
+]
+]
+},
+"plomberie-cvc": {
+"n": 457,
+"pme": 331,
+"top_deps": [
+[
+"75",
+43
+],
+[
+"93",
+31
+],
+[
+"94",
+30
+],
+[
+"69",
+28
+],
+[
+"77",
+24
+]
+]
+},
+"menuiserie": {
+"n": 298,
+"pme": 246,
+"top_deps": [
+[
+"75",
+32
+],
+[
+"69",
+24
+],
+[
+"35",
+21
+],
+[
+"94",
+19
+],
+[
+"92",
+18
+]
+]
+},
+"maconnerie-gros-oeuvre": {
+"n": 405,
+"pme": 336,
+"top_deps": [
+[
+"75",
+32
+],
+[
+"59",
+23
+],
+[
+"92",
+22
+],
+[
+"57",
+19
+],
+[
+"77",
+19
+]
+]
+},
+"couverture": {
+"n": 244,
+"pme": 208,
+"top_deps": [
+[
+"75",
+26
+],
+[
+"94",
+14
+],
+[
+"33",
+13
+],
+[
+"78",
+12
+],
+[
+"71",
+11
+]
+]
+},
+"platrerie": {
+"n": 95,
+"pme": 82,
+"top_deps": [
+[
+"75",
+10
+],
+[
+"69",
+10
+],
+[
+"44",
+7
+],
+[
+"95",
+6
+],
+[
+"38",
+5
+]
+]
+},
+"carrelage-sols": {
+"n": 28,
+"pme": 20,
+"top_deps": [
+[
+"73",
+5
+],
+[
+"69",
+5
+],
+[
+"59",
+3
+],
+[
+"38",
+3
+],
+[
+"974",
+3
+]
+]
+},
+"voirie-vrd": {
+"n": 307,
+"pme": 210,
+"top_deps": [
+[
+"67",
+17
+],
+[
+"34",
+14
+],
+[
+"31",
+13
+],
+[
+"76",
+12
+],
+[
+"38",
+12
+]
+]
+},
+"restauration": {
+"n": 195,
+"pme": 108,
+"top_deps": [
+[
+"75",
+13
+],
+[
+"77",
+12
+],
+[
+"78",
+11
+],
+[
+"13",
+10
+],
+[
+"95",
+9
+]
+]
+},
+"formation": {
+"n": 146,
+"pme": 98,
+"top_deps": [
+[
+"75",
+28
+],
+[
+"92",
+19
+],
+[
+"76",
+9
+],
+[
+"38",
+9
+],
+[
+"91",
+8
+]
+]
+},
+"communication-web": {
+"n": 177,
+"pme": 103,
+"top_deps": [
+[
+"75",
+30
+],
+[
+"93",
+13
+],
+[
+"94",
+13
+],
+[
+"13",
+12
+],
+[
+"95",
+10
+]
+]
+},
+"informatique": {
+"n": 228,
+"pme": 117,
+"top_deps": [
+[
+"75",
+42
+],
+[
+"92",
+18
+],
+[
+"44",
+12
+],
+[
+"35",
+12
+],
+[
+"69",
+11
+]
+]
+},
+"securite": {
+"n": 159,
+"pme": 95,
+"top_deps": [
+[
+"75",
+16
+],
+[
+"92",
+13
+],
+[
+"13",
+13
+],
+[
+"59",
+11
+],
+[
+"94",
+10
+]
+]
+},
+"transport": {
+"n": 33,
+"pme": 14,
+"top_deps": [
+[
+"94",
+6
+],
+[
+"75",
+5
+],
+[
+"91",
+3
+],
+[
+"92",
+3
+],
+[
+"93",
+3
+]
+]
+}
+},
+"par_region": [
+[
+"Île-de-France",
+559
+],
+[
+"Auvergne-Rhône-Alpes",
+354
+],
+[
+"Nouvelle-Aquitaine",
+247
+],
+[
+"Occitanie",
+247
+],
+[
+"Provence-Alpes-Côte d'Azur",
+239
+],
+[
+"Hauts-de-France",
+228
+],
+[
+"Grand Est",
+215
+],
+[
+"Pays de la Loire",
+182
+],
+[
+"Normandie",
+157
+],
+[
+"Outre-mer",
+149
+],
+[
+"Bretagne",
+145
+],
+[
+"Bourgogne-Franche-Comté",
+131
+],
+[
+"Centre-Val de Loire",
+113
+]
+],
+"top_deps": [
+[
+"67",
+17
+],
+[
+"34",
+14
+],
+[
+"31",
+13
+],
+[
+"76",
+12
+],
+[
+"59",
+11
+],
+[
+"33",
+11
+],
+[
+"69",
+11
+],
+[
+"13",
+10
+],
+[
+"83",
+10
+],
+[
+"30",
+9
+]
+],
+"top_acheteurs": [
+[
+"Eurométropole de Strasbourg",
+12
+],
+[
+"Nantes Métropole",
+10
+],
+[
+"Département du Puy-de-Dôme",
+10
+],
+[
+"SID Sud-Est",
+9
+],
+[
+"Ville de Lyon",
+9
+],
+[
+"Rennes Métropole",
+8
+],
+[
+"Angers Loire Metropole (49)",
+8
+],
+[
+"Commune de Cherbourg-en-Cotentin",
+7
+],
+[
+"Mairie de Cannes",
+7
+],
+[
+"Ville De Montpellier",
+6
+]
+],
+"precedent": {
+"mois": "2026-08",
+"appels": 1853,
+"par_metier": {
+"nettoyage": 129,
+"espaces-verts": 158,
+"peinture": 125,
+"electricite": 256,
+"plomberie-cvc": 287,
+"menuiserie": 196,
+"maconnerie-gros-oeuvre": 286,
+"couverture": 139,
+"platrerie": 57,
+"carrelage-sols": 17,
+"voirie-vrd": 265,
+"restauration": 97,
+"formation": 86,
+"communication-web": 106,
+"informatique": 177,
+"securite": 126,
+"transport": 17
+}
+},
+"reperes": {
+"nettoyage": {
+"n": 2648,
+"montant_median": 140000,
+"offres_median": 4
+},
+"espaces-verts": {
+"n": 4611,
+"montant_median": 143549,
+"offres_median": 3
+},
+"peinture": {
+"n": 1928,
+"montant_median": 69149,
+"offres_median": 4
+},
+"electricite": {
+"n": 4771,
+"montant_median": 106350,
+"offres_median": 3
+},
+"plomberie-cvc": {
+"n": 3870,
+"montant_median": 135000,
+"offres_median": 3.0
+},
+"menuiserie": {
+"n": 4429,
+"montant_median": 94012,
+"offres_median": 3.0
+},
+"maconnerie-gros-oeuvre": {
+"n": 14850,
+"montant_median": 120000,
+"offres_median": 4.0
+},
+"couverture": {
+"n": 4350,
+"montant_median": 111529,
+"offres_median": 3.0
+},
+"platrerie": {
+"n": 2554,
+"montant_median": 87048,
+"offres_median": 4
+},
+"carrelage-sols": {
+"n": 1349,
+"montant_median": 60500,
+"offres_median": 4
+},
+"voirie-vrd": {
+"n": 11023,
+"montant_median": 260754,
+"offres_median": 4.0
+},
+"restauration": {
+"n": 1331,
+"montant_median": 200000,
+"offres_median": 3.0
+},
+"formation": {
+"n": 2110,
+"montant_median": 96000,
+"offres_median": 4
+},
+"communication-web": {
+"n": 1598,
+"montant_median": 90000,
+"offres_median": 3
+},
+"informatique": {
+"n": 6734,
+"montant_median": 171680,
+"offres_median": 1
+},
+"securite": {
+"n": 1354,
+"montant_median": 169966,
+"offres_median": 4.0
+},
+"transport": {
+"n": 1458,
+"montant_median": 220000,
+"offres_median": 2.0
+}
+},
+"calcule_le": "2026-10-16"
+}
