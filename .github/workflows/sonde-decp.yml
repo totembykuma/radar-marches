@@ -1,0 +1,11 @@
+name: Sonde données essentielles (temporaire)
+on:
+  push:
+    branches: [claude/project-thread-nlesq9]
+    paths: [scripts/sonde_decp.py, .github/workflows/sonde-decp.yml]
+jobs:
+  sonde:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install requests && python scripts/sonde_decp.py
