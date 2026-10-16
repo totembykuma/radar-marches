@@ -1,11 +1,12 @@
-name: Test de l'IA (une question, aucun e-mail)
+name: Aperçu alerte IA (vrais avis, aucun e-mail)
 on:
   workflow_dispatch: {}
   push:
     branches: [claude/project-thread-8crrze]
-    paths: [".github/workflows/test-ia.yml"]
+    paths: [".github/workflows/test-ia.yml", "scripts/apercu_ia.py"]
+permissions: { contents: write }
 jobs:
-  test:
+  apercu:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -13,15 +14,7 @@ jobs:
         with: { python-version: "3.12", cache: pip }
       - run: pip install -r requirements.txt
       - env: { ANTHROPIC_API_KEY: "${{ secrets.ANTHROPIC_API_KEY }}" }
-        run: |
-          python - <<'PY'
-          import os, requests
-          k = os.getenv("ANTHROPIC_API_KEY", "").strip()
-          print("cle presente :", bool(k))
-          r = requests.post("https://api.anthropic.com/v1/messages", timeout=60, headers={
-              "x-api-key": k, "anthropic-version": "2023-06-01", "content-type": "application/json"},
-              json={"model": "claude-haiku-5-5", "max_tokens": 50,
-                    "messages": [{"role": "user", "content": "Résume en 10 mots : marché de nettoyage des écoles de Paris, 2 ans."}]})
-          print("statut HTTP :", r.status_code)
-          print(r.text[:400])
-          PY
+        run: PYTHONPATH=. python scripts/apercu_ia.py nettoyage 75 2>&1 | tail -5
+      - run: |
+          git config user.name "radar-bot"; git config user.email "radar-bot@users.noreply.github.com"
+          git add -f apercu-ia/alerte.html && git commit -qm "Aperçu alerte IA" && git push -q
