@@ -18,6 +18,11 @@
     <p><b>Chaque matin, les appels d'offres de votre métier et de votre département</b>, avec le badge « Accessible PME ».</p>
     <a class="btn btn-block" href="{{ root }}#tarifs">Essai gratuit {{ biz.essai_gratuit_jours }} jours</a>
     <small>Dès {{ biz.offres.essentiel.prix_mensuel }} €/mois ensuite · sans engagement</small>
-  </div></aside>
+  </div>{% if biz.dossier_actif %}
+  <div class="cta-box">
+    <p class="kicker">Pas le temps de rédiger ?</p>
+    <p><b>Votre réponse rédigée pour vous, au format Word, sous 24 heures ouvrées.</b> Vous relisez, mettez vos prix et signez.</p>
+    <a class="btn btn-block" href="{{ root }}dossier/">Dossier prêt à signer</a>
+  </div>{% endif %}</aside>
 </section>
 {% endblock %}

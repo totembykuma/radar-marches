@@ -2,7 +2,7 @@
 <section class="wrap rappel">
   <p class="kicker">Espace abonné</p>
   <h1>Donner mon avis</h1>
-  <p class="lead">Votre messagerie s'ouvre avec votre avis déjà rédigé : envoyez-le <b>depuis l'adresse qui reçoit vos alertes</b> (c'est ce qui prouve que vous êtes client). Il est publié automatiquement le jour ouvré suivant, sans tri : bon ou mauvais.</p>
+  <p class="lead">Vous ouvrez votre messagerie (Gmail, Outlook…) avec votre avis déjà rédigé : envoyez-le <b>depuis l'adresse qui reçoit vos alertes</b> (c'est ce qui prouve que vous êtes client). Il est publié automatiquement le jour ouvré suivant, sans tri : bon ou mauvais.</p>
   <form class="card" id="a-form">
     <p><label>Votre note<br><select id="a-note" style="width:100%"><option value="5">5 sur 5 : excellent</option><option value="4">4 sur 5 : bien</option><option value="3">3 sur 5 : correct</option><option value="2">2 sur 5 : décevant</option><option value="1">1 sur 5 : mauvais</option></select></label></p>
     <p><label>Votre avis<br><textarea id="a-texte" rows="5" required minlength="10" maxlength="600" style="width:100%" placeholder="Ce que le service vous apporte, ce qui pourrait être mieux…"></textarea></label></p>
@@ -19,7 +19,7 @@ document.getElementById("a-form").addEventListener("submit", function (ev) {
   function v(id) { return document.getElementById(id).value.trim(); }
   var corps = "Bonjour,\n\nVoici mon avis sur {{ biz.nom }} :\n\nNote : " + v("a-note") + "/5\nNom affiché : " + v("a-nom") +
     "\nActivité : " + v("a-act") + "\nPublication : oui\nAvis : " + v("a-texte") + "\n";
-  location.href = "mailto:{{ biz.avis_adresse or biz.criteres_adresse or biz.email_contact }}?subject=" + encodeURIComponent("Mon avis") + "&body=" + encodeURIComponent(corps);
+  envoyerMail("{{ biz.avis_adresse or biz.criteres_adresse or biz.email_contact }}", "Mon avis", corps);
 });
 </script>
 {% endblock %}

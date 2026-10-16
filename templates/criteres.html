@@ -2,7 +2,7 @@
 <section class="wrap rappel">
   <p class="kicker">Espace abonné</p>
   <h1>Modifier mes critères</h1>
-  <p class="lead">Choisissez vos nouveaux critères : votre messagerie s'ouvre avec la demande déjà rédigée, il ne reste qu'à l'envoyer <b>depuis l'adresse qui reçoit vos alertes</b>. Le changement est appliqué automatiquement le jour ouvré suivant, et vous recevez une confirmation.</p>
+  <p class="lead">Choisissez vos nouveaux critères : vous ouvrez votre messagerie (Gmail, Outlook…) avec la demande déjà rédigée, il ne reste qu'à l'envoyer <b>depuis l'adresse qui reçoit vos alertes</b>. Le changement est appliqué automatiquement le jour ouvré suivant, et vous recevez une confirmation.</p>
   <form class="card" id="c-form">
     <p><label>Votre métier<br><select id="c-metier" style="width:100%">{% for k, m in metiers.items() %}<option>{{ m.libelle }}</option>{% endfor %}</select></label></p>
     <p><label>Départements (ex. 33, 47) ou « France » avec l'offre Pro<br><input id="c-deps" style="width:100%"></label></p>
@@ -17,7 +17,7 @@ document.getElementById("c-form").addEventListener("submit", function (ev) {
   function v(id) { return document.getElementById(id).value.trim(); }
   var corps = "Bonjour,\n\nMerci de modifier mes critères d'alerte :\n\nMétier : " + v("c-metier") +
     "\nDépartements : " + (v("c-deps") || "inchangés") + "\nMots-clés : " + (v("c-mots") || "aucun") + "\n";
-  location.href = "mailto:{{ biz.criteres_adresse or biz.email_contact }}?subject=" + encodeURIComponent("Modifier mes critères") + "&body=" + encodeURIComponent(corps);
+  envoyerMail("{{ biz.criteres_adresse or biz.email_contact }}", "Modifier mes critères", corps);
 });
 </script>
 {% endblock %}
