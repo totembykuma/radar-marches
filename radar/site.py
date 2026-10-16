@@ -263,6 +263,7 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=Non
     posts = linkedin.semaine(biz, metiers, publics, laureats=laureats, barometre=baros[0] if baros else None, today=today)
     (out_dir / "linkedin").mkdir(exist_ok=True)
     (out_dir / "linkedin" / "semaine.json").write_text(json.dumps(posts, ensure_ascii=False, indent=1), encoding="utf-8")
+    (out_dir / "linkedin" / "flux.xml").write_text(linkedin.flux_rss(posts, biz, today=today), encoding="utf-8")
 
     base = biz["site_url"].rstrip("/")
     # Les pages légales (adresse de l'éditeur) restent accessibles mais hors Google.

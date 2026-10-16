@@ -1,7 +1,7 @@
 """Posts LinkedIn de la semaine (lundi → vendredi), écrits à partir des vraies données du site.
 
-Le site publie /linkedin/semaine.json ; une tâche programmée de Claude les planifie chaque lundi
-sur la page LinkedIn via Metricool (aucune clé dans ce dépôt)."""
+Le site publie /linkedin/semaine.json et /linkedin/flux.xml ; un Zap Zapier gratuit (RSS → page LinkedIn)
+publie chaque post le jour venu (aucune clé dans ce dépôt)."""
 import re
 from datetime import date, timedelta
 
@@ -73,3 +73,24 @@ def semaine(biz, metiers, by_metier_public, laureats=None, barometre=None, today
         ajouter(4, f"{txt}\n\n{TAGS}")
     posts.sort(key=lambda p: p["date"])
     return {"semaine_du": lundi.isoformat(), "genere_le": date_fr(today), "posts": posts}
+
+
+def flux_rss(data, biz, today=None):
+    """Flux RSS : un article par post déjà « échu » (date ≤ aujourd'hui). Zapier (gratuit) publie chaque nouvel article
+    sur la page LinkedIn ; l'identifiant unique (guid) par jour évite toute publication en double."""
+    from xml.sax.saxutils import escape
+    today = (today or date.today()).isoformat()
+    base = biz["site_url"].rstrip("/")
+    items = []
+    for p in sorted(data["posts"], key=lambda p: p["date"], reverse=True):
+        jour = p["date"][:10]
+        if jour > today:
+            continue
+        d = date.fromisoformat(jour)
+        pub = f"{['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][d.weekday()]}, {d.day:02d} {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.month - 1]} {d.year} 07:00:00 +0000"
+        titre = p["texte"].split("\n", 1)[0]
+        items.append(f"<item><title>{escape(titre)}</title><link>{base}/</link><guid isPermaLink=\"false\">radar-linkedin-{jour}</guid>"
+                     f"<pubDate>{pub}</pubDate><description>{escape(p['texte'])}</description></item>")
+    return ('<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel>'
+            f"<title>{escape(biz['nom'])} · posts LinkedIn</title><link>{base}/</link><description>Posts du jour</description>"
+            + "".join(items) + "</channel></rss>")
