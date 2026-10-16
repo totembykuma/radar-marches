@@ -9,29 +9,35 @@
     {% set niv = 0 if not k else (1 if k < s1 else (2 if k < s2 else (3 if k < s3 else 4))) %}{# niveaux par quartiles : une grosse valeur (Paris) n'écrase pas les autres #}
     {% if k and liens.get(d.code) %}<a class="dep n{{ niv }}" href="{{ liens[d.code] }}" data-nom="{{ d.nom }}" data-code="{{ d.code }}" data-n="{{ k }}"><title>{{ d.nom }} ({{ d.code }}) · {{ k }} marché{{ 's' if k > 1 }}</title>
     {%- else %}<g class="dep n0" data-nom="{{ d.nom }}" data-code="{{ d.code }}" data-n="0"><title>{{ d.nom }} ({{ d.code }}) · aucun marché en cours</title>{% endif -%}
-    {% set fill = ["#e3e8f0", "#bcd0ec", "#7fa6dc", "#3f73bf", "#13294b"][niv] %}<path d="{{ d.d }}" fill="{{ fill }}" stroke="#fff" stroke-width=".7"/>{% if d.zoom %}<path d="{{ d.zoom }}" fill="{{ fill }}" stroke="#fff" stroke-width=".7"/>{% endif %}{{ '</a>'|safe if k and liens.get(d.code) else '</g>'|safe }}
+    {% set fill = ["#e3e8f0", "#bcd0ec", "#7fa6dc", "#3f73bf", "#13294b"][niv] %}{% for e in carte.encarts if e.code == d.code %}<rect x="{{ e.x }}" y="{{ e.y }}" width="{{ e.w }}" height="{{ e.h }}" rx="8" fill="transparent"/>{% endfor %}<path d="{{ d.d }}" fill="{{ fill }}" stroke="#fff" stroke-width=".7"/>{% if d.zoom %}<path d="{{ d.zoom }}" fill="{{ fill }}" stroke="#fff" stroke-width=".7"/>{% endif %}{{ '</a>'|safe if k and liens.get(d.code) else '</g>'|safe }}
     {% endfor %}
-    <g class="carte-label" style="display:none;pointer-events:none"><rect height="26" rx="7" fill="#0b1b33"/><text text-anchor="middle" fill="#fff" font-size="13" font-weight="700"></text></g>
+    <path class="carte-hl" d="" fill="#ff8a00" stroke="#0b1b33" stroke-width="1.6" style="display:none;pointer-events:none"/><g class="carte-label" style="display:none;pointer-events:none"><rect height="26" rx="7" fill="#0b1b33"/><text text-anchor="middle" fill="#fff" font-size="13" font-weight="700"></text></g>
   </svg>
   <figcaption>Survolez un département pour voir son nom, cliquez pour ouvrir ses appels d'offres. Plus la couleur est foncée, plus il y a de marchés en cours.</figcaption>
 </figure>
 <script>(function () {
   var s = document.currentScript.previousElementSibling.querySelector("svg"), lab = s.querySelector(".carte-label"),
-      t = lab.querySelector("text"), r = lab.querySelector("rect"), W = s.viewBox.baseVal.width;
-  function voir(el, monter) {
+      t = lab.querySelector("text"), r = lab.querySelector("rect"), hl = s.querySelector(".carte-hl"), W = s.viewBox.baseVal.width;
+  function voir(el) {
     var p = el.querySelector("path"), b = p.getBBox(), n = +el.getAttribute("data-n");
     t.textContent = el.getAttribute("data-nom") + " (" + el.getAttribute("data-code") + ")" + (n ? " · " + n + " marché" + (n > 1 ? "s" : "") : "");
     lab.style.display = "";
     var w = t.getComputedTextLength() + 18, x = Math.max(w / 2 + 2, Math.min(W - w / 2 - 2, b.x + b.width / 2)), y = Math.max(30, b.y + b.height / 2);
     r.setAttribute("x", x - w / 2); r.setAttribute("width", w); r.setAttribute("y", y - 30);
     t.setAttribute("x", x); t.setAttribute("y", y - 12);
-    if (monter) s.insertBefore(el, lab);  /* le département survolé passe au premier plan */
+    /* contour mis en avant par une copie posée au-dessus (on ne déplace pas le lien : ça annulait le clic) */
+    if (el.tagName.toLowerCase() === "a") { hl.setAttribute("d", [].map.call(el.querySelectorAll("path"), function (q) { return q.getAttribute("d"); }).join("")); hl.style.display = ""; }
   }
+  /* Sur téléphone, un premier toucher qui change l'affichage est pris pour un survol et le lien ne s'ouvre pas :
+     au doigt, pas d'étiquette, le toucher ouvre directement la page. */
+  var doigt = 0;
+  s.addEventListener("touchstart", function () { doigt = Date.now(); }, { passive: true });
   s.querySelectorAll(".dep").forEach(function (el) {
-    el.addEventListener("mouseenter", function () { voir(el, true); });
-    el.addEventListener("focus", function () { voir(el, false); });
-    el.addEventListener("mouseleave", function () { lab.style.display = "none"; });
-    el.addEventListener("blur", function () { lab.style.display = "none"; });
+    function cacher() { lab.style.display = "none"; hl.style.display = "none"; }
+    el.addEventListener("mouseenter", function () { if (Date.now() - doigt > 1500) voir(el); });
+    el.addEventListener("focus", function () { if (Date.now() - doigt > 1500) voir(el); });
+    el.addEventListener("mouseleave", cacher);
+    el.addEventListener("blur", cacher);
   });
 })();</script>
 {%- endmacro %}
