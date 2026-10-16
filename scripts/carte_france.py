@@ -97,7 +97,7 @@ def main():
             else:
                 deps[c]["zoom"] = d
         encarts.append({"x": 636, "y": round(oy, 1), "w": 160, "h": round(hauteur - 6, 1),
-                        "titre": titre or par_code[codes[0]]["properties"]["nom"]})
+                        "titre": titre or par_code[codes[0]]["properties"]["nom"], **({} if titre else {"code": codes[0]})})
     data = {"viewbox": f"0 0 {W} {H}", "encarts": encarts,
             "departements": sorted(deps.values(), key=lambda d: d["code"])}
     OUT.write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
