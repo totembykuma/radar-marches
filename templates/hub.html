@@ -1,11 +1,17 @@
-{% extends "base.html" %}{% import "_ui.html" as ui %}{% block main %}
+{% extends "base.html" %}{% import "_ui.html" as ui %}{% from "_carte.html" import carte as carte_fr %}{% block main %}
 <section class="page-head"><div class="wrap">
   <p class="crumbs"><a href="{{ root }}">Accueil</a> › Appels d'offres</p>
   <h1>Appels d'offres publics par métier</h1>
   <p class="lead">Les marchés publics en cours, issus du BOAMP, classés par métier et mis à jour chaque matin ({{ date_fr }}).</p>
   {% if nb_villes %}<p><a href="villes/">Voir les appels d'offres par ville ({{ nb_villes }} villes) →</a></p>{% endif %}
 </div></section>
+<section class="wrap block" id="carte">
+  <h2>Par département</h2>
+  <p class="lead">Tous les métiers réunis, département par département, outre-mer compris.</p>
+  {{ carte_fr(carte, carte_n, carte_liens) }}
+</section>
 <section class="wrap block">
+  <h2>Par métier</h2>
   <div class="tiles">{% for k, m in metiers.items() %}{{ ui.tuile(k, m, counts[k], k ~ '/') }}{% endfor %}</div>
 </section>
 {% endblock %}

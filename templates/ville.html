@@ -1,10 +1,10 @@
 {% extends "base.html" %}{% import "_ui.html" as ui %}{% block main %}
 <section class="page-head"><div class="wrap">
-  <p class="crumbs"><a href="{{ root }}">Accueil</a> › <a href="{{ root }}appels-offres/">Appels d'offres</a> › <a href="{{ root }}appels-offres/villes/">Par ville</a>{% if ville %} › {{ ville.nom }}{% endif %}</p>
+  <p class="crumbs"><a href="{{ root }}">Accueil</a> › <a href="{{ root }}appels-offres/">Appels d'offres</a> › {% if departement %}<a href="{{ root }}appels-offres/#carte">Par département</a>{% else %}<a href="{{ root }}appels-offres/villes/">Par ville</a>{% endif %}{% if ville %} › {{ ville.nom }}{% endif %}</p>
   <h1>{{ h1 }}</h1>
   {% if ville %}
-  <p class="lead"><b>{{ ville.total }}</b> appel{{ 's' if ville.total > 1 }} d'offres en cours publiés par des acheteurs publics de {{ ville.nom }} (département {{ ville.dep }}) · mis à jour le {{ date_fr }}</p>
-  <div class="deps"><span>Métiers :</span>{% for k, lst in ville.par_metier %}<a href="#{{ k }}" style="--c:{{ ui.couleur(k) }}">{{ metiers[k].libelle }} <small>{{ lst|length }}</small></a>{% endfor %}</div>
+  <p class="lead"><b>{{ ville.total }}</b> appel{{ 's' if ville.total > 1 }} d'offres en cours {% if departement %}dans le département {{ ville.nom }}, tous métiers confondus{% else %}publiés par des acheteurs publics de {{ ville.nom }} (département {{ ville.dep }}){% endif %} · mis à jour le {{ date_fr }}</p>
+  <div class="deps"><span>Métiers :</span>{% for k, lst, c in ville.par_metier %}<a href="#{{ k }}" style="--c:{{ ui.couleur(k) }}">{{ metiers[k].libelle }} <small>{{ lst|length + c }}</small></a>{% endfor %}</div>
   {% else %}
   <p class="lead">Les villes où les acheteurs publics ont le plus d'appels d'offres en cours, mis à jour chaque matin ({{ date_fr }}).</p>
   {% endif %}
@@ -14,20 +14,22 @@
 <section class="wrap listing">
   <div class="cards">
   {% if ville.acheteurs %}<p class="fine">Principaux acheteurs : {{ ville.acheteurs|join(', ') }}.</p>{% endif %}
-  {% for k, lst in ville.par_metier %}
-    <h2 id="{{ k }}" class="ville-metier">{{ ui.icone(k, 22) }} {{ metiers[k].libelle }} · {{ lst|length }} marché{{ 's' if lst|length > 1 }}
+  {% with caches=ville.caches %}{% include "_reserve.html" %}{% endwith %}
+  {% for k, lst, c in ville.par_metier %}{% set nb = lst|length + c %}
+    <h2 id="{{ k }}" class="ville-metier">{{ ui.icone(k, 22) }} {{ metiers[k].libelle }} · {{ nb }} marché{{ 's' if nb > 1 }}
       <a class="fine" href="{{ root }}appels-offres/{{ k }}/{{ ville.dep }}.html">tout le département {{ ville.dep }} →</a></h2>
     {% for a in lst %}
     <article class="avis">
-      <div class="avis-top"><span class="chip">{{ ville.nom }}</span>{% if a.pme %}<span class="chip chip-pme" title="{{ a.pme }}">✔ Accessible PME</span>{% endif %}{{ ui.echeance(a.jours_restants) }}</div>
+      <div class="avis-top">{% if departement %}{% if a.ville %}<span class="chip">{{ a.ville }}</span>{% endif %}{% else %}<span class="chip">{{ ville.nom }}</span>{% endif %}{% if a.pme %}<span class="chip chip-pme" title="{{ a.pme }}">✔ Accessible PME</span>{% endif %}{{ ui.echeance(a.jours_restants) }}</div>
       <h3><a href="{{ a.url }}" rel="nofollow noopener" target="_blank">{{ a.objet }}</a></h3>
       <p class="buyer">{{ a.acheteur }}</p>
       <div class="avis-foot"><span>Publié le {{ a.date_parution_fr or a.date_parution }}</span>{% if a.date_limite %}<span>Réponse avant le <b>{{ a.date_limite_fr }}</b></span>{% endif %}<a href="{{ a.url }}" rel="nofollow noopener" target="_blank">Avis officiel →</a></div>
     </article>
+    {% else %}<p class="fine">🔒 {{ c }} marché{{ 's' if c > 1 }} récent{{ 's' if c > 1 }}, réservé{{ 's' if c > 1 }} aux abonnés.</p>
     {% endfor %}
     {% if loop.index == 1 %}{% include "_cta.html" %}{% endif %}
   {% endfor %}
-  {% if autres %}<p class="fine">Autres villes du département : {% for v in autres %}<a href="{{ v.slug }}.html">{{ v.nom }} ({{ v.total }})</a>{{ ', ' if not loop.last }}{% endfor %}.</p>{% endif %}
+  {% if autres %}<p class="fine">{{ 'Villes du département' if departement else 'Autres villes du département' }} : {% for v in autres %}<a href="{{ root }}appels-offres/villes/{{ v.slug }}.html">{{ v.nom }} ({{ v.total }})</a>{{ ', ' if not loop.last }}{% endfor %}.</p>{% endif %}
   </div>
   <aside class="side">{% include "_cta.html" %}</aside>
 </section>

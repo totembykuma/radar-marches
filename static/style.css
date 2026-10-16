@@ -345,3 +345,17 @@ footer .logo{color:#fff}footer p{margin:12px 0 0;max-width:420px;line-height:1.5
 .avis-client .etoiles{color:#ffb020;letter-spacing:2px}.avis-client .etoiles span{color:#d9dee8}
 .avis-client blockquote{margin:10px 0;font-size:15px;line-height:1.55}.avis-client figcaption{font-size:14px;color:#5a6478}
 .ville-metier{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:21px;margin:26px 0 4px}.ville-metier a{margin-left:auto;font-weight:600}
+/* Carte de France cliquable */
+.carte{margin:18px 0 0;background:var(--soft);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.carte svg{display:block;width:100%;height:auto;max-height:78vh}
+.carte .encart{fill:#fff;stroke:var(--line)}.carte .encart-t{font-size:11px;fill:var(--muted);font-weight:600}
+.carte .dep path{stroke:#fff;stroke-width:.7;stroke-linejoin:round;transition:fill .15s}
+.carte .n0 path{fill:#e3e8f0}.carte .n1 path{fill:#bcd0ec}.carte .n2 path{fill:#7fa6dc}.carte .n3 path{fill:#3f73bf}.carte .n4 path{fill:#13294b}
+.carte a.dep{cursor:pointer;outline:none}
+.carte a.dep:hover path,.carte a.dep:focus path{fill:var(--accent2);stroke:var(--navy);stroke-width:1.6}
+.carte g.dep:hover path{fill:#cfd6e2}
+.carte-label{pointer-events:none}.carte-label rect{fill:var(--navy)}.carte-label text{fill:#fff;font-size:13px;font-weight:700}
+.carte figcaption{font-size:13.5px;color:var(--muted);margin-top:8px;text-align:center}
+/* Marchés récents réservés aux abonnés */
+.reserve{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:center;background:#fff8e8;border:1px solid #ffd27a;border-radius:var(--r);padding:16px 18px;margin-bottom:18px}
+.reserve p{flex:1 1 260px;margin:0}.reserve-ico{font-size:24px}

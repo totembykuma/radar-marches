@@ -1,4 +1,5 @@
 """Génère le site statique : page de vente + pages SEO par métier et département, mises à jour chaque jour."""
+import json
 import shutil
 from collections import Counter, defaultdict
 from datetime import date, timedelta
@@ -20,6 +21,22 @@ def _jours_restants(s, today):
         return (date.fromisoformat(str(s)[:10]) - today).days
     except ValueError:
         return None
+
+
+CARTE = json.loads((ROOT / "config" / "carte_france.json").read_text(encoding="utf-8"))
+NOMS_DEP = {d["code"]: d["nom"] for d in CARTE["departements"]}
+RECENTS_JOURS = 3   # les marchés publiés ces 3 derniers jours sont réservés aux abonnés (pas sur les pages publiques)
+
+
+def _publics(lst, today):
+    """(avis visibles publiquement, nombre d'avis récents réservés aux abonnés)."""
+    seuil = (today - timedelta(days=RECENTS_JOURS - 1)).isoformat()
+    vis = [a for a in lst if not (a.get("date_parution") or "") >= seuil]
+    return vis, len(lst) - len(vis)
+
+
+def _nom_dep(d):
+    return f"{NOMS_DEP[d]} ({d})" if d in NOMS_DEP else f"département {d}"
 
 
 MOIS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."]
@@ -82,6 +99,16 @@ def _villes(by_metier, metiers):
     return out[:VILLES_MAX]
 
 
+def _zone(dep, nom, par_metier, today, slug=None):
+    """Ville ou département : avis par métier, sans les récents (réservés aux abonnés)."""
+    uniques = {id(a): a for lst in par_metier.values() for a in lst}
+    acheteurs = Counter(a["acheteur"] for a in uniques.values() if a.get("acheteur"))
+    pm = [(k, *_publics(lst, today)) for k, lst in sorted(par_metier.items(), key=lambda kv: -len(kv[1]))]
+    return {"nom": nom, "dep": dep, "slug": slug, "total": len(uniques), "par_metier": pm,
+            "caches": len(uniques) - len({id(a) for _, vis, _ in pm for a in vis}),
+            "acheteurs": [n for n, _ in acheteurs.most_common(5)]}
+
+
 def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=None):
     out_dir = Path(out_dir)
     if out_dir.exists():
@@ -103,7 +130,7 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=Non
         for a in lst:
             a["jours_restants"] = _jours_restants(a.get("date_limite"), today)
 
-    common = dict(biz=biz, metiers=metiers, date_fr=date_fr())
+    common = dict(biz=biz, metiers=metiers, date_fr=date_fr(), carte=CARTE, recents_jours=RECENTS_JOURS)
     pages = []
 
     def write(rel, html):
@@ -125,39 +152,63 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=Non
                                title=f"{biz['nom']} · Appels d'offres publics par métier, triés" + (" par IA" if biz.get("ia_active") else ""),
                                description=biz["slogan"], **common))
     villes = _villes(by_metier, metiers)
+    # Une page par département (tous métiers), ouverte depuis la carte de France du hub.
+    par_dep = defaultdict(lambda: defaultdict(list))
+    for key in metiers:
+        for a in by_metier.get(key, []):
+            for d in a["departements"]:
+                if d:
+                    par_dep[d][key].append(a)
+    zones_dep = [_zone(d, _nom_dep(d), pm, today) for d, pm in par_dep.items()]
     write("appels-offres/index.html", render(
         "hub.html", root="../", path="/appels-offres/", counts=counts, nb_villes=len(villes),
+        carte_n={z["dep"]: z["total"] for z in zones_dep}, carte_liens={z["dep"]: f"departements/{z['dep']}.html" for z in zones_dep},
         title="Appels d'offres publics en cours par métier", description="Marchés publics en cours classés par métier, mis à jour chaque jour.", **common))
 
     for key, m in metiers.items():
         lst = by_metier[key]
         dep_counts = Counter(d for a in lst for d in a["departements"])
         deps = sorted(dep_counts)
+        vis, caches = _publics(lst, today)
         write(f"appels-offres/{key}/index.html", render(
-            "listing.html", root="../../", path=f"/appels-offres/{key}/", avis=lst[:150], total=len(lst), metier=m, metier_key=key,
-            dep=None, deps=deps, dep_counts=dep_counts, h1=f"Appels d'offres {m['libelle'].lower()} en cours",
+            "listing.html", root="../../", path=f"/appels-offres/{key}/", avis=vis[:150], visibles=len(vis), caches=caches, total=len(lst),
+            metier=m, metier_key=key, dep=None, deps=deps, dep_counts=dep_counts, noms_dep=NOMS_DEP,
+            carte_n=dep_counts, carte_liens={d: f"{d}.html" for d in deps}, h1=f"Appels d'offres {m['libelle'].lower()} en cours",
             title=f"Appels d'offres {m['libelle'].lower()} : marchés publics en cours ({date_fr()})",
             description=f"{len(lst)} marchés publics {m['libelle'].lower()} ouverts, mis à jour chaque jour.", **common))
         for d in deps:
             sub = [a for a in lst if d in a["departements"]]
+            vis, caches = _publics(sub, today)
+            nom = NOMS_DEP.get(d, "")
             write(f"appels-offres/{key}/{d}.html", render(
-                "listing.html", root="../../", path=f"/appels-offres/{key}/{d}.html", avis=sub, total=len(sub), metier=m,
-                metier_key=key, dep=d, deps=[], dep_counts={}, villes=[v for v in villes if v["dep"] == d][:15], h1=f"Appels d'offres {m['libelle'].lower()} · département {d}",
-                title=f"Appels d'offres {m['libelle'].lower()} {d} : marchés publics en cours",
-                description=f"{len(sub)} marchés publics {m['libelle'].lower()} ouverts dans le département {d}.", **common))
+                "listing.html", root="../../", path=f"/appels-offres/{key}/{d}.html", avis=vis, visibles=len(vis), caches=caches, total=len(sub),
+                metier=m, metier_key=key, dep=d, deps=[], dep_counts={}, villes=[v for v in villes if v["dep"] == d][:15],
+                h1=f"Appels d'offres {m['libelle'].lower()} · {_nom_dep(d)}",
+                title=f"Appels d'offres {m['libelle'].lower()} {d}{' ' + nom if nom else ''} : marchés publics en cours",
+                description=f"{len(sub)} marchés publics {m['libelle'].lower()} ouverts dans le département {_nom_dep(d)}.", **common))
+
+    for z in zones_dep:
+        noms = ", ".join(metiers[k]["libelle"].lower() for k, *_ in z["par_metier"][:3])
+        write(f"appels-offres/departements/{z['dep']}.html", render(
+            "ville.html", root="../../", path=f"/appels-offres/departements/{z['dep']}.html", ville=z, departement=True,
+            autres=[v for v in villes if v["dep"] == z["dep"]][:15], metier=metiers[z["par_metier"][0][0]], dep=z["dep"],
+            h1=f"Appels d'offres publics · {z['nom']}",
+            title=f"Appels d'offres {z['nom']} : {z['total']} marchés publics en cours",
+            description=f"{z['total']} marchés publics en cours dans le département {z['nom']} : {noms}. Mis à jour chaque matin.", **common))
 
     for v in villes:
         autres = [x for x in villes if x["dep"] == v["dep"] and x is not v][:12]
         noms = ", ".join(metiers[k]["libelle"].lower() for k, _ in v["par_metier"][:3])
+        v = _zone(v["dep"], v["nom"], dict(v["par_metier"]), today, slug=v["slug"])
         write(f"appels-offres/villes/{v['slug']}.html", render(
             "ville.html", root="../../", path=f"/appels-offres/villes/{v['slug']}.html", ville=v, autres=autres,
             metier=metiers[v["par_metier"][0][0]], dep=v["dep"],
             h1=f"Appels d'offres à {v['nom']} ({v['dep']})",
             title=f"Appels d'offres {v['nom']} ({v['dep']}) : {v['total']} marchés publics en cours",
             description=f"{v['total']} marchés publics en cours à {v['nom']} : {noms}. Mis à jour chaque matin.", **common))
-    par_dep = sorted(((d, [v for v in villes if v["dep"] == d]) for d in {v["dep"] for v in villes}), key=lambda x: x[0])
+    villes_dep = sorted(((d, [v for v in villes if v["dep"] == d]) for d in {v["dep"] for v in villes}), key=lambda x: x[0])
     write("appels-offres/villes/index.html", render(
-        "ville.html", root="../../", path="/appels-offres/villes/", ville=None, par_dep=par_dep,
+        "ville.html", root="../../", path="/appels-offres/villes/", ville=None, par_dep=villes_dep,
         h1="Appels d'offres publics par ville", title="Appels d'offres publics par ville : marchés en cours",
         description=f"Marchés publics en cours dans {len(villes)} villes de France, classés par métier et mis à jour chaque jour.", **common))
 

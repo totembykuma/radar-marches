@@ -1,4 +1,4 @@
-{% extends "base.html" %}{% import "_ui.html" as ui %}{% block main %}
+{% extends "base.html" %}{% import "_ui.html" as ui %}{% from "_carte.html" import carte as carte_fr %}{% block main %}
 <section class="page-head metier-head" style="--c:{{ ui.couleur(metier_key) }}"><div class="wrap">
   <p class="crumbs"><a href="{{ root }}">Accueil</a> › <a href="{{ root }}appels-offres/">Appels d'offres</a>{% if dep %} › <a href="{{ root }}appels-offres/{{ metier_key }}/">{{ metier.libelle }}</a>{% endif %}</p>
   <div class="head-row">
@@ -9,11 +9,13 @@
     </div>
   </div>
   {% if villes %}<div class="deps"><span>Toutes les offres par ville :</span>{% for v in villes %}<a href="{{ root }}appels-offres/villes/{{ v.slug }}.html">{{ v.nom }} <small>{{ v.total }}</small></a>{% endfor %}</div>{% endif %}
-  {% if deps %}<div class="deps"><span>Par département :</span>{% for d in deps %}<a href="{{ root }}appels-offres/{{ metier_key }}/{{ d }}.html">{{ d }} <small>{{ dep_counts[d] }}</small></a>{% endfor %}</div>{% endif %}
+  {% if deps %}<div class="deps"><span>Par département :</span>{% for d in deps %}<a href="{{ root }}appels-offres/{{ metier_key }}/{{ d }}.html"{% if noms_dep.get(d) %} title="{{ noms_dep[d] }}"{% endif %}>{{ d }} <small>{{ dep_counts[d] }}</small></a>{% endfor %}</div>{% endif %}
 </div></section>
+{% if deps %}<section class="wrap block">{{ carte_fr(carte, carte_n, carte_liens) }}</section>{% endif %}
 
 <section class="wrap listing">
   <div class="cards">
+  {% include "_reserve.html" %}
   {% for a in avis %}
     <article class="avis">
       <div class="avis-top">{% if a.departements %}<span class="chip">Dép. {{ a.departements|join(', ') }}</span>{% endif %}{% if a.pme %}<span class="chip chip-pme" title="{{ a.pme }}">✔ Accessible PME</span>{% endif %}{{ ui.echeance(a.jours_restants) }}</div>
@@ -22,10 +24,10 @@
       <div class="avis-foot"><span>Publié le {{ a.date_parution_fr or a.date_parution }}</span>{% if a.date_limite %}<span>Réponse avant le <b>{{ a.date_limite_fr }}</b></span>{% endif %}<a href="{{ a.url }}" rel="nofollow noopener" target="_blank">Avis officiel →</a></div>
     </article>
     {% if loop.index == 6 %}{% include "_cta.html" %}{% endif %}
-  {% else %}
-    <p class="empty">Aucun appel d'offres ouvert pour l'instant ici. Les nouveaux sont ajoutés chaque matin.</p>
+  {% else %}{% if not caches %}
+    <p class="empty">Aucun appel d'offres ouvert pour l'instant ici. Les nouveaux sont ajoutés chaque matin.</p>{% endif %}
   {% endfor %}
-  {% if total > avis|length %}<p class="fine">Les {{ avis|length }} plus récents sont affichés. Choisissez un département ci-dessus pour tout voir.</p>{% endif %}
+  {% if visibles > avis|length %}<p class="fine">{{ avis|length }} marchés affichés sur {{ visibles }}. Choisissez un département pour tout voir.</p>{% endif %}
   </div>
   <aside class="side">{% include "_cta.html" %}</aside>
 </section>

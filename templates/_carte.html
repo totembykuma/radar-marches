@@ -1,0 +1,36 @@
+{# Carte de France cliquable (métropole, Corse, outre-mer en encarts). n = {code: nb de marchés}, liens = {code: url}. #}
+{% macro carte(carte, n, liens) -%}
+{% set mx = (n.values()|list|max) if n else 0 %}
+<figure class="carte">
+  <svg viewBox="{{ carte.viewbox }}" role="img" aria-label="Carte des départements de France : cliquez sur un département">
+    {% for e in carte.encarts %}<rect class="encart" x="{{ e.x }}" y="{{ e.y }}" width="{{ e.w }}" height="{{ e.h }}" rx="8"/><text class="encart-t" x="{{ e.x + 8 }}" y="{{ e.y + 13 }}">{{ e.titre }}</text>{% endfor %}
+    {% for d in carte.departements %}{% set k = n.get(d.code, 0) %}
+    {% set q = k / mx if mx else 0 %}{% set niv = 0 if not k else (1 if q <= 0.12 else (2 if q <= 0.3 else (3 if q <= 0.6 else 4))) %}
+    {% if k and liens.get(d.code) %}<a class="dep n{{ niv }}" href="{{ liens[d.code] }}" data-nom="{{ d.nom }}" data-code="{{ d.code }}" data-n="{{ k }}"><title>{{ d.nom }} ({{ d.code }}) · {{ k }} marché{{ 's' if k > 1 }}</title>
+    {%- else %}<g class="dep n0" data-nom="{{ d.nom }}" data-code="{{ d.code }}" data-n="0"><title>{{ d.nom }} ({{ d.code }}) · aucun marché en cours</title>{% endif -%}
+    <path d="{{ d.d }}"/>{% if d.zoom %}<path d="{{ d.zoom }}"/>{% endif %}{{ '</a>'|safe if k and liens.get(d.code) else '</g>'|safe }}
+    {% endfor %}
+    <g class="carte-label" style="display:none"><rect height="26" rx="7"/><text text-anchor="middle"></text></g>
+  </svg>
+  <figcaption>Survolez un département pour voir son nom, cliquez pour ouvrir ses appels d'offres. Plus la couleur est foncée, plus il y a de marchés en cours.</figcaption>
+</figure>
+<script>(function () {
+  var s = document.currentScript.previousElementSibling.querySelector("svg"), lab = s.querySelector(".carte-label"),
+      t = lab.querySelector("text"), r = lab.querySelector("rect"), W = s.viewBox.baseVal.width;
+  function voir(el, monter) {
+    var p = el.querySelector("path"), b = p.getBBox(), n = +el.getAttribute("data-n");
+    t.textContent = el.getAttribute("data-nom") + " (" + el.getAttribute("data-code") + ")" + (n ? " · " + n + " marché" + (n > 1 ? "s" : "") : "");
+    lab.style.display = "";
+    var w = t.getComputedTextLength() + 18, x = Math.max(w / 2 + 2, Math.min(W - w / 2 - 2, b.x + b.width / 2)), y = Math.max(30, b.y + b.height / 2);
+    r.setAttribute("x", x - w / 2); r.setAttribute("width", w); r.setAttribute("y", y - 30);
+    t.setAttribute("x", x); t.setAttribute("y", y - 12);
+    if (monter) s.insertBefore(el, lab);  /* le département survolé passe au premier plan */
+  }
+  s.querySelectorAll(".dep").forEach(function (el) {
+    el.addEventListener("mouseenter", function () { voir(el, true); });
+    el.addEventListener("focus", function () { voir(el, false); });
+    el.addEventListener("mouseleave", function () { lab.style.display = "none"; });
+    el.addEventListener("blur", function () { lab.style.display = "none"; });
+  });
+})();</script>
+{%- endmacro %}
