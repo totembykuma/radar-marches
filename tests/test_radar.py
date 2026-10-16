@@ -152,7 +152,9 @@ def test_stripe_setup_writes_config(tmp_path, monkeypatch):
     assert biz["offres"]["essentiel"]["stripe_price_ids"] == ["price_2900", "price_29000"]
     assert biz["stripe_mode"] == "test" and biz["portail_client"].endswith("test_x")
     assert biz["dossier"]["lien_paiement"].endswith("price_19900") and biz["dossier"]["lien_pro"].endswith("price_14900")
-    assert biz["dossier"]["stripe_link_ids"] == ["plink_price_19900", "plink_price_14900"]
+    assert biz["dossier"]["stripe_link_ids"] == ["plink_price_19900", "plink_price_14900", "plink_price_9900"]
+    assert biz["dossier"]["lien_cle"].endswith("price_9900")
+    assert biz["offres"]["cle"]["lien_paiement"].endswith("price_14900") and biz["offres"]["cle"]["lien_annuel"].endswith("price_149000")
     stripe_setup.run()  # relancer ne casse pas le fichier
     assert config.business()["offres"]["pro"]["stripe_price_ids"] == ["price_4900", "price_49000"]
 
@@ -807,3 +809,88 @@ def test_montant_estime():
     from radar.boamp import _montant_estime as m
     assert m({"EFORMS": {"x": {"cbc:EstimatedOverallContractAmount": {"#text": "120000"}}}}) == 120000
     assert m("{}") is None and m(None) is None
+
+def _biz_cle(monkeypatch):
+    from radar import config
+    biz = _biz_dossier(monkeypatch)
+    biz["offres"]["cle"].update(lien_paiement="https://buy.stripe.com/c", lien_annuel="https://buy.stripe.com/ca")
+    biz["dossier"]["lien_cle"] = "https://buy.stripe.com/x"
+    biz["cle_actif"] = config.cle_actif(biz)
+    return biz
+
+
+def test_cle_dossiers_inclus_sans_paiement(monkeypatch):
+    """Clé en main : l'e-mail suffit, 2 dossiers par mois, pas pendant l'essai, rien de personnel dans l'état."""
+    from radar import dossier, mailer
+    biz = _biz_cle(monkeypatch)
+    envoyes = []
+    monkeypatch.setattr(mailer, "send", lambda to, sujet, html, exp, reply_to=None, attachments=None, **k: envoyes.append((to, sujet.split(" : ", 1)[1], html)))
+    monkeypatch.setattr(dossier, "paiements", lambda biz, session=None: {})
+    monkeypatch.setattr(dossier, "pieces_jointes", lambda *a, **k: [("RC.pdf", "Règlement. " * 300)])
+    mails = [{"id": f"e{i}", "from": "cle@ex.fr", "to": ["dossier@elkaurtel.resend.app"]} for i in range(3)] \
+        + [{"id": "e9", "from": "essai@ex.fr", "to": ["dossier@elkaurtel.resend.app"]}]
+    monkeypatch.setattr(dossier, "_resend", lambda path, key, session=None: {"data": mails} if "?" in path else {"text": "Net33"})
+    gen = lambda dce, infos: {"objet": "Nettoyage", "date_limite": (date.today() + timedelta(days=30)).isoformat(), "memoire": [], "pieces": []}
+    abonnes = [{"email": "cle@ex.fr", "plan": "cle", "statut": "active"}, {"email": "essai@ex.fr", "plan": "cle", "statut": "trialing"}]
+    state = {}
+    livres, erreurs = dossier.traiter(biz, state, generer_fn=gen, abonnes=abonnes)
+    assert (livres, erreurs) == (2, [])
+    sujets = [(to, s) for to, s, _ in envoyes]
+    assert sujets.count(("cle@ex.fr", "votre dossier est prêt")) == 2
+    assert ("cle@ex.fr", "vos dossiers inclus du mois sont utilisés") in sujets
+    assert ("essai@ex.fr", "vos dossiers inclus démarrent au 1er paiement") in sujets
+    assert "buy.stripe.com/x" in next(h for to, s, h in envoyes if "utilisés" in s)
+    assert dossier.inclus_utilises(state["dossiers"], "cle@ex.fr") == 2 and "cle@ex.fr" not in json.dumps(state)
+
+
+def test_cle_rapport_comment_gagner(monkeypatch):
+    from radar import rapport, mailer
+    biz = _biz_cle(monkeypatch)
+    envoyes = []
+    monkeypatch.setattr(mailer, "send", lambda to, sujet, html, exp, reply_to=None, **k: envoyes.append((to, sujet.split(" : ", 1)[1], html)))
+    monkeypatch.setattr(rapport, "pieces_jointes", lambda *a, **k: [])
+    mails = {"data": [{"id": "r1", "from": "cle@ex.fr", "to": ["rapport@elkaurtel.resend.app"], "subject": "Rapport 26-101001"},
+                      {"id": "r2", "from": "pro@ex.fr", "to": ["rapport@elkaurtel.resend.app"], "subject": "Rapport 26-101001"},
+                      {"id": "r3", "from": "cle@ex.fr", "to": ["rapport@elkaurtel.resend.app"], "subject": "Bonjour"}]}
+    monkeypatch.setattr(rapport, "_resend", lambda path, key, session=None: mails if "?" in path else {"text": ""})
+    prompts = []
+    def ask(prompt, **k):
+        prompts.append(prompt)
+        return 'Voici : {"en_bref": "Ménage de la mairie", "chances": "bonnes", "pourquoi_chances": "Petit lot.", ' \
+               '"criteres": [{"critere": "Prix", "poids": "40 %", "comment_gagner_des_points": "Rester sous 50 000 €"}], ' \
+               '"prix": {"repere": "45 000 € HT", "source": "3 marchés précédents", "conseil": "Visez la médiane."}, ' \
+               '"pieces": [{"piece": "Kbis", "ou_la_trouver": "infogreffe.fr", "obligatoire": true}], "pieges": ["Visite obligatoire"], ' \
+               '"plan": [{"quand": "J-10", "action": "Visiter le site"}], "a_demander": []}'
+    class H:
+        def fiche(self, siret, metier):
+            return {"n": 3, "mois": 24, "montant_median": 45000, "offres_median": 4,
+                    "derniers": [{"date": "2025-03-01", "objet": "Ménage", "montant": 44000, "offres": 4, "gagnant": "Net SA"}]}
+    abonnes = [{"email": "cle@ex.fr", "plan": "cle", "statut": "trialing", "metiers": ["nettoyage"]},
+               {"email": "pro@ex.fr", "plan": "pro", "statut": "active", "metiers": ["nettoyage"]}]
+    state = {}
+    n, erreurs = rapport.traiter(biz, state, abonnes, metiers(), histo=H(), ask_fn=ask, avis_fn=lambda ref: dict(by_id(101001), acheteur_siret="123"))
+    assert (n, erreurs) == (1, [])
+    to, sujet, html = envoyes[0]
+    assert to == "cle@ex.fr" and sujet.startswith("comment gagner") and "45 000 € HT" in html and "Visite obligatoire" in html
+    assert "Net SA" in prompts[0] and "dossier/envoyer/?avis=26-101001" in html
+    assert ("pro@ex.fr", "rapport réservé à l'offre Clé en main", ) in [(t, s) for t, s, _ in envoyes]
+    assert ("cle@ex.fr", "avis introuvable") in [(t, s) for t, s, _ in envoyes]
+    assert "cle@ex.fr" not in json.dumps(state)
+    assert rapport.reference("Rapport 26-123456") == "26-123456"
+
+
+def test_cle_visible_seulement_avec_ia(monkeypatch, tmp_path):
+    from radar import cli, compte
+    from radar.render import render
+    biz = _biz_cle(monkeypatch)
+    html = render("index.html", biz=biz, root="./", avis=[], stats={}, metiers={})
+    assert "Clé en main" in html and "prices-3" in html
+    biz["cle_actif"] = False
+    assert "Clé en main" not in render("legal/cgv.html", biz=biz, root="./")
+    l = cli.lien_dossier(dict(biz, cle_actif=True), {"plan": "cle", "email": "a@b.fr"})
+    assert l["inclus"] and l["rapport"] == "rapport@elkaurtel.resend.app"
+    lien = compte.lien(biz, {"email": "a@b.fr", "plan": "cle", "metiers": [], "statut": "active"}, metiers())
+    import base64
+    code = lien.split("#")[1]
+    d = json.loads(base64.urlsafe_b64decode(code + "=" * (-len(code) % 4)))
+    assert d["pro"] and d["cle"]["n"] == 2

@@ -17,6 +17,7 @@ from .textutil import norm, slugify
 log = logging.getLogger(__name__)
 STRIPE = "https://api.stripe.com/v1"
 ACTIVE = {"active", "trialing", "past_due"}
+PLANS_PRO = ("pro", "cle")   # offres avec départements illimités, mots-clés, fiche complète et bilan du lundi
 
 
 def _stripe_list(path, params, key, session):
@@ -85,7 +86,7 @@ def from_stripe(biz, metiers, session=None):
             continue
         out.append({"email": email, "plan": plan, "statut": sub["status"],
                     "metiers": [metier] if metier else [], "departements": deps,
-                    "mots_cles": mots if plan == "pro" else [], "source": "stripe",
+                    "mots_cles": mots if plan in PLANS_PRO else [], "source": "stripe",
                     "stripe_subscription": sub["id"], "debut": sub.get("start_date") or sub.get("created"),
                     "customer": cs.get("customer") or sub.get("customer"), "ref": cs.get("client_reference_id"),
                     "fin_essai": sub.get("trial_end") if sub["status"] == "trialing" else None})

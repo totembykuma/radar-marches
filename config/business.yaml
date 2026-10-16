@@ -25,6 +25,19 @@ offres:
     lien_paiement: "https://buy.stripe.com/00w8wI4fC1j36eRbPa3F603"
     lien_annuel: "https://buy.stripe.com/28E9AM6nK8Lvbzb06s3F605"
     stripe_price_ids: ["price_1UQrs879764n3f0zbVlgAi7W", "price_1UQtSW79764n3f0zcOnqqpEh"]
+  # Offre « Clé en main » : tout Pro + rapports « comment gagner » + dossiers prêts à signer inclus (radar/rapport.py, radar/dossier.py).
+  # Visible sur le site seulement quand l'IA est active (comme l'option dossier).
+  cle:
+    nom: "Clé en main"
+    prix_mensuel: 149
+    prix_annuel: 1490   # 2 mois offerts
+    metiers_max: 1
+    departements_max: 101
+    dossiers_inclus: 2  # par mois, à partir du 1er paiement ; le suivant au prix dossier.prix_cle
+    rapports_max: 20    # rapports « comment gagner » par mois
+    lien_paiement: "https://buy.stripe.com/aFa00c4fCf9TeLncTe3F608"   # rempli par le workflow stripe.yml
+    lien_annuel: "https://buy.stripe.com/14A9AMeUg0eZ46Jg5q3F609"
+    stripe_price_ids: ["price_1URDTv79764n3f0zoMkKYfW3", "price_1URDTw79764n3f0zfqAbnyOv"]
 # Promo mensuelle : chaque mois, du lundi au vendredi de la « semaine » choisie (3 = semaine du 3e lundi),
 # les N premiers abonnés Pro (mensuel) de chaque jour paient « prix » € pendant « mois » mois.
 # Le code du jour (ex. PRO1910 = 19 octobre) est créé dans Stripe vers minuit (workflow promo.yml), limité à N utilisations.
@@ -42,8 +55,11 @@ dossier:
   prix_pro: 149
   lien_paiement: "https://buy.stripe.com/14AcMYeUg9Pz7iVdXi3F606"     # rempli par le workflow stripe.yml
   lien_pro: "https://buy.stripe.com/aFa4gsdQc0eZav7dXi3F607"
-  stripe_link_ids: ["plink_1UR6bR79764n3f0z06tqO6sM", "plink_1UR6bS79764n3f0zSJod1CIZ"]
+  prix_cle: 99          # dossier en plus des dossiers inclus de l'offre Clé en main
+  lien_cle: "https://buy.stripe.com/bJe14gdQcaTDcDff1m3F60a"
+  stripe_link_ids: ["plink_1UR6bR79764n3f0z06tqO6sM", "plink_1UR6bS79764n3f0zSJod1CIZ", "plink_1URDTy79764n3f0zfyNq3S33"]
   adresse: "dossier@elkaurtel.resend.app"   # réception Resend des pièces envoyées par le client
+  rapport_adresse: "rapport@elkaurtel.resend.app"   # demandes de rapport « comment gagner » (offre Clé en main)
   modele: "claude-opus-5-5"
   delai_min_jours: 5    # en dessous : remboursement automatique
 # Adresse de réception Resend (…@xxxx.resend.app) pour les changements de critères automatiques (vide = vers email_contact, traité à la main)

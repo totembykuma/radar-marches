@@ -6,10 +6,12 @@ Parcours, 100 % automatique (workflow dossier.yml, toutes les heures en journée
    (pièces jointes PDF, Word ou ZIP) et la présentation de son entreprise (formulaire /dossier/envoyer/) ;
 3. on rapproche l'e-mail du paiement (même adresse), on extrait le texte du DCE, Claude rédige le dossier ;
 4. le client reçoit un fichier Word modifiable, passages à compléter surlignés.
+Offre « Clé en main » (abonnement) : pas de paiement à l'unité, l'e-mail du client suffit, dans la limite des dossiers inclus du mois.
 Rien n'est conservé : les pièces sont traitées en mémoire, l'état public (data/state.json) ne garde que des identifiants Stripe.
 Inactif tant que l'IA n'est pas autorisée (clé ANTHROPIC_API_KEY + premier client payant) ou que les liens n'existent pas.
 """
 import base64
+import hashlib
 import io
 import json
 import logging
@@ -263,8 +265,19 @@ def _envoyer(biz, to, sujet, cas, pj=None, **kw):
     mailer.send(to, f"{biz['nom']} : {sujet}", html, biz["email_expediteur"], reply_to=biz["email_contact"], attachments=pj)
 
 
-def traiter(biz, state, alerte=lambda sujet, html: None, session=None, generer_fn=None):
-    """Rapproche paiements et e-mails reçus, prépare et envoie les dossiers. Retourne (nb livrés, erreurs)."""
+def _h(email):
+    return hashlib.sha256(email.lower().encode()).hexdigest()[:16]
+
+
+def inclus_utilises(suivi, email, mois=None):
+    """Dossiers inclus (offre Clé en main) déjà livrés ce mois-ci à ce client."""
+    mois, h = mois or date.today().isoformat()[:7], _h(email)
+    return sum(1 for s in suivi.values() if s.get("cle") == h and (s.get("livre") or "").startswith(mois))
+
+
+def traiter(biz, state, alerte=lambda sujet, html: None, session=None, generer_fn=None, abonnes=()):
+    """Rapproche paiements et e-mails reçus, prépare et envoie les dossiers. Retourne (nb livrés, erreurs).
+    abonnes : clients de l'offre Clé en main ; leurs dossiers inclus se demandent par e-mail, sans paiement."""
     d = biz.get("dossier") or {}
     key, adresse = (os.getenv("RESEND_INBOUND_KEY") or "").strip(), (d.get("adresse") or "").lower()
     if not actif(biz) or not key:
@@ -292,6 +305,25 @@ def traiter(biz, state, alerte=lambda sujet, html: None, session=None, generer_f
         exp = _adresse(e.get("from"))
         cs = next((c for c, a in sorted(achats.items(), key=lambda x: x[1]["date"])
                    if a["email"] == exp and suivi.get(c, {}).get("etat") == "attente"), None)
+        cle = next((s for s in abonnes if s.get("plan") == "cle" and (s.get("email") or "").lower() == exp), None)
+        if not cs and cle:                            # offre Clé en main : dossier inclus, sans paiement
+            cs = "cle-" + e["id"]
+            if cs not in suivi:
+                o = (biz.get("offres") or {}).get("cle") or {}
+                try:
+                    if cle.get("statut") != "active":
+                        _envoyer(biz, exp, "vos dossiers inclus démarrent au 1er paiement", "cle_essai", inclus=True)
+                        continue
+                    if inclus_utilises(suivi, exp) >= int(o.get("dossiers_inclus") or 2):
+                        _envoyer(biz, exp, "vos dossiers inclus du mois sont utilisés", "cle_quota", inclus=True,
+                                 n=o.get("dossiers_inclus") or 2)
+                        continue
+                except Exception as exc:
+                    erreurs.append(f"dossier inclus : réponse non envoyée ({str(exc)[:80]})")
+                    continue
+                suivi[cs] = {"etat": "attente", "date": date.today().isoformat(), "cle": _h(exp)}
+            achats[cs] = {"email": exp, "montant": 0, "payment_intent": None, "date": suivi[cs]["date"], "avis": "", "inclus": True}
+        inclus = bool(cs and achats[cs].get("inclus"))
         try:
             if not cs:
                 _envoyer(biz, exp, "aucun dossier en attente", "sans_paiement")
@@ -308,11 +340,12 @@ def traiter(biz, state, alerte=lambda sujet, html: None, session=None, generer_f
             if reste is not None and reste < int(d.get("delai_min_jours") or 5):
                 rembourser(achats[cs], session)
                 suivi[cs].update(etat="rembourse")
-                _envoyer(biz, exp, "délai trop court, vous êtes remboursé", "delai", reste=max(reste, 0))
+                _envoyer(biz, exp, "délai trop court, dossier non décompté" if inclus else "délai trop court, vous êtes remboursé",
+                         "delai", reste=max(reste, 0), inclus=inclus)
                 continue
             fichier = construire_docx(dossier, biz["nom"])
             nom = "dossier-" + re.sub(r"[^a-z0-9]+", "-", norm(dossier.get("objet") or "reponse"))[:50].strip("-") + ".docx"
-            _envoyer(biz, exp, "votre dossier est prêt", "livre", objet=dossier.get("objet"), date_limite=dossier.get("date_limite"),
+            _envoyer(biz, exp, "votre dossier est prêt", "livre", objet=dossier.get("objet"), date_limite=dossier.get("date_limite"), inclus=inclus,
                      pj=[{"filename": nom, "content": base64.b64encode(fichier).decode()}])
             suivi[cs].update(etat="livre", livre=date.today().isoformat())
             livres += 1
@@ -326,7 +359,7 @@ def traiter(biz, state, alerte=lambda sujet, html: None, session=None, generer_f
                     suivi[cs]["etat"] = "rembourse"
                     try:
                         rembourser(achats[cs], session)
-                        _envoyer(biz, exp, "votre dossier n'a pas pu être préparé", "echec")
+                        _envoyer(biz, exp, "votre dossier n'a pas pu être préparé", "echec", inclus=inclus)
                     except Exception:
                         pass
                     alerte("Dossier non préparé (client remboursé)", f"<p>Erreur : {str(exc)[:300]}</p>")

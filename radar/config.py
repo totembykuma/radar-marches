@@ -36,6 +36,7 @@ def business():
         if env_link:
             cfg["offres"][key]["lien_paiement"] = env_link
     cfg["dossier_actif"] = dossier_actif(cfg)
+    cfg["cle_actif"] = cle_actif(cfg)
     return cfg
 
 
@@ -43,6 +44,11 @@ def dossier_actif(cfg):
     """Option « Dossier prêt à signer » : seulement avec l'IA active et les liens de paiement créés."""
     d = cfg.get("dossier") or {}
     return bool(cfg.get("ia_active") and d.get("lien_paiement") and d.get("adresse"))
+
+
+def cle_actif(cfg):
+    """Offre « Clé en main » : comme l'option dossier, plus ses liens d'abonnement créés."""
+    return bool(dossier_actif(cfg) and ((cfg.get("offres") or {}).get("cle") or {}).get("lien_paiement"))
 
 
 def metiers():

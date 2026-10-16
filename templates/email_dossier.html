@@ -20,7 +20,7 @@
 2. Ajoutez vos prix dans les documents financiers de l'acheteur.<br>
 3. Rassemblez les pièces listées au début du document.<br>
 4. Signez et déposez sur le site de l'acheteur{% if date_limite %} avant le <b>{{ date_limite }}</b>{% endif %}.</p>
-<p>Ce dossier est une aide à la rédaction : vous restez seul responsable de l'offre que vous déposez. Si le document ne vous est pas utile, répondez à cet e-mail : nous vous remboursons.</p>
+<p>Ce dossier est une aide à la rédaction : vous restez seul responsable de l'offre que vous déposez.{% if not inclus %} Si le document ne vous est pas utile, répondez à cet e-mail : nous vous remboursons.{% endif %}</p>
 {% elif cas == "sans_paiement" %}
 <h2 style="color:#0b1b33;font-size:21px;margin:0 0 14px">Aucun dossier en attente pour cette adresse</h2>
 <p>Bonjour,</p>
@@ -38,13 +38,23 @@
 <p>Bonjour,</p>
 <p>Sans dossier de consultation reçu, nous avons remboursé votre commande. Le remboursement apparaît sous quelques jours sur votre relevé.</p>
 {% elif cas == "delai" %}
-<h2 style="color:#0b1b33;font-size:21px;margin:0 0 14px">Délai trop court : vous êtes remboursé</h2>
+<h2 style="color:#0b1b33;font-size:21px;margin:0 0 14px">Délai trop court{% if not inclus %} : vous êtes remboursé{% endif %}</h2>
 <p>Bonjour,</p>
-<p>La date limite de cet appel d'offres est dans {{ reste }} jour{{ 's' if reste > 1 }}. C'est trop court pour relire, chiffrer et déposer sereinement : nous avons remboursé votre commande. Commandez votre dossier au moins {{ biz.dossier.delai_min_jours }} jours avant la date limite.</p>
+<p>La date limite de cet appel d'offres est dans {{ reste }} jour{{ 's' if reste > 1 }}. C'est trop court pour relire, chiffrer et déposer sereinement : {% if inclus %}nous n'avons pas préparé ce dossier, et il n'est pas décompté de vos dossiers inclus{% else %}nous avons remboursé votre commande{% endif %}. Envoyez votre demande au moins {{ biz.dossier.delai_min_jours }} jours avant la date limite.</p>
 {% elif cas == "echec" %}
 <h2 style="color:#0b1b33;font-size:21px;margin:0 0 14px">Votre dossier n'a pas pu être préparé</h2>
 <p>Bonjour,</p>
-<p>Nous n'avons pas réussi à préparer ce dossier et nous vous avons remboursé. Toutes nos excuses.</p>
+<p>Nous n'avons pas réussi à préparer ce dossier{% if inclus %} : il n'est pas décompté de vos dossiers inclus{% else %} et nous vous avons remboursé{% endif %}. Toutes nos excuses.</p>
+{% elif cas == "cle_essai" %}
+<h2 style="color:#0b1b33;font-size:21px;margin:0 0 14px">Vos dossiers inclus démarrent au premier paiement</h2>
+<p>Bonjour,</p>
+<p>Pendant l'essai gratuit, vos rapports « comment gagner » sont disponibles, mais pas les dossiers prêts à signer inclus : ils démarrent avec votre premier mois payé.</p>
+{% if biz.dossier.lien_cle %}<p>Besoin d'un dossier tout de suite ? <a href="{{ biz.dossier.lien_cle }}">Commandez-le ici ({{ biz.dossier.prix_cle }} €)</a>, puis renvoyez les pièces.</p>{% endif %}
+{% elif cas == "cle_quota" %}
+<h2 style="color:#0b1b33;font-size:21px;margin:0 0 14px">Vos {{ n }} dossiers inclus du mois sont utilisés</h2>
+<p>Bonjour,</p>
+<p>Vous avez déjà reçu vos {{ n }} dossiers prêts à signer inclus ce mois-ci. Le compteur repart le 1er du mois prochain.</p>
+{% if biz.dossier.lien_cle %}<p>Pour un dossier de plus dès maintenant : <a href="{{ biz.dossier.lien_cle }}">commandez-le ici ({{ biz.dossier.prix_cle }} €)</a>, puis renvoyez les pièces depuis cette adresse.</p>{% endif %}
 {% endif %}
 <p>Bien cordialement,</p>
 {% endblock %}

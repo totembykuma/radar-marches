@@ -30,7 +30,12 @@ def lien(biz, sub, metiers):
          "fe": _date(sub.get("fin_essai")), "db": _date(sub.get("debut")),
          "m": [[k, metiers[k]["libelle"]] for k in sub.get("metiers") or [] if k in metiers],
          "d": sub.get("departements") or [], "k": sub.get("mots_cles") or [],
-         "p": parrainage.lien(biz, sub), "pro": sub.get("plan") == "pro"}
+         "p": parrainage.lien(biz, sub), "pro": sub.get("plan") in ("pro", "cle")}
+    if sub.get("plan") == "cle":    # offre Clé en main : comment demander rapports et dossiers inclus
+        o = biz["offres"]["cle"]
+        d.update(cle={"r": (biz.get("dossier") or {}).get("rapport_adresse", ""), "n": o.get("dossiers_inclus", 2),
+                      "rm": o.get("rapports_max", 20), "x": (biz.get("dossier") or {}).get("prix_cle", 99),
+                      "u": (biz.get("dossier") or {}).get("lien_cle", "")})
     code = base64.urlsafe_b64encode(json.dumps(d, ensure_ascii=False, separators=(",", ":")).encode()).decode().rstrip("=")
     return f"{biz['site_url'].rstrip('/')}/compte/#{code}"
 

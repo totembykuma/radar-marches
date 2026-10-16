@@ -88,7 +88,7 @@ def traiter(subs, biz, metiers, state, criteres_txt, session=None):
             deps = parse_departements(d.get("departements") or "")[: offre["departements_max"]]
             if deps:
                 meta["departements"], s["departements"] = ", ".join(deps), deps
-            if s["plan"] == "pro" and "motscles" in d:
+            if s["plan"] in ("pro", "cle") and "motscles" in d:
                 mots = [x.strip() for x in d["motscles"].split(",") if x.strip() and norm(x.strip()) != "aucun"]
                 meta["motscles"], s["mots_cles"] = ", ".join(mots) or ",", mots
             if meta:

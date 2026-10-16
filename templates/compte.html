@@ -22,6 +22,12 @@
       <p><a class="btn" href="{{ root }}criteres/">Modifier mes critères</a></p>
       <p class="muted">Vos alertes arrivent chaque matin ouvré vers 6 h 30. Pas d'e-mail un jour donné = aucun nouvel avis pertinent.</p></div>
     <div class="card"><h2>Mes appels d'offres</h2><p>Les marchés ouverts de votre métier, à consulter à tout moment :</p><ul id="c-liens"></ul></div>
+    <div class="card" id="c-cle" hidden><h2>Mon service Clé en main</h2>
+      <p><b>Rapport « comment gagner »</b> : critères de notation, pièces à fournir, pièges, prix de repère et plan d'action pour un marché. Reçu dans l'heure (jours ouvrés). <span id="c-rmax"></span></p>
+      <form id="c-rform"><p><label>Lien ou référence de l'appel d'offres (ex. 26-123456)<br><input id="c-ravis" required style="width:100%"></label></p>
+      <button class="btn" type="submit">Demander le rapport</button></form>
+      <p style="margin-top:18px"><b>Dossier prêt à signer</b> : <span id="c-dinclus"></span> Envoyez le dossier de consultation, vous recevez un Word complet à relire, chiffrer, signer et déposer.</p>
+      <p><a class="btn" href="{{ root }}dossier/envoyer/">Envoyer mon dossier de consultation</a> <a id="c-dplus" hidden></a></p></div>
     <div class="card" id="c-parrain" hidden><h2>Parrainage : 1 mois offert</h2><p>Partagez votre lien à un confrère. Quand il devient client, vous recevez chacun 1 mois offert.</p><p><a id="c-plien"></a></p></div>
     <p class="muted">Une question ? Répondez simplement à l'un de nos e-mails. <a href="#" id="c-sortir">Se déconnecter de cet appareil</a></p>
   </div>
@@ -56,6 +62,19 @@
   function lien(href, t) { var li = document.createElement("li"), a = document.createElement("a"); a.href = href; a.textContent = t; li.appendChild(a); ul.appendChild(li); }
   d.m.forEach(function (x) { lien("{{ root }}appels-offres/" + x[0] + "/", x[1] + " : tous les marchés ouverts"); });
   d.d.forEach(function (dep) { lien("{{ root }}appels-offres/departements/" + dep + ".html", "Tous les marchés du département " + dep); });
+  if (d.cle) {
+    document.getElementById("c-cle").hidden = false;
+    txt("c-rmax", "Jusqu'à " + d.cle.rm + " rapports par mois.");
+    txt("c-dinclus", d.cle.n + " dossiers inclus chaque mois" + (d.s === "trialing" ? " à partir de votre premier paiement." : "."));
+    if (d.cle.u) { var x = document.getElementById("c-dplus"); x.hidden = false; x.href = d.cle.u + "?prefilled_email=" + encodeURIComponent(d.e); x.textContent = "Un dossier de plus : " + d.cle.x + " €"; }
+    document.getElementById("c-rform").addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      var ref = document.getElementById("c-ravis").value.trim();
+      location.href = "mailto:" + d.cle.r + "?subject=" + encodeURIComponent("Rapport " + ref) + "&body=" + encodeURIComponent(
+        "Bonjour,\n\nMerci de m'envoyer le rapport « comment gagner » pour l'appel d'offres : " + ref +
+        "\n\n(Facultatif : joignez le dossier de consultation pour un rapport encore plus précis.)\n");
+    });
+  }
   if (d.p) { document.getElementById("c-parrain").hidden = false; var pl = document.getElementById("c-plien"); pl.href = d.p; pl.textContent = d.p; }
   document.getElementById("c-sortir").addEventListener("click", function (ev) {
     ev.preventDefault(); try { localStorage.removeItem(cle); } catch (e) {} location.reload();
