@@ -20,6 +20,7 @@ tout tourne dans GitHub Actions. Propriétaire non technique, en français, une 
 - Alerte gratuite (RETIRÉE le 2026-10-16, code dormant tant que `alerte_gratuite` absent de business.yaml ; `gratuit.py`, page /alerte-gratuite/, mailto → alerte@…resend.app lu par daily) : 3 marchés/semaine, adresses chiffrées (Fernet, clé tirée de RESEND_INBOUND_KEY) dans data/alerte_gratuite.json, sortie auto si client, STOP = désinscription.
 - Relance prospects (`cli.relancer`) : 1 seule, 5 à 12 j après, si Resend dit « clicked » et pas client/inscrit gratuit ; seulement les envois avec champ `suivi` (pied de page annonçant le rappel). IndexNow (Bing) le lundi.
 - Après paiement : liens Stripe → `/merci/` (stripe.yml) ; bienvenue.yml toutes les 10 min envoie la bienvenue aux nouveaux abonnés (`cli bienvenue`).
+- Espace client `/compte/` (`compte.py`) : sans mot de passe, données dans le lien (#…, jamais envoyées au serveur), lien dans bienvenue/alertes/fin d'essai ; lien perdu → mailto compte@…resend.app, renvoyé par bienvenue.yml.
 - Résumés IA : actifs seulement si secret ANTHROPIC_API_KEY ET `premier_client_payant` dans data/state.json (posé par daily, qui prévient le propriétaire).
 
 ## Règles pour économiser les tokens

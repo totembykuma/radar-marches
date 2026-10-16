@@ -35,6 +35,7 @@
 {% endfor %}
 {% endblock %}
 {% block pied %}
+  {% if lien_compte %}<a href="{{ lien_compte }}">Mon espace client</a> (offre, critères, factures, sans mot de passe).<br>{% endif %}
   Pour modifier vos critères : <a href="{{ biz.site_url }}/criteres/">ce formulaire</a> ou répondez à cet e-mail.<br>
   {% if lien_parrainage %}Parrainage : un confrère s'abonne avec <a href="{{ lien_parrainage }}">votre lien</a>, vous recevez chacun 1 mois offert.<br>{% endif %}
   {% if biz.ia_active %}Résumés générés automatiquement par IA à partir des avis officiels du BOAMP : vérifiez{% else %}Sélection automatique à partir des avis officiels du BOAMP : vérifiez{% endif %} toujours l'avis complet avant de répondre. Fiches « avant de répondre » : données essentielles de la commande publique (marchés notifiés depuis 2 ans).<br>
