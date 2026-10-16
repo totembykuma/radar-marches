@@ -1,4 +1,5 @@
 """Génère le site statique : page de vente + pages SEO par métier et département, mises à jour chaque jour."""
+import hashlib
 import json
 import shutil
 from collections import Counter, defaultdict
@@ -130,7 +131,8 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=Non
         for a in lst:
             a["jours_restants"] = _jours_restants(a.get("date_limite"), today)
 
-    common = dict(biz=biz, metiers=metiers, date_fr=date_fr(), carte=CARTE, recents_jours=RECENTS_JOURS)
+    css_v = hashlib.md5((ROOT / "static" / "style.css").read_bytes()).hexdigest()[:8]   # nouvelle adresse à chaque changement : pas d'ancien style en cache
+    common = dict(biz=biz, metiers=metiers, date_fr=date_fr(), carte=CARTE, recents_jours=RECENTS_JOURS, css_v=css_v)
     pages = []
 
     def write(rel, html):
