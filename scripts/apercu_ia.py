@@ -14,7 +14,7 @@ dep = sys.argv[2] if len(sys.argv) > 2 else "75"
 biz, metiers = business(), load_metiers()
 biz["dossier_actif"] = biz["ia_active"] = True
 m = Matcher(metiers)
-avis = boamp.fetch_since(date.today() - timedelta(days=10))
+avis = boamp.fetch_open(days=10)
 for a in avis:
     a["metiers"] = m.metiers_of(a)
 sub = {"email": "client@exemple.fr", "plan": "pro", "metiers": [metier], "departements": [dep], "mots_cles": []}

@@ -1,9 +1,5 @@
 name: Aperçu alerte IA (vrais avis, aucun e-mail)
-on:
-  workflow_dispatch: {}
-  push:
-    branches: [claude/project-thread-8crrze]
-    paths: [".github/workflows/test-ia.yml", "scripts/apercu_ia.py"]
+on: { workflow_dispatch: {} }
 permissions: { contents: write }
 jobs:
   apercu:
@@ -17,4 +13,4 @@ jobs:
         run: PYTHONPATH=. python scripts/apercu_ia.py nettoyage 75 2>&1 | tail -5
       - run: |
           git config user.name "radar-bot"; git config user.email "radar-bot@users.noreply.github.com"
-          git add -f apercu-ia/alerte.html && git commit -qm "Aperçu alerte IA" && git push -q
+          git add -f apercu-ia/alerte.html && git commit -qm "Aperçu alerte IA" && git pull -q --rebase && git push -q
