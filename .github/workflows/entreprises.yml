@@ -1,0 +1,30 @@
+name: Entreprises lauréates (noms)
+# Complète les noms des entreprises lauréates (annuaire officiel) pour les pages « qui a gagné quoi ». Aucun e-mail.
+on:
+  schedule:
+    - cron: "30 2 * * 0"   # chaque dimanche
+  workflow_dispatch: {}
+permissions:
+  contents: write
+  actions: write
+concurrency: { group: radar-entreprises, cancel-in-progress: false }
+jobs:
+  entreprises:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - run: python -m radar.cli entreprises --budget 6000 | tail -c 400
+      - name: Enregistrer
+        run: |
+          git config user.name "radar-bot"
+          git config user.email "radar-bot@users.noreply.github.com"
+          git add data/societes.json
+          git diff --cached --quiet || git commit -m "Noms des entreprises lauréates $(date -I)"
+          git pull -q --rebase origin main && git push
+      - name: Republier le site avec les nouvelles données
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: gh workflow run site.yml --ref main -R ${{ github.repository }}

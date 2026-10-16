@@ -1,0 +1,36 @@
+{% extends "base.html" %}{% import "_ui.html" as ui %}{% block main %}
+<section class="page-head"><div class="wrap">
+  <p class="crumbs"><a href="{{ root }}">Accueil</a> › {% if dep %}<a href="{{ root }}entreprises/">Qui a gagné quoi</a> › {{ nom_dep(dep) }}{% else %}Qui a gagné quoi{% endif %}</p>
+  <h1>{{ h1 }}</h1>
+  {% if dep %}
+  <p class="lead">Les <b>{{ liste|length }}</b> sociétés dont le siège est dans le département {{ nom_dep(dep) }} et qui ont remporté des marchés publics dans nos métiers ces 12 derniers mois. Mis à jour le {{ date_fr }}.</p>
+  {% else %}
+  <p class="lead"><b>{{ nb }}</b> entreprises ont remporté <b>{{ "{:,}".format(nb_marches)|replace(",", " ") }}</b> marchés publics dans nos 17 métiers ces 12 derniers mois. Pour chacune : les acheteurs, les montants, le nombre d'offres reçues et ses concurrents. Mis à jour le {{ date_fr }}.</p>
+  {% endif %}
+</div></section>
+{% if dep %}
+<section class="wrap block">
+  <div class="tbl-wrap"><table class="tbl">
+    <thead><tr><th>Entreprise</th><th>Commune</th><th>Métier principal</th><th class="nb">Marchés</th><th class="nb">Montant total</th></tr></thead>
+    <tbody>{% for f in liste %}
+      <tr><td><a href="../{{ f.slug }}.html">{{ f.nom }}</a></td><td>{{ f.commune }}</td><td>{{ metiers[f.metiers[0]].libelle if f.metiers else '' }}</td>
+      <td class="nb">{{ f.marches|length }}</td><td class="nb nowrap">{{ euros(f.total) or '–' }}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+  <p class="fine"><a href="../">← Tous les départements</a></p>
+</section>
+{% else %}
+<section class="wrap block">
+  <h2>Par département</h2>
+  <div class="deps">{% for d, n in deps %}<a href="departements/{{ d }}.html">{{ nom_dep(d) }} <small>{{ n }}</small></a>{% endfor %}</div>
+</section>
+<section class="wrap block">
+  <h2>Par métier</h2>
+  {% for k, lst in par_metier.items() if lst %}
+  <h3 class="ville-metier">{{ ui.icone(k, 22) }} {{ metiers[k].libelle }}{% if reperes[k].offres_median %} <span class="fine">· {{ reperes[k].offres_median|string|replace('.0', '')|replace('.', ',') }} offres reçues en médiane par marché{% if reperes[k].montant_median %}, montant médian {{ euros(reperes[k].montant_median) }}{% endif %}</span>{% endif %}</h3>
+  <div class="deps">{% for f in lst %}<a href="{{ f.slug }}.html">{{ f.nom }}{% if f.commune %} · {{ f.commune }}{% endif %} <small>{{ f.marches|length }}</small></a>{% endfor %}</div>
+  {% endfor %}
+  <p class="fine">Source : données essentielles de la commande publique (data.economie.gouv.fr, Licence Ouverte) et annuaire officiel des entreprises. Seules les sociétés figurent ici (pas les entrepreneurs individuels).</p>
+</section>
+{% endif %}
+{% endblock %}
