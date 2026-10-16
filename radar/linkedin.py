@@ -58,7 +58,7 @@ def semaine(biz, metiers, by_metier_public, laureats=None, barometre=None, today
                        f"Bravo aux équipes ! Toutes les entreprises lauréates et leurs marchés (données publiques officielles) :\n"
                        f"{base}/entreprises/{utm}\n\n{TAGS}")
     reperes = (laureats or {}).get("reperes") or {}
-    faible = sorted(((v["offres_median"], k) for k, v in reperes.items() if v.get("offres_median") and v["n"] >= 30))
+    faible = sorted(((v["offres_median"], k) for k, v in reperes.items() if (v.get("offres_median") or 0) >= 2 and v["n"] >= 30))
     if faible:
         n, k = faible[0]
         txt = (f"💡 Le saviez-vous ? En {metiers[k]['libelle'].lower()}, un marché public reçoit en médiane {str(n).replace('.0', '').replace('.', ',')} offres "
