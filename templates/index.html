@@ -38,6 +38,27 @@
   </div>
 </section>
 
+{% if vitrine %}{% from "_flou.html" import carte as carte_floue %}
+<section class="wrap block" id="derniers">
+  <p class="kicker">En direct du BOAMP</p>
+  <h2>Les derniers appels d'offres publiés</h2>
+  <p class="lead">{{ vitrine.recents }} marchés publiés ces {{ recents_jours }} derniers jours. Les plus récents sont réservés aux abonnés, qui les reçoivent le matin même : les autres sont en accès libre.</p>
+  <div class="vitrine">
+  {% for t, k, a in vitrine.cartes %}{% if t == 'flou' %}{{ carte_floue(a, root, biz, metiers) }}{% else %}
+    <article class="avis" style="--c:{{ ui.couleur(k) }}">
+      <div class="avis-top"><span class="chip">{{ metiers[k].libelle }}</span>{% if a.departements %}<span class="chip">Dép. {{ a.departements|join(', ') }}</span>{% endif %}{% if a.pme %}<span class="chip chip-pme">✔ Accessible PME</span>{% endif %}{{ ui.echeance(a.jours_restants) }}</div>
+      <h3><a href="{{ a.url }}" rel="nofollow noopener" target="_blank">{{ a.objet|truncate(110) }}</a></h3>
+      <p class="buyer">{{ a.acheteur }}</p>
+      <p class="flou-montant">{% if a.montant_estime %}Montant estimé par l'acheteur : <b>{{ "{:,}".format(a.montant_estime).replace(",", " ") }} € HT</b>{% else %}Publié le {{ a.date_parution_fr }}{% endif %}</p>
+      <div class="avis-foot">{% if a.date_limite %}<span>Réponse avant le <b>{{ a.date_limite_fr }}</b></span>{% endif %}<a href="{{ a.url }}" rel="nofollow noopener" target="_blank">Avis officiel →</a></div>
+    </article>{% endif %}
+  {% endfor %}
+  </div>
+  <div class="cta-row" style="justify-content:center;margin-top:22px"><a class="btn btn-lg" href="#tarifs">Essayez {{ biz.nom }} pour voir tous les appels d'offres</a></div>
+  <p class="muted" style="text-align:center"><a href="appels-offres/">Voir les marchés en accès libre →</a></p>
+</section>
+{% endif %}
+
 <section class="band"><div class="wrap stats">
   <div><b>{{ stats.ouverts }}</b><span>marchés ouverts aujourd'hui</span></div>
   <div><b>{{ metiers|length }}</b><span>métiers suivis</span></div>

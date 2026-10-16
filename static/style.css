@@ -369,3 +369,11 @@ footer .logo{color:#fff}footer p{margin:12px 0 0;max-width:420px;line-height:1.5
 .tbl a{color:var(--ink,#0b1b33);font-weight:600;text-decoration:none}.tbl a:hover{text-decoration:underline}
 .tbl .nb{text-align:right}.tbl .nowrap{white-space:nowrap}
 .tbl .up{color:#0a8a4a;font-weight:700}.tbl .down{color:#c0392b;font-weight:700}
+/* Marchés récents floutés (réservés aux abonnés) */
+.vitrine{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-top:18px}
+.vitrine .avis{display:flex;flex-direction:column;border-top:4px solid var(--c,#2563eb)}.vitrine .avis-foot{margin-top:auto}
+.avis-flou{position:relative;background:linear-gradient(#fff,#fffaf0)}
+.flou{filter:blur(6px);user-select:none;pointer-events:none;color:var(--ink)}
+.flou-montant{margin:10px 0 0;font-size:14.5px}.flou-montant b{color:#b45309}
+.chip-new{background:#ffb020;color:#0b1b33;font-weight:700}
+.avis-flou .avis-foot a{color:#b45309}

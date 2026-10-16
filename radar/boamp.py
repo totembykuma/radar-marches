@@ -181,6 +181,48 @@ def _ville_brute(donnees, departements):
     return ""
 
 
+MONTANT_CLES = re.compile(r"estimatedoverallcontractamount|valeur_?estim|montant_?estim|valeurtotale|estimationvaleur", re.I)
+
+
+def _montant_estime(donnees):
+    """Montant estimé HT du marché, tel que l'acheteur l'a publié (eForms ou formulaires nationaux), ou None.
+    Jamais inventé : sans montant publié, rien n'est affiché."""
+    try:
+        data = json.loads(donnees) if isinstance(donnees, str) else (donnees or {})
+    except ValueError:
+        return None
+    vals = []
+
+    def num(v):
+        if isinstance(v, dict):
+            v = v.get("#text") or v.get("$") or v.get("valeur") or ""
+        v = re.sub(r"[\s\u00a0\u202f€]", "", str(v or "")).replace(",", ".")
+        try:
+            return float(v)
+        except ValueError:
+            return None
+
+    def walk(node, depth=0):
+        if depth > 30:
+            return
+        if isinstance(node, dict):
+            for k, v in node.items():
+                if MONTANT_CLES.search(str(k)) and not isinstance(v, (list,)) and (n := num(v)):
+                    vals.append(n)
+                else:
+                    walk(v, depth + 1)
+        elif isinstance(node, list):
+            for v in node:
+                walk(v, depth + 1)
+
+    try:
+        walk(data)
+    except Exception:
+        return None
+    vals = [v for v in vals if 1_000 <= v <= 500_000_000]
+    return int(max(vals)) if vals else None
+
+
 def _pme(rec):
     """Badge « Accessible PME » : petits marchés (MAPA < 90 k€, national < seuils européens)
     ou lot que l'acheteur déclare adapté aux PME. Renvoie la raison, ou "" si non."""
@@ -213,6 +255,7 @@ def normalize(rec):
         "texte": _extract_text(rec.get("donnees")),
         "acheteur_siret": _siret_acheteur(rec.get("donnees")),
         "pme": _pme(rec),
+        "montant_estime": _montant_estime(rec.get("donnees")),
     }
     out["ville"] = _ville_acheteur(rec.get("donnees"), out["departements"])
     return out

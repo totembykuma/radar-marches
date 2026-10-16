@@ -14,7 +14,7 @@
 <section class="wrap listing">
   <div class="cards">
   {% if ville.acheteurs %}<p class="fine">Principaux acheteurs : {{ ville.acheteurs|join(', ') }}.</p>{% endif %}
-  {% with caches=ville.caches %}{% include "_reserve.html" %}{% endwith %}
+  {% with caches=ville.caches, flous=ville.flous %}{% include "_reserve.html" %}{% endwith %}
   {% for k, lst, c in ville.par_metier %}{% set nb = lst|length + c %}
     <h2 id="{{ k }}" class="ville-metier">{{ ui.icone(k, 22) }} {{ metiers[k].libelle }} · {{ nb }} marché{{ 's' if nb > 1 }}
       <a class="fine" href="{{ root }}appels-offres/{{ k }}/{{ ville.dep }}.html">tout le département {{ ville.dep }} →</a></h2>

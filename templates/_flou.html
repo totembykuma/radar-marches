@@ -1,0 +1,11 @@
+{# Carte d'un marché récent réservé aux abonnés : seul le faux texte est flouté, le vrai objet n'est pas dans la page. #}
+{% import "_ui.html" as ui %}
+{% macro carte(f, root, biz, metiers, h="h3") -%}
+<article class="avis avis-flou" style="--c:{{ ui.couleur(f.metier) }}">
+  <div class="avis-top"><span class="chip">{{ metiers[f.metier].libelle }}</span>{% if f.departements %}<span class="chip">Dép. {{ f.departements|join(', ') }}</span>{% endif %}{% if f.pme %}<span class="chip chip-pme">✔ Accessible PME</span>{% endif %}<span class="chip chip-new">Nouveau</span>{{ ui.echeance(f.jours_restants) }}</div>
+  <{{ h }} class="flou" aria-hidden="true">{{ f.faux_objet }}</{{ h }}>
+  <p class="buyer flou" aria-hidden="true">{{ f.faux_acheteur }}</p>
+  <p class="flou-montant">{% if f.montant %}Montant estimé par l'acheteur : <b>{{ f.montant }} HT</b>{% else %}🔒 Objet, acheteur et lien de l'avis réservés aux abonnés{% endif %}</p>
+  <div class="avis-foot">{% if f.date_limite_fr %}<span>Réponse avant le <b>{{ f.date_limite_fr }}</b></span>{% endif %}<a href="{{ root }}#tarifs">Essayez {{ biz.nom }} pour voir l'appel d'offres →</a></div>
+</article>
+{%- endmacro %}

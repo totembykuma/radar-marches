@@ -38,6 +38,27 @@ def _publics(lst, today):
     return vis, len(lst) - len(vis)
 
 
+FAUX_MOTS = ("prestations travaux entretien maintenance fourniture pose rénovation réhabilitation services marché accord-cadre "
+             "lot bâtiments communaux site groupe scolaire équipements locaux voirie réseaux ensemble mise conformité").split()
+
+
+def _flou(a, key, today):
+    """Carte « floutée » d'un avis récent : métier, département, date limite et montant publié seulement.
+    L'objet et l'acheteur réels ne figurent PAS dans la page (faux texte flouté), on ne peut donc pas les lire en retirant le flou."""
+    h = hashlib.md5(str(a.get("id") or a.get("objet")).encode()).digest()
+    faux = lambda n, o: " ".join(FAUX_MOTS[(h[(o + i) % 16] + i) % len(FAUX_MOTS)] for i in range(n)).capitalize()
+    return {"metier": key, "departements": a.get("departements") or [], "jours_restants": a.get("jours_restants"),
+            "date_limite_fr": a.get("date_limite_fr") or "", "pme": bool(a.get("pme")),
+            "montant": _euros(a.get("montant_estime")) if a.get("montant_estime") else "",
+            "faux_objet": faux(7 + h[0] % 5, 1), "faux_acheteur": faux(3, 9)}
+
+
+def _recents(lst, today, key, n=3):
+    seuil = (today - timedelta(days=RECENTS_JOURS - 1)).isoformat()
+    return [_flou(a, key, today) for a in lst if (a.get("date_parution") or "") >= seuil
+            and (a.get("jours_restants") is None or a["jours_restants"] >= 0)][:n]
+
+
 def _nom_dep(d):
     return f"{NOMS_DEP[d]} ({d})" if d in NOMS_DEP else f"département {d}"
 
@@ -102,6 +123,29 @@ def _villes(by_metier, metiers):
     return out[:VILLES_MAX]
 
 
+def _vitrine(by_metier, today, n_flous=4, n_clairs=2):
+    """Accueil, 2e section : les derniers marchés, mêlant récents floutés (abonnés) et plus anciens en clair."""
+    vus, flous, clairs = set(), [], []
+    for k, lst in sorted(by_metier.items(), key=lambda kv: -len(kv[1])):
+        vis, _ = _publics(lst, today)
+        for f in _recents(lst, today, k, 2):
+            flous.append(f)
+        for a in vis:
+            if id(a) not in vus and (a.get("jours_restants") or 0) >= 7 and len([c for c in clairs if c[0] == k]) < 1:
+                vus.add(id(a)); clairs.append((k, a))
+                break
+    seuil = (today - timedelta(days=RECENTS_JOURS - 1)).isoformat()
+    nb = len({id(a) for lst in by_metier.values() for a in lst if (a.get("date_parution") or "") >= seuil})
+    flous, clairs = flous[:n_flous], clairs[:n_clairs]
+    cartes = []
+    while flous or clairs:
+        if clairs:
+            cartes.append(("clair", *clairs.pop(0)))
+        cartes += [("flou", f["metier"], f) for f in flous[:2]]
+        flous = flous[2:]
+    return {"cartes": cartes, "recents": nb} if cartes else None
+
+
 def _zone(dep, nom, par_metier, today, slug=None):
     """Ville ou département : avis par métier, sans les récents (réservés aux abonnés)."""
     uniques = {id(a): a for lst in par_metier.values() for a in lst}
@@ -109,6 +153,7 @@ def _zone(dep, nom, par_metier, today, slug=None):
     pm = [(k, *_publics(lst, today)) for k, lst in sorted(par_metier.items(), key=lambda kv: -len(kv[1]))]
     return {"nom": nom, "dep": dep, "slug": slug, "total": len(uniques), "par_metier": pm,
             "caches": len(uniques) - len({id(a) for _, vis, _ in pm for a in vis}),
+            "flous": [f for k, lst in par_metier.items() for f in _recents(lst, today, k, 1)][:3],
             "acheteurs": [n for n, _ in acheteurs.most_common(5)]}
 
 
@@ -148,11 +193,12 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=Non
     stats["ouverts"] = len({id(a) for lst in by_metier.values() for a in lst})
     # Aperçu « e-mail du matin » de la page d'accueil : de vrais avis du métier le plus fourni.
     ex_key = max(counts, key=counts.get) if counts else None
-    exemple = [a for a in by_metier.get(ex_key, []) if (a.get("jours_restants") or 0) > 0][:3]
+    exemple = [a for a in _publics(by_metier.get(ex_key, []), today)[0] if (a.get("jours_restants") or 0) > 0][:3]   # jamais un récent (réservé)
     film = _film(by_metier, histo)
+    vitrine = _vitrine(by_metier, today)
     avis_clients = avis_mod.resume(avis_mod.charger())
     write("index.html", render("index.html", root="", path="/", stats=stats, counts=counts,
-                               ex_key=ex_key, exemple=exemple, film=film, avis_clients=avis_clients,
+                               ex_key=ex_key, exemple=exemple, film=film, vitrine=vitrine, avis_clients=avis_clients,
                                title=f"{biz['nom']} · Appels d'offres publics par métier, triés" + (" par IA" if biz.get("ia_active") else ""),
                                description=biz["slogan"], **common))
     villes = _villes(by_metier, metiers)
@@ -175,7 +221,7 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=Non
         deps = sorted(dep_counts)
         vis, caches = _publics(lst, today)
         write(f"appels-offres/{key}/index.html", render(
-            "listing.html", root="../../", path=f"/appels-offres/{key}/", avis=vis[:150], visibles=len(vis), caches=caches, total=len(lst),
+            "listing.html", root="../../", path=f"/appels-offres/{key}/", avis=vis[:150], visibles=len(vis), caches=caches, total=len(lst), flous=_recents(lst, today, key),
             metier=m, metier_key=key, dep=None, deps=deps, dep_counts=dep_counts, noms_dep=NOMS_DEP,
             carte_n=dep_counts, carte_liens={d: f"{d}.html" for d in deps}, h1=f"Appels d'offres {m['libelle'].lower()} en cours",
             title=f"Appels d'offres {m['libelle'].lower()} : marchés publics en cours ({date_fr()})",
@@ -185,7 +231,7 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=Non
             vis, caches = _publics(sub, today)
             nom = NOMS_DEP.get(d, "")
             write(f"appels-offres/{key}/{d}.html", render(
-                "listing.html", root="../../", path=f"/appels-offres/{key}/{d}.html", avis=vis, visibles=len(vis), caches=caches, total=len(sub),
+                "listing.html", root="../../", path=f"/appels-offres/{key}/{d}.html", avis=vis, visibles=len(vis), caches=caches, total=len(sub), flous=_recents(sub, today, key),
                 metier=m, metier_key=key, dep=d, deps=[], dep_counts={}, villes=[v for v in villes if v["dep"] == d][:15],
                 h1=f"Appels d'offres {m['libelle'].lower()} · {_nom_dep(d)}",
                 title=f"Appels d'offres {m['libelle'].lower()} {d}{' ' + nom if nom else ''} : marchés publics en cours",
