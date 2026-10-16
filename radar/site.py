@@ -271,6 +271,7 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=Non
     urls = "".join(f"<url><loc>{base}/{p.removesuffix('index.html')}</loc><lastmod>{date.today()}</lastmod></url>" for p in pages)
     (out_dir / "sitemap.xml").write_text(
         f'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>', encoding="utf-8")
+    shutil.copy(ROOT / "static" / "icons" / "favicon.ico", out_dir / "favicon.ico")   # Google cherche aussi /favicon.ico
     (out_dir / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {base}/sitemap.xml\n", encoding="utf-8")
     (out_dir / f"{indexnow_cle(biz)}.txt").write_text(indexnow_cle(biz), encoding="utf-8")
     cname = base.split("://")[-1]
