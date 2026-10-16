@@ -170,7 +170,7 @@
   <p class="sub">Aucun prélèvement pendant l'essai, et nous vous prévenons par e-mail 3 jours avant sa fin. Vous arrêtez quand vous voulez, en un clic.</p>
   {% set annuel = biz.offres.essentiel.lien_annuel and biz.offres.pro.lien_annuel and biz.stripe_mode == 'réel' %}
   {% if annuel %}<div class="periode" role="group" aria-label="Période de paiement"><button type="button" data-p="mois" class="on" aria-pressed="true">Mensuel</button><button type="button" data-p="an" aria-pressed="false">Annuel <em>2 mois offerts</em></button></div>{% endif %}
-  <div class="prices">
+  <div class="prices{% if biz.cle_actif %} prices-3{% endif %}">
   {% set o = biz.offres.essentiel %}
     <div class="price">
       <h3>{{ o.nom }}</h3>
@@ -199,6 +199,21 @@
       </ul>
       {% if o.lien_paiement and biz.stripe_mode == 'réel' %}<a class="btn btn-lg btn-block" href="{{ o.lien_paiement }}" data-mois-href="{{ o.lien_paiement }}" data-an-href="{{ o.lien_annuel }}">Essayer gratuitement</a>{% else %}<a class="btn btn-lg btn-block disabled" href="mailto:{{ biz.email_contact }}">Bientôt disponible</a>{% endif %}
     </div>
+  {% if biz.cle_actif %}{% set o = biz.offres.cle %}
+    <div class="price cle">
+      <span class="ribbon">On fait tout</span>
+      <h3>{{ o.nom }}</h3>
+      <p class="for">Pour répondre à plus de marchés sans y passer vos soirées</p>
+      <p class="amount" data-mois>{{ o.prix_mensuel }} €<span>/mois</span></p>{% if annuel and o.lien_annuel %}<p class="amount" data-an hidden>{{ o.prix_annuel }} €<span>/an</span></p><p class="eco" data-an hidden>Soit {{ '%.2f'|format(o.prix_annuel / 12)|replace('.', ',') }} €/mois : vous économisez {{ o.prix_mensuel * 12 - o.prix_annuel }} €</p>{% endif %}
+      <ul class="checks">
+        <li>Toute l'offre Pro, plus :</li>
+        <li><b>Le rapport « comment gagner »</b> sur chaque marché qui vous intéresse : ce que l'acheteur va noter, les pièces à fournir, les pièges, un <b>prix de repère</b> tiré des marchés déjà attribués, et votre plan d'action</li>
+        <li><b>{{ o.dossiers_inclus }} dossiers de réponse prêts à signer par mois</b> : mémoire technique, lettre de candidature, DUME, liste des pièces. Vous relisez, mettez vos prix, signez, envoyez</li>
+        <li>Un dossier de plus : {{ biz.dossier.prix_cle }} € au lieu de {{ biz.dossier.prix }} €</li>
+      </ul>
+      {% if biz.stripe_mode == 'réel' %}<a class="btn btn-lg btn-block btn-ghost-dark" href="{{ o.lien_paiement }}" data-mois-href="{{ o.lien_paiement }}" data-an-href="{{ o.lien_annuel or o.lien_paiement }}">Essayer gratuitement</a>{% else %}<a class="btn btn-lg btn-block disabled" href="mailto:{{ biz.email_contact }}">Bientôt disponible</a>{% endif %}
+    </div>
+  {% endif %}
   </div>
   {% if promo %}<script>
   (function () {
@@ -219,7 +234,7 @@
     }); });
   })();
   </script>{% endif %}
-  <p class="fine"><b>{{ biz.essai_gratuit_jours }} jours d'essai gratuit sur les deux offres.</b> Le bilan du lundi vous montre vos concurrents, leurs clients et les prix pratiqués : de quoi ajuster vos devis et viser les bons acheteurs.</p>
+  <p class="fine"><b>{{ biz.essai_gratuit_jours }} jours d'essai gratuit sur {% if biz.cle_actif %}les trois offres{% else %}les deux offres{% endif %}.</b> Le bilan du lundi vous montre vos concurrents, leurs clients et les prix pratiqués : de quoi ajuster vos devis et viser les bons acheteurs.</p>
   {% if annuel %}<script>
   (function () {
     var t = document.getElementById("tarifs"), bs = t.querySelectorAll(".periode button");

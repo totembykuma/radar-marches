@@ -51,14 +51,14 @@ def enrich(avis_list, model="claude-haiku-5-5", batch=25, session=None):
     return avis_list
 
 
-def ask(prompt, model="claude-haiku-5-5", max_tokens=1500, session=None):
+def ask(prompt, model="claude-haiku-5-5", max_tokens=1500, session=None, timeout=120):
     """Question libre (rapport hebdo). Renvoie '' si pas de clé ou erreur."""
     key = (os.getenv("ANTHROPIC_API_KEY") or "").strip()
     if not key:
         return ""
     http = session or requests
     try:
-        r = http.post(API_URL, timeout=120, headers={
+        r = http.post(API_URL, timeout=timeout, headers={
             "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json"},
             json={"model": model, "max_tokens": max_tokens, "messages": [{"role": "user", "content": prompt}]})
         r.raise_for_status()

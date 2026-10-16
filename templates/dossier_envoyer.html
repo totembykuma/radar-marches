@@ -19,6 +19,7 @@ var champs = ["avis", "entreprise", "activite", "chiffres", "moyens", "reference
 var libelles = {avis: "Appel d'offres", entreprise: "Entreprise", activite: "Activité", chiffres: "Effectif et chiffre d'affaires",
   moyens: "Moyens", references: "Références", certifs: "Certifications et assurances", contact: "Signataire"};
 try { champs.forEach(function (c) { if (c !== "avis") document.getElementById("d-" + c).value = localStorage.getItem("dossier-" + c) || ""; }); } catch (e) {}
+try { var q = new URLSearchParams(location.search).get("avis"); if (q) document.getElementById("d-avis").value = q; } catch (e) {}
 document.getElementById("d-form").addEventListener("submit", function (ev) {
   ev.preventDefault();
   var corps = "Bonjour,\n\nVoici le dossier de consultation (en pièces jointes) et la présentation de mon entreprise.\n\n";

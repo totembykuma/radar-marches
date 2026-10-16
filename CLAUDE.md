@@ -21,6 +21,7 @@ tout tourne dans GitHub Actions. Propriétaire non technique, en français, une 
 - Relance prospects (`cli.relancer`) : 1 seule, 5 à 12 j après, si Resend dit « clicked » et pas client/inscrit gratuit ; seulement les envois avec champ `suivi` (pied de page annonçant le rappel). IndexNow (Bing) le lundi.
 - Après paiement : liens Stripe → `/merci/` (stripe.yml) ; bienvenue.yml toutes les 10 min envoie la bienvenue aux nouveaux abonnés (`cli bienvenue`).
 - Espace client `/compte/` (`compte.py`) : sans mot de passe, données dans le lien (#…, jamais envoyées au serveur), lien dans bienvenue/alertes/fin d'essai ; lien perdu → mailto compte@…resend.app, renvoyé par bienvenue.yml.
+- Offre « Clé en main » 149 €/mois (`offres.cle`, cachée tant que `cle_actif` faux = IA inactive) : tout Pro + rapports « comment gagner » (`rapport.py`, mail à rapport@…resend.app, 20/mois) + 2 dossiers inclus/mois sans paiement (`dossier.traiter(abonnes=)`, dès le 1er paiement), dossier en plus 99 € (`dossier.lien_cle`). Traité par dossier.yml.
 - Résumés IA : actifs seulement si secret ANTHROPIC_API_KEY ET `premier_client_payant` dans data/state.json (posé par daily, qui prévient le propriétaire).
 
 ## Règles pour économiser les tokens

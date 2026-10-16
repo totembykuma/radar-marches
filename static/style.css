@@ -377,3 +377,5 @@ footer .logo{color:#fff}footer p{margin:12px 0 0;max-width:420px;line-height:1.5
 .flou-montant{margin:10px 0 0;font-size:14.5px}.flou-montant b{color:#b45309}
 .chip-new{background:#ffb020;color:#0b1b33;font-weight:700}
 .avis-flou .avis-foot a{color:#b45309}
+.prices.prices-3{grid-template-columns:repeat(3,minmax(0,340px))}
+@media (max-width:1050px){.prices.prices-3{grid-template-columns:1fr}}

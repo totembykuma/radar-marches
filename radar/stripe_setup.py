@@ -1,4 +1,4 @@
-"""Crée (une seule fois) dans Stripe les 2 offres, leurs liens de paiement avec essai et champs personnalisés,
+"""Crée (une seule fois) dans Stripe les offres, leurs liens de paiement avec essai et champs personnalisés,
 et le portail client. Fonctionne en mode test (sk_test_…) comme en réel (sk_live_… / rk_live_…).
 Les liens et identifiants de prix sont écrits dans config/business.yaml."""
 import os
@@ -9,6 +9,9 @@ import requests
 from .config import ROOT, business, metiers as load_metiers
 
 API = "https://api.stripe.com/v1"
+DESC = "Alertes quotidiennes par e-mail des appels d'offres publics de votre métier et de vos départements."
+DESC_CLE = (DESC + " Pour chaque marché qui vous intéresse : rapport « comment gagner » (critères, pièces, prix de repère)"
+            " et 2 dossiers de réponse prêts à signer par mois.")
 
 
 def _call(method, path, data=None, params=None):
@@ -45,7 +48,7 @@ def _link_fields(offre_key, metiers):
     for i, (k, m) in enumerate(metiers.items()):
         d[f"custom_fields[0][dropdown][options][{i}][label]"] = m["libelle"][:100]
         d[f"custom_fields[0][dropdown][options][{i}][value]"] = k.replace("-", "")
-    if offre_key == "pro":
+    if offre_key in ("pro", "cle"):
         d.update({"custom_fields[2][key]": "motscles", "custom_fields[2][type]": "text", "custom_fields[2][optional]": "true",
                   "custom_fields[2][label][type]": "custom", "custom_fields[2][label][custom]": "Mots-clés en plus (facultatif)"})
     return d
@@ -97,7 +100,9 @@ def _dossier(biz):
              for pl in _call("GET", "payment_links", params={"active": "true", "limit": 100})["data"]
              if (pl.get("metadata") or {}).get("radar_offre") == "dossier"}
     out = {"ids": []}
-    for champ, prix in (("lien_paiement", d["prix"]), ("lien_pro", d["prix_pro"])):
+    for champ, prix in (("lien_paiement", d["prix"]), ("lien_pro", d["prix_pro"]), ("lien_cle", d.get("prix_cle"))):
+        if not prix:
+            continue
         price = prices.get(int(prix * 100)) or _call("POST", "prices", data={
             "product": product["id"], "currency": "eur", "unit_amount": int(prix * 100), "tax_behavior": "inclusive"})
         link = links.get(price["id"]) or _call("POST", "payment_links", data={
@@ -118,8 +123,8 @@ def run():
     biz, metiers = business(), load_metiers()
     mode = "test" if os.environ["STRIPE_SECRET_KEY"].strip().split("_")[1] == "test" else "réel"
     results = {}
-    desc = "Alertes quotidiennes par e-mail des appels d'offres publics de votre métier et de vos départements."
     for key, offre in biz["offres"].items():
+        desc = DESC_CLE if key == "cle" else DESC
         product = _find_product(key)
         if not product:
             product = _call("POST", "products", data={
@@ -170,6 +175,8 @@ def run():
         block = re.search(r"\ndossier:\n(?:  .*\n)+", text).group(0)
         new = re.sub(r'lien_paiement: ".*?"', f'lien_paiement: "{dossier["lien_paiement"]}"', block)
         new = re.sub(r'lien_pro: ".*?"', f'lien_pro: "{dossier["lien_pro"]}"', new)
+        if dossier.get("lien_cle"):
+            new = re.sub(r'lien_cle: ".*?"', f'lien_cle: "{dossier["lien_cle"]}"', new)
         new = re.sub(r"stripe_link_ids: \[.*?\]", "stripe_link_ids: [" + ", ".join(f'"{i}"' for i in dossier["ids"]) + "]", new)
         text = text.replace(block, new)
     if portal:

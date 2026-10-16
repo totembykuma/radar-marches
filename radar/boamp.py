@@ -290,3 +290,13 @@ def schema_sample(session=None):
     r.raise_for_status()
     results = r.json().get("results", [])
     return sorted(results[0].keys()) if results else []
+
+
+def fetch_one(avis_id, session=None):
+    """Un avis par son numéro BOAMP (ex. 26-123456), None s'il est introuvable."""
+    if not re.fullmatch(r"\d{2}-\d{3,7}", avis_id or ""):
+        return None
+    r = (session or requests).get(f"{API}/records", params={"where": f'idweb = "{avis_id}"', "limit": 1}, timeout=60)
+    r.raise_for_status()
+    rows = r.json().get("results") or []
+    return normalize(rows[0]) if rows else None

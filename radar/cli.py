@@ -19,8 +19,8 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 from . import avis, criteres, gratuit, ai, dossier, parrainage, boamp, finance, historique, barometre, laureats, mailer, prospects, site, subscribers
-from . import compte
-from .config import ROOT, business, dossier_actif, metiers as load_metiers
+from . import compte, rapport
+from .config import ROOT, business, cle_actif, dossier_actif, metiers as load_metiers
 from .matching import Matcher
 from .render import date_fr, date_limite_fr, render
 
@@ -66,10 +66,14 @@ def alert_owner(biz, subject, body_html):
 
 
 def lien_dossier(biz, sub):
-    """Bouton « Préparer ma réponse » des alertes : prix abonné Pro pour les Pro, sinon prix normal ; rien si l'option est inactive."""
+    """Bouton « Préparer ma réponse » des alertes : prix abonné Pro pour les Pro, sinon prix normal ; rien si l'option est inactive.
+    Offre Clé en main : dossiers inclus (formulaire d'envoi des pièces) et bouton « Rapport : comment gagner »."""
     if not biz.get("dossier_actif"):
         return None
     d = biz["dossier"]
+    if sub.get("plan") == "cle":
+        return {"inclus": True, "url": biz["site_url"].rstrip("/") + "/dossier/envoyer/", "rapport": d.get("rapport_adresse") or "",
+                "email": sub.get("email") or ""}
     pro = sub.get("plan") == "pro" and d.get("lien_pro")
     return {"url": d["lien_pro"] if pro else d["lien_paiement"], "prix": d["prix_pro"] if pro else d["prix"],
             "email": sub.get("email") or ""}
@@ -84,7 +88,7 @@ def criteres_txt(sub, metiers):
 
 def envoyer_resultats(subs, biz, metiers, matcher, state, records=None):
     """Offre Pro : chaque lundi, « qui a gagné » les marchés de leur métier et départements (7 derniers jours)."""
-    pros = [s for s in subs if s["plan"] == "pro" and s["metiers"]]
+    pros = [s for s in subs if s["plan"] in subscribers.PLANS_PRO and s["metiers"]]
     if not pros:
         return 0
     semaine = date.today().strftime("%G-W%V")
@@ -143,7 +147,7 @@ def run_bienvenue():
     biz, metiers = business(), load_metiers()
     state = _load_json(DATA / "state.json", {"sent": {}})
     biz["ia_active"] = bool(os.getenv("ANTHROPIC_API_KEY", "").strip()) and bool(state.get("premier_client_payant"))
-    biz["dossier_actif"] = dossier_actif(biz)
+    biz["dossier_actif"], biz["cle_actif"] = dossier_actif(biz), cle_actif(biz)
     run = {"erreurs": []}
     subs = subscribers.load_all(biz, metiers)
     envoyer_bienvenues(subs, biz, metiers, state, run)
@@ -199,7 +203,7 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
         if not os.getenv("ANTHROPIC_API_KEY", "").strip():
             alert_owner(biz, "Premier client payant : vous pouvez activer les résumés IA", render("email_premier_client.html", biz=biz))
     biz["ia_active"] = bool(os.getenv("ANTHROPIC_API_KEY", "").strip()) and bool(state.get("premier_client_payant"))
-    biz["dossier_actif"] = dossier_actif(biz)
+    biz["dossier_actif"], biz["cle_actif"] = dossier_actif(biz), cle_actif(biz)
 
     # 2b. Message de bienvenue aux nouveaux abonnés (aussi envoyé toutes les 10 min par bienvenue.yml)
     envoyer_bienvenues(subs, biz, metiers, state, run)
@@ -280,7 +284,7 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
             a["date_limite_fr"] = date_limite_fr(a["date_limite"])
             m = next((m for m in s["metiers"] if m in (a.get("metiers") or [])), None)
             a["fiche"] = histo.fiche(a.get("acheteur_siret"), m) if m and a.get("acheteur_siret") else None
-            a["fiche_complete"] = s.get("plan") == "pro"
+            a["fiche_complete"] = s.get("plan") in subscribers.PLANS_PRO
             a["metier_libelle"] = metiers[m]["libelle"].lower() if m else ""
         html = render("email_digest.html", biz=biz, avis=sel, date_fr=date_fr(), criteres=criteres_txt(s, metiers),
                       lien_parrainage=parrainage.lien(biz, s), lien_dossier=lien_dossier(biz, s),
@@ -765,11 +769,15 @@ def run_dossiers():
         return {"actif": False}
     path = DATA / "dossiers.json"
     state = _load_json(path, {})
-    livres, erreurs = dossier.traiter(biz, state, alerte=lambda sujet, html: alert_owner(biz, sujet, html))
+    metiers = load_metiers()
+    cles = [s for s in subscribers.load_all(biz, metiers) if s.get("plan") == "cle"] if biz["cle_actif"] else []
+    livres, erreurs = dossier.traiter(biz, state, alerte=lambda sujet, html: alert_owner(biz, sujet, html), abonnes=cles)
+    rapports, errs = rapport.traiter(biz, state, cles, metiers, histo=historique.Historique(metiers)) if cles else (0, [])
+    erreurs += errs
     _save_json(path, state)
     if erreurs:
         log.warning("Dossiers : %s", [safe(e) for e in erreurs])
-    return {"actif": True, "livres": livres, "erreurs": len(erreurs)}
+    return {"actif": True, "livres": livres, "rapports": rapports, "erreurs": len(erreurs)}
 
 
 def main(argv=None):
