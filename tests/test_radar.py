@@ -792,3 +792,18 @@ def test_espace_client_lien_et_page(tmp_path):
     n1, _ = compte.traiter([sub], biz, metiers, state)
     n2, _ = compte.traiter([sub], biz, metiers, state)
     assert (n1, n2) == (1, 0)
+
+
+def test_flou_ne_contient_pas_le_vrai_texte():
+    from datetime import date
+    from radar import site
+    a = {"id": "26-1", "objet": "Nettoyage secret de la mairie", "acheteur": "Ville de Test", "departements": ["33"],
+         "date_parution": date.today().isoformat(), "jours_restants": 10, "montant_estime": 120000}
+    f = site._recents([a], date.today(), "nettoyage")[0]
+    assert "secret" not in str(f) and "Ville de Test" not in str(f) and f["montant"] == "120 000 €"
+
+
+def test_montant_estime():
+    from radar.boamp import _montant_estime as m
+    assert m({"EFORMS": {"x": {"cbc:EstimatedOverallContractAmount": {"#text": "120000"}}}}) == 120000
+    assert m("{}") is None and m(None) is None
