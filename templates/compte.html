@@ -8,7 +8,7 @@
       <h2>Lien perdu ?</h2>
       <p><label>Votre adresse e-mail (celle utilisée pour payer)<br><input id="c-email" type="email" required style="width:100%"></label></p>
       <button class="btn btn-lg" type="submit">Recevoir mon lien</button>
-      <p class="muted" id="c-info">Votre messagerie s'ouvre avec un e-mail déjà prêt : envoyez-le tel quel. Votre lien vous est renvoyé en une dizaine de minutes.</p>
+      <p class="muted" id="c-info">Vous ouvrez votre messagerie (Gmail, Outlook…) avec un e-mail déjà prêt : envoyez-le tel quel. Votre lien vous est renvoyé en une dizaine de minutes.</p>
     </form>
     <p>Pas encore client ? <a href="{{ root }}#tarifs">Essai gratuit de {{ biz.essai_gratuit_jours }} jours</a>.</p>
   </div>
@@ -46,8 +46,7 @@
     document.getElementById("c-form").addEventListener("submit", function (ev) {
       ev.preventDefault();
       var em = document.getElementById("c-email").value.trim();
-      location.href = "mailto:{{ biz.compte_adresse }}?subject=" + encodeURIComponent("Mon espace client") +
-        "&body=" + encodeURIComponent("Bonjour,\n\nMerci de m'envoyer le lien de mon espace client.\n\nAdresse du compte : " + em + "\n");
+      envoyerMail("{{ biz.compte_adresse }}", "Mon espace client", "Bonjour,\n\nMerci de m'envoyer le lien de mon espace client.\n\nAdresse du compte : " + em + "\n");
     });
     return;
   }
@@ -70,7 +69,7 @@
     document.getElementById("c-rform").addEventListener("submit", function (ev) {
       ev.preventDefault();
       var ref = document.getElementById("c-ravis").value.trim();
-      location.href = "mailto:" + d.cle.r + "?subject=" + encodeURIComponent("Rapport " + ref) + "&body=" + encodeURIComponent(
+      envoyerMail(d.cle.r, "Rapport " + ref, 
         "Bonjour,\n\nMerci de m'envoyer le rapport « comment gagner » pour l'appel d'offres : " + ref +
         "\n\n(Facultatif : joignez le dossier de consultation pour un rapport encore plus précis.)\n");
     });

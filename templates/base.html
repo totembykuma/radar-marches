@@ -33,4 +33,33 @@
   }, true);
 })();</script>
 {% if biz.statistiques_goatcounter %}<script data-goatcounter="https://{{ biz.statistiques_goatcounter }}.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>{% endif %}
+<script>/* Envoi par e-mail : ouvre la messagerie de l'ordinateur ET propose Gmail / Outlook / copier, car un lien mailto ne fait rien sans logiciel de messagerie. */
+function envoyerMail(to, sujet, corps) {
+  var e = encodeURIComponent, old = document.getElementById("em-box");
+  if (old) old.remove();
+  var gm = "https://mail.google.com/mail/?view=cm&fs=1&to=" + e(to) + "&su=" + e(sujet) + "&body=" + e(corps);
+  var ol = "https://outlook.live.com/mail/0/deeplink/compose?to=" + e(to) + "&subject=" + e(sujet) + "&body=" + e(corps);
+  var box = document.createElement("div");
+  box.id = "em-box"; box.setAttribute("role", "dialog");
+  box.style.cssText = "position:fixed;inset:0;background:rgba(11,27,51,.55);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px";
+  box.innerHTML = '<div style="background:#fff;border-radius:14px;max-width:440px;width:100%;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,.25)">' +
+    '<p style="margin:0 0 6px;font-weight:700;font-size:18px">Envoyez ce message pour terminer</p>' +
+    '<p style="margin:0 0 14px;color:#4a5568">Votre e-mail est déjà rédigé. Choisissez votre messagerie, puis cliquez sur « Envoyer ».</p>' +
+    '<a class="btn btn-block" style="margin-bottom:8px" target="_blank" rel="noopener" href="' + gm + '">Ouvrir dans Gmail</a>' +
+    '<a class="btn btn-block btn-ghost-dark" style="margin-bottom:8px" target="_blank" rel="noopener" href="' + ol + '">Ouvrir dans Outlook / Hotmail</a>' +
+    '<a class="btn btn-block btn-ghost-dark" style="margin-bottom:8px" href="mailto:' + to + '?subject=' + e(sujet) + '&body=' + e(corps) + '">Autre messagerie (Apple Mail, Orange…)</a>' +
+    '<p style="margin:12px 0 4px;font-size:14px;color:#4a5568">Ou copiez le message et envoyez-le à <b>' + to + '</b> :</p>' +
+    '<button type="button" class="btn btn-block btn-ghost-dark" id="em-copy">Copier le message</button>' +
+    '<button type="button" id="em-x" style="margin-top:10px;background:none;border:0;color:#4a5568;text-decoration:underline;cursor:pointer;width:100%">Fermer</button></div>';
+  document.body.appendChild(box);
+  box.querySelector("#em-x").onclick = function () { box.remove(); };
+  box.onclick = function (ev) { if (ev.target === box) box.remove(); };
+  box.querySelector("#em-copy").onclick = function () {
+    var t = "À : " + to + "\nObjet : " + sujet + "\n\n" + corps, b = this;
+    function ok() { b.textContent = "Copié ✓ collez-le dans un nouvel e-mail"; }
+    if (navigator.clipboard) navigator.clipboard.writeText(t).then(ok, function () { prompt("Copiez ce message :", t); });
+    else prompt("Copiez ce message :", t);
+  };
+}
+</script>
 </body></html>

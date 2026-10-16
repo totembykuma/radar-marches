@@ -2,7 +2,7 @@
 <section class="wrap rappel">
   <p class="kicker">{{ biz.dossier.nom }}</p>
   <h1>Envoyer mon dossier de consultation</h1>
-  <p class="lead">Remplissez ces informations : votre messagerie s'ouvre avec l'e-mail déjà rédigé. <b>Joignez les fichiers du dossier de consultation</b> (PDF, Word ou ZIP) et envoyez-le <b>depuis l'adresse utilisée pour payer</b>. Ce navigateur se souvient de vos réponses pour la prochaine fois.</p>
+  <p class="lead">Remplissez ces informations : vous ouvrez votre messagerie (Gmail, Outlook…) avec l'e-mail déjà rédigé. <b>Joignez les fichiers du dossier de consultation</b> (PDF, Word ou ZIP) et envoyez-le <b>depuis l'adresse utilisée pour payer</b>. Ce navigateur se souvient de vos réponses pour la prochaine fois.</p>
   <form class="card" id="d-form">
     {% for id, lib in [("avis", "Lien ou référence de l'appel d'offres"), ("entreprise", "Nom de l'entreprise et SIRET"),
        ("activite", "Activité et savoir-faire (2 ou 3 phrases)"), ("chiffres", "Effectif, chiffre d'affaires des 3 dernières années"),
@@ -28,7 +28,7 @@ document.getElementById("d-form").addEventListener("submit", function (ev) {
     try { if (c !== "avis") localStorage.setItem("dossier-" + c, v); } catch (e) {}
     corps += libelles[c] + " : " + (v || "non précisé") + "\n\n";
   });
-  location.href = "mailto:{{ biz.dossier.adresse }}?subject=" + encodeURIComponent("Dossier prêt à signer") + "&body=" + encodeURIComponent(corps);
+  envoyerMail("{{ biz.dossier.adresse }}", "Dossier prêt à signer", corps);
 });
 </script>
 {% endblock %}
