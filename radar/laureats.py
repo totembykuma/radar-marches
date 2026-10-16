@@ -108,15 +108,19 @@ class Annuaire:
                 log.warning("Annuaire indisponible : %s", exc)
                 return
 
-    def completer(self, sirets, budget):
-        """Cherche les SIRET inconnus, dans l'ordre donné, dans la limite du budget."""
+    def completer(self, sirets, budget, fin=None):
+        """Cherche les SIRET inconnus, dans l'ordre donné, dans la limite du budget et de l'heure de fin.
+        Le cache est enregistré régulièrement : un travail interrompu n'est pas perdu."""
         n = 0
         for s in sirets:
-            if n >= budget:
+            if n >= budget or (fin and time.time() > fin):
                 break
             if s[:9] not in self.cache:
                 self.chercher(s)
                 n += 1
+                if n % 250 == 0:
+                    self.sauver()
+                    log.info("Annuaire : %d entreprises cherchées", n)
         return n
 
     def sauver(self):
@@ -131,17 +135,18 @@ def societe(info):
     return bool(info and info[0] and not info[1].startswith("1"))
 
 
-def charger(metiers, budget=0, http=None, mois=12):
+def charger(metiers, budget=0, http=None, mois=12, secondes=None):
     """Récupère les marchés, complète les noms (budget d'appels à l'annuaire) et prépare les fiches entreprises."""
     rows = extraire(metiers, http=http, mois=mois)
     ann = Annuaire(http=http)
     nb = Counter(t for r in rows for t in r["t"])
     titulaires = [s for s, _ in nb.most_common()]
     if budget:
-        fait = ann.completer(titulaires, int(budget * 0.7))
+        fin = time.time() + secondes if secondes else None
+        fait = ann.completer(titulaires, int(budget * 0.7), fin=fin - (secondes or 0) * 0.3 if fin else None)
         retenus = {s[:9] for s in titulaires if societe(ann.get(s))}
         acheteurs = Counter(r["a"] for r in rows if SIRET.match(r["a"]) and any(t[:9] in retenus for t in r["t"]))
-        ann.completer([a for a, _ in acheteurs.most_common()], budget - fait)
+        ann.completer([a for a, _ in acheteurs.most_common()], budget - fait, fin=fin)
         ann.sauver()
     return preparer(rows, ann, metiers)
 

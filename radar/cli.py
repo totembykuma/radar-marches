@@ -280,7 +280,7 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
         if avis_open is None:
             avis_open = boamp.fetch_open(days=30)
         res = site.build(avis_open, biz, metiers, matcher, OUT / "site", histo=None if os.getenv("RADAR_DEMO") else histo,
-                         laureats=None if os.getenv("RADAR_DEMO") else charger_laureats(metiers, run, budget=1500),
+                         laureats=None if os.getenv("RADAR_DEMO") else charger_laureats(metiers, run, budget=1500, secondes=300),
                          stats={"total": len(avis_new), "metiers_hits": run["avis_metiers"]})
         run["pages_site"] = res["pages"]
         if date.today().weekday() == 0 and os.getenv("GITHUB_ACTIONS") == "true" and not os.getenv("RADAR_DEMO"):
@@ -658,10 +658,10 @@ def run_demo():
     return run_daily(avis_new=avis, avis_open=[dict(a) for a in avis], subs=subs)
 
 
-def charger_laureats(metiers, run, budget=0):
+def charger_laureats(metiers, run, budget=0, secondes=None):
     """Entreprises lauréates (pages « qui a gagné quoi ») ; None si les données publiques sont indisponibles."""
     try:
-        data = laureats.charger(metiers, budget=budget)
+        data = laureats.charger(metiers, budget=budget, secondes=secondes)
         run["entreprises_lauréates"] = len(data["fiches"])
         return data
     except Exception as exc:
@@ -672,7 +672,7 @@ def charger_laureats(metiers, run, budget=0):
 def run_entreprises(budget):
     """Complète les noms des entreprises lauréates (annuaire officiel), sans e-mail ni site."""
     metiers = load_metiers()
-    data = laureats.charger(metiers, budget=budget)
+    data = laureats.charger(metiers, budget=budget, secondes=35 * 60)
     return {"marchés": data["nb_marches"], "entreprises_avec_page": len(data["fiches"]), "repères": data["reperes"]}
 
 
