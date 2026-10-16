@@ -9,7 +9,7 @@ log = logging.getLogger(__name__)
 OUTBOX = Path(os.getenv("RADAR_OUTBOX", "out/outbox"))
 
 
-def send(to, subject, html, sender, reply_to=None, session=None, headers=None, text=None):
+def send(to, subject, html, sender, reply_to=None, session=None, headers=None, text=None, attachments=None):
     key = (os.getenv("RESEND_API_KEY") or "").strip()
     if not key or os.getenv("RADAR_DRY_RUN") == "1":
         OUTBOX.mkdir(parents=True, exist_ok=True)
@@ -25,6 +25,8 @@ def send(to, subject, html, sender, reply_to=None, session=None, headers=None, t
         body["headers"] = headers
     if text:
         body["text"] = text
+    if attachments:
+        body["attachments"] = attachments       # [{"filename": ..., "content": base64}]
     r = http.post("https://api.resend.com/emails", json=body, timeout=30,
                   headers={"Authorization": f"Bearer {key}"})
     if r.status_code >= 400:

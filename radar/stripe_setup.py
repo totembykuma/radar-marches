@@ -78,6 +78,35 @@ def _link_for(key, price, biz, metiers, mode, offre):
     return link
 
 
+def _dossier(biz):
+    """Option « Dossier prêt à signer » : un produit à l'unité, deux prix (normal et abonnés Pro), deux liens."""
+    d = biz["dossier"]
+    product = _find_product("dossier") or _call("POST", "products", data={
+        "name": f"{biz['nom']} · {d['nom']}", "metadata[radar_offre]": "dossier",
+        "description": "Réponse à un appel d'offres préparée pour vous : analyse, mémoire technique, lettre de candidature, DUME."})
+    prices = {pr["unit_amount"]: pr for pr in _call("GET", "prices", params={"product": product["id"], "active": "true", "limit": 100})["data"]
+              if not pr.get("recurring")}
+    links = {(pl.get("metadata") or {}).get("radar_price"): pl
+             for pl in _call("GET", "payment_links", params={"active": "true", "limit": 100})["data"]
+             if (pl.get("metadata") or {}).get("radar_offre") == "dossier"}
+    out = {"ids": []}
+    for champ, prix in (("lien_paiement", d["prix"]), ("lien_pro", d["prix_pro"])):
+        price = prices.get(int(prix * 100)) or _call("POST", "prices", data={
+            "product": product["id"], "currency": "eur", "unit_amount": int(prix * 100), "tax_behavior": "inclusive"})
+        link = links.get(price["id"]) or _call("POST", "payment_links", data={
+            "line_items[0][price]": price["id"], "line_items[0][quantity]": 1, "allow_promotion_codes": "true",
+            "invoice_creation[enabled]": "true", "tax_id_collection[enabled]": "true",
+            "after_completion[type]": "redirect",
+            "after_completion[redirect][url]": biz["site_url"].rstrip("/") + "/dossier/envoyer/",
+            "custom_fields[0][key]": "avis", "custom_fields[0][type]": "text", "custom_fields[0][optional]": "true",
+            "custom_fields[0][label][type]": "custom", "custom_fields[0][label][custom]": "Lien ou référence de l'appel d'offres",
+            "metadata[radar_offre]": "dossier", "metadata[radar_price]": price["id"]})
+        out[champ] = link["url"]
+        out["ids"].append(link["id"])
+        print(f"{d['nom']} ({prix} €) : {link['url']}")
+    return out
+
+
 def run():
     biz, metiers = business(), load_metiers()
     mode = "test" if os.environ["STRIPE_SECRET_KEY"].strip().split("_")[1] == "test" else "réel"
@@ -100,6 +129,8 @@ def run():
             results[key][champ] = link["url"]
             results[key].setdefault("prices", []).append(price["id"])
             print(f"[{mode}] {offre['nom']} ({'an' if interval == 'year' else 'mois'}) : {link['url']} (prix {price['id']})")
+
+    dossier = _dossier(biz) if biz.get("dossier") else None
 
     portal = None
     try:
@@ -127,6 +158,12 @@ def run():
                 new = re.sub(rf'{champ}: ".*?"', f'{champ}: "{r[champ]}"', new)
         ids = ", ".join(f'"{i}"' for i in r["prices"])
         new = re.sub(r"stripe_price_ids: \[.*?\]", f"stripe_price_ids: [{ids}]", new)
+        text = text.replace(block, new)
+    if dossier:
+        block = re.search(r"\ndossier:\n(?:  .*\n)+", text).group(0)
+        new = re.sub(r'lien_paiement: ".*?"', f'lien_paiement: "{dossier["lien_paiement"]}"', block)
+        new = re.sub(r'lien_pro: ".*?"', f'lien_pro: "{dossier["lien_pro"]}"', new)
+        new = re.sub(r"stripe_link_ids: \[.*?\]", "stripe_link_ids: [" + ", ".join(f'"{i}"' for i in dossier["ids"]) + "]", new)
         text = text.replace(block, new)
     if portal:
         text = re.sub(r'portail_client: ".*?"', f'portail_client: "{portal}"', text) if "portail_client:" in text \

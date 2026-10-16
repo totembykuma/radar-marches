@@ -1,0 +1,50 @@
+{% extends "_email.html" %}
+{% block contenu %}
+{% set envoyer = biz.site_url ~ "/dossier/envoyer/" %}
+{% if cas == "recu" %}
+<h2 style="color:#0b1b33;font-size:21px;margin:0 0 14px">Merci, il nous manque le dossier de consultation</h2>
+<p>Bonjour,</p>
+<p>Votre paiement pour un <b>{{ biz.dossier.nom }}</b> est bien reçu. Dernière étape, deux minutes :</p>
+<ol>
+<li>Téléchargez le dossier de consultation (DCE) sur le site de l'acheteur : le lien figure dans l'avis.</li>
+<li>Remplissez <a href="{{ envoyer }}">ce formulaire</a> : votre messagerie s'ouvre avec la présentation de votre entreprise déjà rédigée.</li>
+<li>Joignez les fichiers du DCE (PDF, Word ou ZIP) et envoyez <b>depuis cette adresse e-mail</b>.</li>
+</ol>
+<p>Vous recevez votre dossier sous 24 heures ouvrées.</p>
+{% elif cas == "livre" %}
+<h2 style="color:#0b1b33;font-size:21px;margin:0 0 14px">Votre dossier est prêt</h2>
+<p>Bonjour,</p>
+<p>Vous trouverez en pièce jointe votre réponse à l'appel d'offres <b>{{ objet }}</b>, au format Word modifiable.</p>
+<p style="background:#f4f5f7;padding:12px 14px;border-radius:8px;border-left:3px solid #ffb020">
+1. Relisez tout et complétez les passages <b>surlignés en jaune</b>.<br>
+2. Ajoutez vos prix dans les documents financiers de l'acheteur.<br>
+3. Rassemblez les pièces listées au début du document.<br>
+4. Signez et déposez sur le site de l'acheteur{% if date_limite %} avant le <b>{{ date_limite }}</b>{% endif %}.</p>
+<p>Ce dossier est une aide à la rédaction : vous restez seul responsable de l'offre que vous déposez. Si le document ne vous est pas utile, répondez à cet e-mail : nous vous remboursons.</p>
+{% elif cas == "sans_paiement" %}
+<h2 style="color:#0b1b33;font-size:21px;margin:0 0 14px">Aucun dossier en attente pour cette adresse</h2>
+<p>Bonjour,</p>
+<p>Nous n'avons pas trouvé de commande de dossier en attente pour l'adresse qui nous a écrit. Envoyez les pièces depuis l'adresse utilisée lors du paiement, ou commandez votre dossier sur <a href="{{ biz.site_url }}/dossier/">cette page</a>.</p>
+{% elif cas == "pieces_manquantes" %}
+<h2 style="color:#0b1b33;font-size:21px;margin:0 0 14px">Il manque le dossier de consultation</h2>
+<p>Bonjour,</p>
+<p>Votre e-mail est bien arrivé, mais nous n'avons pas pu lire le dossier de consultation. Renvoyez-le en <b>pièces jointes</b> (PDF, Word ou ZIP), en répondant avec <a href="{{ envoyer }}">le formulaire</a>.</p>
+{% elif cas == "relance" %}
+<h2 style="color:#0b1b33;font-size:21px;margin:0 0 14px">Nous attendons votre dossier de consultation</h2>
+<p>Bonjour,</p>
+<p>Votre dossier est payé, mais nous n'avons pas encore reçu les pièces. Utilisez <a href="{{ envoyer }}">ce formulaire</a> et joignez le dossier de consultation. Sans nouvelles de votre part sous 5 jours, nous vous remboursons automatiquement.</p>
+{% elif cas == "rembourse_sans_pieces" %}
+<h2 style="color:#0b1b33;font-size:21px;margin:0 0 14px">Vous êtes remboursé</h2>
+<p>Bonjour,</p>
+<p>Sans dossier de consultation reçu, nous avons remboursé votre commande. Le remboursement apparaît sous quelques jours sur votre relevé.</p>
+{% elif cas == "delai" %}
+<h2 style="color:#0b1b33;font-size:21px;margin:0 0 14px">Délai trop court : vous êtes remboursé</h2>
+<p>Bonjour,</p>
+<p>La date limite de cet appel d'offres est dans {{ reste }} jour{{ 's' if reste > 1 }}. C'est trop court pour relire, chiffrer et déposer sereinement : nous avons remboursé votre commande. Commandez votre dossier au moins {{ biz.dossier.delai_min_jours }} jours avant la date limite.</p>
+{% elif cas == "echec" %}
+<h2 style="color:#0b1b33;font-size:21px;margin:0 0 14px">Votre dossier n'a pas pu être préparé</h2>
+<p>Bonjour,</p>
+<p>Nous n'avons pas réussi à préparer ce dossier et nous vous avons remboursé. Toutes nos excuses.</p>
+{% endif %}
+<p>Bien cordialement,</p>
+{% endblock %}

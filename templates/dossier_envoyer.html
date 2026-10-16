@@ -1,0 +1,33 @@
+{% extends "base.html" %}{% block main %}
+<section class="wrap rappel">
+  <p class="kicker">{{ biz.dossier.nom }}</p>
+  <h1>Envoyer mon dossier de consultation</h1>
+  <p class="lead">Remplissez ces informations : votre messagerie s'ouvre avec l'e-mail déjà rédigé. <b>Joignez les fichiers du dossier de consultation</b> (PDF, Word ou ZIP) et envoyez-le <b>depuis l'adresse utilisée pour payer</b>. Ce navigateur se souvient de vos réponses pour la prochaine fois.</p>
+  <form class="card" id="d-form">
+    {% for id, lib in [("avis", "Lien ou référence de l'appel d'offres"), ("entreprise", "Nom de l'entreprise et SIRET"),
+       ("activite", "Activité et savoir-faire (2 ou 3 phrases)"), ("chiffres", "Effectif, chiffre d'affaires des 3 dernières années"),
+       ("moyens", "Matériel, véhicules, locaux"), ("references", "3 chantiers ou clients récents (client, objet, année, montant)"),
+       ("certifs", "Certifications, qualifications, assurances (Qualibat, RGE…)"), ("contact", "Signataire (nom, fonction) et téléphone")] %}
+    <p><label>{{ lib }}<br><textarea id="d-{{ id }}" rows="{{ 3 if id in ('activite', 'references', 'moyens') else 1 }}" style="width:100%"></textarea></label></p>
+    {% endfor %}
+    <button class="btn btn-lg" type="submit">Préparer mon e-mail</button>
+  </form>
+  <p class="muted">Rien n'est enregistré sur nos serveurs : vos réponses restent dans ce navigateur. Les pièces envoyées servent uniquement à préparer votre dossier, puis ne sont pas conservées.</p>
+</section>
+<script>
+var champs = ["avis", "entreprise", "activite", "chiffres", "moyens", "references", "certifs", "contact"];
+var libelles = {avis: "Appel d'offres", entreprise: "Entreprise", activite: "Activité", chiffres: "Effectif et chiffre d'affaires",
+  moyens: "Moyens", references: "Références", certifs: "Certifications et assurances", contact: "Signataire"};
+try { champs.forEach(function (c) { if (c !== "avis") document.getElementById("d-" + c).value = localStorage.getItem("dossier-" + c) || ""; }); } catch (e) {}
+document.getElementById("d-form").addEventListener("submit", function (ev) {
+  ev.preventDefault();
+  var corps = "Bonjour,\n\nVoici le dossier de consultation (en pièces jointes) et la présentation de mon entreprise.\n\n";
+  champs.forEach(function (c) {
+    var v = document.getElementById("d-" + c).value.trim();
+    try { if (c !== "avis") localStorage.setItem("dossier-" + c, v); } catch (e) {}
+    corps += libelles[c] + " : " + (v || "non précisé") + "\n\n";
+  });
+  location.href = "mailto:{{ biz.dossier.adresse }}?subject=" + encodeURIComponent("Dossier prêt à signer") + "&body=" + encodeURIComponent(corps);
+});
+</script>
+{% endblock %}

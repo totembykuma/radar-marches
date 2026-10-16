@@ -133,7 +133,10 @@ def test_stripe_setup_writes_config(tmp_path, monkeypatch):
             return {"id": f"prod_{data['metadata[radar_offre]']}"}
         if path == "prices":
             return {"id": f"price_{data['unit_amount']}", "unit_amount": data["unit_amount"],
-                    "recurring": {"interval": data["recurring[interval]"]}}
+                    "recurring": {"interval": data["recurring[interval]"]} if "recurring[interval]" in data else None}
+        if path == "payment_links" and data["metadata[radar_offre]"] == "dossier":
+            assert data["after_completion[redirect][url]"].endswith("/dossier/envoyer/") and "subscription_data[trial_period_days]" not in data
+            return {"id": f"plink_{data['line_items[0][price]']}", "url": f"https://buy.stripe.com/test_dossier_{data['line_items[0][price]']}"}
         if path == "payment_links":
             assert data["custom_fields[0][dropdown][options][1][value]"] == "espacesverts"
             assert data["subscription_data[trial_period_days]"] == 14
@@ -147,6 +150,8 @@ def test_stripe_setup_writes_config(tmp_path, monkeypatch):
     assert biz["offres"]["pro"]["lien_annuel"] == "https://buy.stripe.com/test_pro_price_49000"
     assert biz["offres"]["essentiel"]["stripe_price_ids"] == ["price_2900", "price_29000"]
     assert biz["stripe_mode"] == "test" and biz["portail_client"].endswith("test_x")
+    assert biz["dossier"]["lien_paiement"].endswith("price_19900") and biz["dossier"]["lien_pro"].endswith("price_14900")
+    assert biz["dossier"]["stripe_link_ids"] == ["plink_price_19900", "plink_price_14900"]
     stripe_setup.run()  # relancer ne casse pas le fichier
     assert config.business()["offres"]["pro"]["stripe_price_ids"] == ["price_4900", "price_49000"]
 
@@ -541,3 +546,121 @@ def test_recents_reserves_et_carte(tmp_path):
     assert 'href="departements/971.html"' in hub
     d = (tmp_path / "appels-offres" / "departements" / "2A.html").read_text()
     assert "Corse-du-Sud" in d and "https://x/3" not in d and "réservé aux abonnés" in d
+
+
+def _biz_dossier(monkeypatch):
+    from radar import config
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "x")
+    monkeypatch.setenv("RESEND_INBOUND_KEY", "k")
+    monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_x")
+    monkeypatch.setattr(config, "premier_client_payant", lambda *a: "2026-10-20")
+    biz = config.business()
+    biz["dossier"].update(lien_paiement="https://buy.stripe.com/d", lien_pro="https://buy.stripe.com/p", stripe_link_ids=["plink_1"])
+    biz["dossier_actif"] = config.dossier_actif(biz)
+    return biz
+
+
+def test_dossier_inactif_sans_ia(monkeypatch):
+    from radar import config, dossier
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    biz = config.business()
+    biz["dossier"]["lien_paiement"] = "https://buy.stripe.com/d"
+    assert not config.dossier_actif(biz) and dossier.traiter(biz, {}) == (0, [])
+
+
+def test_dossier_extraction_et_priorite():
+    import io, zipfile
+    from docx import Document
+    from radar import dossier
+    doc = Document(); doc.add_paragraph("Article 1 du CCTP : nettoyage quotidien des bureaux")
+    b = io.BytesIO(); doc.save(b)
+    z = io.BytesIO()
+    with zipfile.ZipFile(z, "w") as f:
+        f.writestr("DCE/annexe-plan.txt", "plan des locaux")
+        f.writestr("DCE/CCTP.docx", b.getvalue())
+        f.writestr("DCE/RC.txt", "Règlement de consultation : critère valeur technique 60 %, prix 40 %")
+        f.writestr("DCE/photo.jpg", b"\xff\xd8")
+    pieces = dossier.extraire_texte("dce.zip", z.getvalue())
+    assert {p[0].split("/")[-1] for p in pieces} == {"annexe-plan.txt", "CCTP.docx", "RC.txt"}
+    texte = dossier.assembler(pieces)
+    assert texte.index("RC.txt") < texte.index("CCTP.docx") < texte.index("annexe-plan.txt")
+    assert "nettoyage quotidien" in texte
+
+
+def test_dossier_parcours_complet(monkeypatch, tmp_path):
+    """Paiement → accusé ; e-mail avec DCE → dossier Word envoyé ; délai trop court → remboursement."""
+    import base64, io
+    from docx import Document
+    from radar import dossier, mailer
+    biz = _biz_dossier(monkeypatch)
+    envoyes, rembourses = [], []
+    monkeypatch.setattr(mailer, "send", lambda to, sujet, html, exp, reply_to=None, attachments=None, **k: envoyes.append((to, sujet, html, attachments)))
+    dans = lambda j: (date.today() + timedelta(days=j)).isoformat()
+    achats = {"cs_1": {"email": "client@ex.fr", "montant": 199, "payment_intent": "pi_1", "date": date.today().isoformat(), "avis": "26-101001"},
+              "cs_2": {"email": "presse@ex.fr", "montant": 149, "payment_intent": "pi_2", "date": date.today().isoformat(), "avis": ""},
+              "cs_3": {"email": "oubli@ex.fr", "montant": 199, "payment_intent": "pi_3", "date": (date.today() - timedelta(days=8)).isoformat(), "avis": ""}}
+    monkeypatch.setattr(dossier, "paiements", lambda biz, session=None: achats)
+    monkeypatch.setattr(dossier, "rembourser", lambda a, session=None: rembourses.append(a["payment_intent"]))
+    dce = "Règlement de consultation. " * 200
+    monkeypatch.setattr(dossier, "pieces_jointes", lambda eid, key, session=None: [("RC.pdf", dce)] if eid != "e_vide" else [])
+    recus = {"data": [{"id": "e1", "from": "Client <client@ex.fr>", "to": ["dossier@elkaurtel.resend.app"]},
+                      {"id": "e2", "from": "presse@ex.fr", "to": ["dossier@elkaurtel.resend.app"]},
+                      {"id": "e3", "from": "inconnu@ex.fr", "to": ["dossier@elkaurtel.resend.app"]},
+                      {"id": "e_vide", "from": "oubli@ex.fr", "to": ["criteres@elkaurtel.resend.app"]}]}
+    monkeypatch.setattr(dossier, "_resend", lambda path, key, session=None: recus if path.startswith("/emails/receiving?") else {"text": "Entreprise : Net33, 12 salariés"})
+    vus_infos = []
+    def gen(texte, infos):
+        vus_infos.append(infos)
+        urgent = "presse" in infos or len(vus_infos) == 2
+        return {"objet": "Nettoyage des locaux", "acheteur": "Mairie", "date_limite": dans(2 if urgent else 20) + " 12:00",
+                "criteres": [{"critere": "Valeur technique", "poids": "60 %", "conseil": "Détailler"}],
+                "memoire": [{"titre": "1. Moyens humains", "texte": "Équipe de [À COMPLÉTER : nombre] agents.\n\nEncadrement."}],
+                "lettre": "Madame, Monsieur", "dume": [{"rubrique": "II-A", "reponse": "Net33"}], "references": [], "pieces": []}
+    state = {}
+    livres, erreurs = dossier.traiter(biz, state, generer_fn=gen)
+    assert (livres, erreurs) == (1, [])
+    sujets = {(to, sujet.split(" : ", 1)[1]) for to, sujet, _, _ in envoyes}
+    assert ("client@ex.fr", "votre dossier est prêt") in sujets
+    assert ("presse@ex.fr", "délai trop court, vous êtes remboursé") in sujets
+    assert ("inconnu@ex.fr", "aucun dossier en attente") in sujets
+    assert ("oubli@ex.fr", "remboursement de votre dossier") in sujets
+    assert sorted(rembourses) == ["pi_2", "pi_3"] and "Net33" in vus_infos[0] and "26-101001" in vus_infos[0]
+    pj = next(a for to, s, h, a in envoyes if a)[0]
+    assert pj["filename"] == "dossier-nettoyage-des-locaux.docx"
+    texte = "\n".join(p.text for p in Document(io.BytesIO(base64.b64decode(pj["content"]))).paragraphs)
+    assert "Moyens humains" in texte and "[À COMPLÉTER : nombre]" in texte
+    assert state["dossiers"]["cs_1"]["etat"] == "livre" and "client@ex.fr" not in json.dumps(state)   # rien de personnel dans le dépôt public
+    envoyes.clear()
+    assert dossier.traiter(biz, state, generer_fn=gen) == (0, []) and not envoyes   # rien n'est refait au passage suivant
+
+
+def test_dossier_echec_ia_rembourse_apres_deux_essais(monkeypatch):
+    from radar import dossier, mailer
+    biz = _biz_dossier(monkeypatch)
+    alertes, rembourses = [], []
+    monkeypatch.setattr(mailer, "send", lambda *a, **k: None)
+    monkeypatch.setattr(dossier, "paiements", lambda biz, session=None: {"cs_1": {"email": "c@ex.fr", "montant": 199, "payment_intent": "pi_1", "date": date.today().isoformat(), "avis": ""}})
+    monkeypatch.setattr(dossier, "rembourser", lambda a, session=None: rembourses.append(1))
+    monkeypatch.setattr(dossier, "pieces_jointes", lambda *a, **k: [("RC.pdf", "x" * 3000)])
+    monkeypatch.setattr(dossier, "_resend", lambda path, key, session=None: {"data": [{"id": "e1", "from": "c@ex.fr", "to": ["dossier@elkaurtel.resend.app"]}]} if "?" in path else {"text": ""})
+    def gen(*a):
+        raise RuntimeError("panne")
+    state = {}
+    dossier.traiter(biz, state, alerte=lambda s, h: alertes.append(s), generer_fn=gen)
+    assert state["dossiers"]["cs_1"]["etat"] == "attente" and not rembourses
+    dossier.traiter(biz, state, alerte=lambda s, h: alertes.append(s), generer_fn=gen)
+    assert state["dossiers"]["cs_1"]["etat"] == "rembourse" and rembourses and any("non préparé" in a for a in alertes)
+
+
+def test_bouton_dossier_dans_les_alertes(monkeypatch):
+    from radar import cli
+    from radar.render import render
+    biz = _biz_dossier(monkeypatch)
+    a = dict(by_id(101001), date_limite_fr="6 novembre", fiche=None)
+    pro = cli.lien_dossier(biz, {"plan": "pro", "email": "a@b.fr"})
+    assert pro["prix"] == 149 and pro["url"].endswith("/p")
+    html = render("email_digest.html", biz=biz, avis=[a], date_fr="lundi", criteres="x", lien_dossier=pro)
+    assert "Préparer ma réponse (149 €)" in html and "client_reference_id=26-101001" in html
+    assert cli.lien_dossier(biz, {"plan": "essentiel"})["prix"] == 199
+    biz["dossier_actif"] = False
+    assert cli.lien_dossier(biz, {"plan": "pro"}) is None
