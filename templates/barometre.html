@@ -7,12 +7,12 @@
 <section class="wrap block">
   <h2>Par métier</h2>
   <div class="tbl-wrap"><table class="tbl">
-    <thead><tr><th>Métier</th><th class="num">Appels d'offres</th><th class="num">Sur un mois</th><th class="num">Accessibles PME</th><th class="num">Offres reçues*</th><th class="num">Montant médian*</th><th>Départements les plus actifs</th></tr></thead>
+    <thead><tr><th>Métier</th><th class="nb">Appels d'offres</th><th class="nb">Sur un mois</th><th class="nb">Accessibles PME</th><th class="nb">Offres reçues*</th><th class="nb">Montant médian*</th><th>Départements les plus actifs</th></tr></thead>
     <tbody>{% for r in rows %}
-      <tr><td><a href="{{ root }}appels-offres/{{ r.k }}/">{{ metiers[r.k].libelle }}</a></td><td class="num">{{ r.n }}</td>
-      <td class="num">{% if r.var is not none %}<span class="{{ 'up' if r.var > 0 else 'down' if r.var < 0 }}">{{ '+' if r.var > 0 }}{{ r.var }} %</span>{% else %}–{% endif %}</td>
-      <td class="num">{{ r.pme }}</td><td class="num">{{ r.rep.offres_median|string|replace('.0', '')|replace('.', ',') if r.rep.offres_median else '–' }}</td>
-      <td class="num nowrap">{{ euros(r.rep.montant_median) or '–' }}</td>
+      <tr><td><a href="{{ root }}appels-offres/{{ r.k }}/">{{ metiers[r.k].libelle }}</a></td><td class="nb">{{ r.n }}</td>
+      <td class="nb">{% if r.var is not none %}<span class="{{ 'up' if r.var > 0 else 'down' if r.var < 0 }}">{{ '+' if r.var > 0 }}{{ r.var }} %</span>{% else %}–{% endif %}</td>
+      <td class="nb">{{ r.pme }}</td><td class="nb">{{ r.rep.offres_median|string|replace('.0', '')|replace('.', ',') if r.rep.offres_median else '–' }}</td>
+      <td class="nb nowrap">{{ euros(r.rep.montant_median) or '–' }}</td>
       <td>{% for d, n in r.top_deps[:3] %}{{ d }} ({{ n }}){{ ', ' if not loop.last }}{% endfor %}</td></tr>
     {% endfor %}</tbody>
   </table></div>

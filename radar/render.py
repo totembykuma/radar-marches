@@ -30,6 +30,15 @@ env = Environment(loader=FileSystemLoader(str(ROOT / "templates")),
                   autoescape=select_autoescape(["html"]))
 
 
+def phrase(s):
+    """Texte tout en majuscules → phrase normale (plus lisible)."""
+    s = (s or "").strip()
+    return s.capitalize() if s.isupper() else s
+
+
+env.filters["phrase"] = phrase
+
+
 def render(name, **ctx):
     return env.get_template(name).render(**ctx)
 

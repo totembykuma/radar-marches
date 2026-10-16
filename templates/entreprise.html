@@ -9,10 +9,10 @@
 <section class="wrap listing">
   <div class="cards">
     <div class="tbl-wrap"><table class="tbl">
-      <thead><tr><th>Date</th><th>Marché</th><th>Acheteur</th><th class="num">Montant</th><th class="num">Offres reçues</th></tr></thead>
+      <thead><tr><th>Date</th><th>Marché</th><th>Acheteur</th><th class="nb">Montant</th><th class="nb">Offres reçues</th></tr></thead>
       <tbody>{% for r in f.marches[:60] %}
-        <tr><td class="nowrap">{{ date_lim(r.d) }}</td><td>{{ r.o }}{% if r.l %} <span class="fine">({{ r.l }})</span>{% endif %}</td><td>{{ r.acheteur or 'Acheteur public' }}</td>
-        <td class="num nowrap">{{ euros(r.m) if r.m else '–' }}</td><td class="num">{{ r.n or '–' }}</td></tr>
+        <tr><td class="nowrap">{{ date_lim(r.d) }}</td><td>{{ r.o|phrase }}{% if r.l %} <span class="fine">({{ r.l }})</span>{% endif %}</td><td>{{ r.acheteur or 'Acheteur public' }}</td>
+        <td class="nb nowrap">{{ euros(r.m) if r.m else '–' }}</td><td class="nb">{{ r.n or '–' }}</td></tr>
       {% endfor %}</tbody>
     </table></div>
     {% if f.marches|length > 60 %}<p class="fine">Et {{ f.marches|length - 60 }} autres marchés.</p>{% endif %}

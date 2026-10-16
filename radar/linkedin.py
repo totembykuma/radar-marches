@@ -2,6 +2,7 @@
 
 Le site publie /linkedin/semaine.json ; une tâche programmée de Claude les planifie chaque lundi
 sur la page LinkedIn via Metricool (aucune clé dans ce dépôt)."""
+import re
 from datetime import date, timedelta
 
 from .render import date_fr, date_limite_fr
@@ -14,7 +15,9 @@ def _euros(n):
 
 
 def _court(s, n=90):
-    s = (s or "").strip()
+    s = re.sub(r"^[\w/.-]*\d{4,}[\w/.-]*\s*[-:]\s*", "", (s or "").strip())   # numéro de consultation en tête
+    if s.isupper():
+        s = s.capitalize()
     return s if len(s) <= n else s[:n].rsplit(" ", 1)[0] + "…"
 
 
