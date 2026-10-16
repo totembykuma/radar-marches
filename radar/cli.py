@@ -168,6 +168,8 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
     if avis_new is None:
         since = date.today() - timedelta(days=4)  # couvre le week-end ; les doublons sont filtrés
         avis_new = boamp.fetch_since(since)
+        jour = date.today().isoformat()  # jamais d'avis déjà clos (rectificatifs publiés après la date limite)
+        avis_new = [a for a in avis_new if not a["date_limite"] or a["date_limite"][:10] >= jour]
     for a in avis_new:
         a["metiers"] = matcher.metiers_of(a)
     run["avis_recuperes"] = len(avis_new)
