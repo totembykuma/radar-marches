@@ -18,7 +18,7 @@ from markupsafe import Markup
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
-from . import avis, criteres, ai, dossier, parrainage, boamp, finance, historique, mailer, prospects, site, subscribers
+from . import avis, criteres, gratuit, ai, dossier, parrainage, boamp, finance, historique, mailer, prospects, site, subscribers
 from .config import ROOT, business, dossier_actif, metiers as load_metiers
 from .matching import Matcher
 from .render import date_fr, date_limite_fr, render
@@ -282,8 +282,25 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
         res = site.build(avis_open, biz, metiers, matcher, OUT / "site", histo=None if os.getenv("RADAR_DEMO") else histo,
                          stats={"total": len(avis_new), "metiers_hits": run["avis_metiers"]})
         run["pages_site"] = res["pages"]
+        if date.today().weekday() == 0 and os.getenv("GITHUB_ACTIONS") == "true" and not os.getenv("RADAR_DEMO"):
+            try:   # chaque lundi : signaler les pages à Bing et aux autres moteurs IndexNow
+                code, n = site.indexnow(biz, OUT / "site")
+                run["indexnow"] = f"{n} pages, réponse {code}"
+            except Exception as exc:
+                log.warning("IndexNow : %s", safe(exc))
     except Exception as exc:
         run["erreurs"].append(f"site non généré : {safe(exc)}")
+
+    # 6b. Alerte gratuite limitée : inscriptions / désinscriptions reçues, puis 3 marchés par semaine (dans la limite Resend du jour)
+    if avis_open is not None:
+        try:
+            quota = RESEND_JOUR - MARGE_JOUR - sent - run.get("bienvenues", 0) - run.get("rappels_essai", 0)
+            g, errs = gratuit.traiter(biz, metiers, matcher, state, subs, avis_open, quota)
+            run["alerte_gratuite"] = g
+            run["emails_gratuits"] = g["envoyes"]
+            run["erreurs"] += errs
+        except Exception as exc:
+            run["erreurs"].append(f"alerte gratuite non traitée : {safe(exc)}")
 
     # 7. Contrôles
     weekday = date.today().weekday() < 5
@@ -335,6 +352,8 @@ def run_weekly():
     debut = (today - timedelta(days=7)).isoformat()
     kpi["prospects_contactes_7j"] = sum(j.get("envoyes", 0) for j in pj if j.get("date", "") >= debut)
     kpi["prospects_contactes_total"] = sum(j.get("envoyes", 0) for j in pj)
+    kpi["prospects_relances_7j"] = sum(j.get("relances", 0) for j in pj if j.get("date", "") >= debut)
+    kpi["alerte_gratuite_inscrits"] = len(gratuit.charger()["abonnes"])
     kpi["prospects_clics_7j"] = _clics([i for j in pj if j.get("date", "") >= debut for i in j.get("ids", [])])
     decisions = []
     if kpi["visites_7j"] is None and biz.get("statistiques_goatcounter"):
@@ -360,6 +379,8 @@ def run_weekly():
               + ligne("Visites du site", kpi["visites_7j"], "personnes venues sur radar-marches.fr")
               + ligne("Entreprises prospectées", kpi["prospects_contactes_7j"], "1 seul e-mail par entreprise")
               + ligne("Clics dans ces e-mails", kpi["prospects_clics_7j"], "")
+              + ligne("Relances (prospects qui avaient cliqué)", kpi["prospects_relances_7j"], "1 seule relance, 5 jours après")
+              + ligne("Inscrits à l'alerte gratuite", kpi["alerte_gratuite_inscrits"], "3 marchés par semaine")
               + ligne("Essais gratuits commencés", kpi["essais_commences_7j"], "")
               + ligne("Ventes (passés payants)", kpi["ventes_7j"], "")
               + ligne("Résiliations", kpi["resilies_7j"], "")
@@ -434,15 +455,18 @@ def run_prospection(apercu=False):
         for m in matcher.metiers_of(a):
             par_metier.setdefault(m, []).append(a)
 
-    def compose(p):
-        lst = par_metier.get(p["metier"], [])
-        local = [a for a in lst if p["dep"] and p["dep"] in a["departements"]]
-        base = biz["site_url"].rstrip("/") + f"/appels-offres/{p['metier']}/"
+    def zone_de(metier, dep, source="prospection"):
+        lst = par_metier.get(metier, [])
+        local = [a for a in lst if dep and dep in a["departements"]]
+        base = biz["site_url"].rstrip("/") + f"/appels-offres/{metier}/"
         if len(local) >= 2:
-            n, zone, ex, lien = len(local), f"dans le département {p['dep']}", local[0], base + f"{p['dep']}.html"
+            n, zone, ex, lien = len(local), f"dans le département {dep}", local[0], base + f"{dep}.html"
         else:
             n, zone, ex, lien = len(lst), "en France", (lst[0] if lst else None), base
-        lien += f"?utm_source=prospection&utm_medium=email&utm_campaign={p['metier']}"
+        return n, zone, ex, lien + f"?utm_source={source}&utm_medium=email&utm_campaign={metier}"
+
+    def compose(p):
+        n, zone, ex, lien = zone_de(p["metier"], p["dep"])
         m = metiers[p["metier"]]
         subject = f"{n} marchés publics « {m['libelle'].lower()} » ouverts {zone.replace('dans le département', 'dans le')}"
         html = render("email_prospect.html", p=p, n=n, zone=zone, ex=ex, lien=lien, metier=m, biz=biz)
@@ -473,10 +497,14 @@ def run_prospection(apercu=False):
         mailer.activer_suivi_clics(conf["expediteur"].split("@")[-1].strip(" >"))
     except Exception as exc:
         log.warning("Suivi des clics non activé : %s", safe(exc))
-    envoyes, ids = 0, []
+    envoyes, ids, suivi = 0, [], {}
     quota = quota_prospection(int(conf.get("par_jour") or 20), state["journal"])
     resume["quota_du_jour"] = quota
-    for c in cands[:quota]:
+    # Relance unique, 5 jours après, seulement pour ceux qui ont cliqué sans s'inscrire (avant les nouveaux prospects).
+    nb_relances = relancer(state["journal"], biz, metiers, conf, zone_de, clients, quota)
+    resume["relances"] = nb_relances
+    quota -= nb_relances
+    for c in cands[:max(0, quota)]:
         subject, html, _ = compose(c)
         reply = biz.get("email_proprietaire") or biz["email_contact"]
         try:
@@ -493,7 +521,9 @@ def run_prospection(apercu=False):
         envoyes += 1
         if res.get("id"):
             ids.append(res["id"])
-    state["journal"].append({"date": date.today().isoformat(), "envoyes": envoyes, "ids": ids})
+            suivi[res["id"]] = [c["metier"], c["dep"]]
+    state["journal"].append({"date": date.today().isoformat(), "envoyes": envoyes, "ids": ids, "suivi": suivi,
+                             "relances": nb_relances})
     state["journal"] = state["journal"][-120:]
     _save_json(state_path, state)
     resume["envoyes"] = envoyes
@@ -505,18 +535,75 @@ def run_prospection(apercu=False):
 RESEND_JOUR, RESEND_MOIS, MARGE_JOUR, MARGE_MOIS = 100, 3000, 20, 300
 
 
+def _envois(run):
+    return sum(int(run.get(k) or 0) for k in ("emails_envoyes", "emails_gratuits", "bienvenues", "rappels_essai"))
+
+
 def quota_prospection(par_jour, journal, today=None):
     today = today or date.today()
     run = _load_json(DATA / "runs" / f"{today.isoformat()}.json", {}) or {}
-    reste_jour = RESEND_JOUR - MARGE_JOUR - int(run.get("emails_envoyes") or 0)
+    reste_jour = RESEND_JOUR - MARGE_JOUR - _envois(run)
     mois = today.strftime("%Y-%m")
-    clients_mois = sum(int((_load_json(f, {}) or {}).get("emails_envoyes") or 0) for f in (DATA / "runs").glob(f"{mois}-*.json"))
-    prospects_mois = sum(j.get("envoyes", 0) for j in journal if str(j.get("date", "")).startswith(mois))
+    clients_mois = sum(_envois(_load_json(f, {}) or {}) for f in (DATA / "runs").glob(f"{mois}-*.json"))
+    prospects_mois = sum(j.get("envoyes", 0) + j.get("relances", 0) for j in journal if str(j.get("date", "")).startswith(mois))
     # Envois clients encore à venir ce mois-ci (estimés sur la moyenne des jours déjà passés).
     jours = max(1, len(list((DATA / "runs").glob(f"{mois}-*.json"))))
     a_venir = clients_mois / jours * max(0, 22 - jours)
     reste_mois = RESEND_MOIS - MARGE_MOIS - clients_mois - prospects_mois - a_venir
     return max(0, min(par_jour, reste_jour, int(reste_mois)))
+
+
+RELANCE_APRES, RELANCE_JUSQUA = 5, 12   # jours après le premier e-mail
+
+
+def relancer(journal, biz, metiers, conf, zone_de, clients, quota, today=None):
+    """Une seule relance par prospect ayant cliqué sans s'inscrire (ni abonné, ni inscrit à l'alerte gratuite).
+    Seuls les e-mails dont le pied de page annonçait ce rappel (champ « suivi » du journal) sont concernés."""
+    today = today or date.today()
+    clients = {gratuit.h(e) for e in clients} | gratuit.emails_connus()
+    reply = biz.get("email_proprietaire") or biz["email_contact"]
+    n = 0
+    for j in journal:
+        if not j.get("suivi") or j.get("relance_faite"):
+            continue
+        age = (today - date.fromisoformat(j["date"])).days
+        if age < RELANCE_APRES:
+            continue
+        verifies = set(j.get("verifies") or [])
+        for i, (metier, dep) in j["suivi"].items():
+            if i in verifies or age > RELANCE_JUSQUA:
+                continue
+            if n >= quota:
+                break
+            try:
+                e = mailer.lire_email(i)
+                time.sleep(0.6)  # limite Resend : 2 requêtes/seconde
+            except Exception as exc:
+                log.warning("Relance : e-mail non lu (%s)", safe(exc))
+                break
+            verifies.add(i)
+            to = ((e.get("to") or [""])[0] or "").lower()
+            if e.get("last_event") != "clicked" or not to or gratuit.h(to) in clients or metier not in metiers:
+                continue
+            nb, zone, ex, lien = zone_de(metier, dep, "relance")
+            if nb < 2:
+                continue
+            m = metiers[metier]
+            site = biz["site_url"].rstrip("/")
+            html = render("email_relance.html", biz=biz, metier=m, n=nb, zone=zone, ex=ex, lien=lien,
+                          lien_essai=f"{site}/?utm_source=relance&utm_medium=email&utm_campaign={metier}#tarifs",
+                          lien_gratuit=f"{site}/alerte-gratuite/?utm_source=relance" if biz.get("alerte_gratuite") else None)
+            try:
+                mailer.send(to, f"{nb} marchés « {m['libelle'].lower()} » ouverts {zone.replace('dans le département', 'dans le')}",
+                            html, conf["expediteur"], reply_to=reply, headers={"List-Unsubscribe": f"<mailto:{reply}?subject=STOP>"})
+                n += 1
+            except Exception as exc:
+                log.error("Relance refusée : %s", safe(exc))
+        j["verifies"] = sorted(verifies)
+        if age > RELANCE_JUSQUA or verifies >= set(j["suivi"]):
+            j["relance_faite"] = True
+            j.pop("verifies", None)
+    return n
 
 
 def _clics(ids):

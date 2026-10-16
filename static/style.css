@@ -133,6 +133,7 @@ nav{display:flex;align-items:center;gap:26px}nav a{color:var(--ink);text-decorat
 .avis-foot a{margin-left:auto;font-weight:700;text-decoration:none}
 .side{position:relative}.side .cta-box{position:sticky;top:90px}
 .cta-box{background:linear-gradient(160deg,var(--navy),var(--navy2));color:#fff;border-radius:var(--r);padding:24px;box-shadow:var(--shadow-lg)}
+.cta-box .cta-free{display:block;margin-top:12px;color:#fff;text-align:center;font-weight:600;font-size:14px;text-decoration:underline}
 .cta-box p{margin:0 0 16px;color:#dce6f5}.cta-box .kicker{color:var(--accent);margin-bottom:8px}.cta-box small{display:block;margin-top:10px;color:#a9bbd6;font-size:12.5px;text-align:center}
 .cards .cta-box{display:none}
 .empty{padding:30px;border:1px dashed var(--line);border-radius:var(--r);color:var(--muted);text-align:center}

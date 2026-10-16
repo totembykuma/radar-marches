@@ -1,0 +1,22 @@
+{% extends "_email.html" %}
+{% block contenu %}
+<h2 style="color:#0b1b33;font-size:21px;margin:0 0 14px">{% if bienvenue %}Votre alerte gratuite est active{% else %}Vos {{ avis|length }} marchés de la semaine{% endif %}</h2>
+<p>Bonjour,</p>
+{% if bienvenue %}<p>Merci ! Chaque semaine, vous recevrez gratuitement {{ avis|length or 3 }} marchés publics « {{ metier.libelle|lower }} »{% if dep %} du département {{ dep }}{% endif %}. Voici les premiers :</p>
+{% else %}<p>Voici une sélection de marchés publics « {{ metier.libelle|lower }} » ouverts en ce moment{% if dep %} dans le département {{ dep }}{% endif %} :</p>{% endif %}
+{% for a in avis %}
+<div style="border:1px solid #e6e9ef;border-radius:10px;padding:12px 14px;margin:0 0 10px">
+  <div style="font-size:12px;color:#5a6478">{{ a.acheteur }}{% if a.departements %} · Dép. {{ a.departements|join(', ') }}{% endif %}</div>
+  <div style="font-size:15px;font-weight:bold;margin:4px 0"><a href="{{ a.url }}" style="color:#0b1b33;text-decoration:none">{{ a.objet|truncate(140) }}</a></div>
+  {% if a.date_limite_fr %}<div style="font-size:13px;color:#5a6478">Réponse avant le <b>{{ a.date_limite_fr }}</b></div>{% endif %}
+</div>
+{% else %}<p>Pas de nouveau marché cette semaine dans votre métier. Nous revenons vers vous la semaine prochaine.</p>
+{% endfor %}
+{% if total > avis|length %}<p><b>{{ total - avis|length }} autres marchés « {{ metier.libelle|lower }} »</b> sont ouverts{% if dep %} dans le {{ dep }}{% endif %} et n'apparaissent pas ici.</p>{% endif %}
+<p style="background:#fff8e6;padding:12px 14px;border-radius:8px;border-left:3px solid #ffb020">Avec l'abonnement, vous recevez <b>tous</b> les marchés de votre métier <b>chaque matin</b>, dès leur parution, avec la fiche « avant de répondre » sur l'acheteur. Essai gratuit {{ biz.essai_gratuit_jours }} jours, sans engagement.</p>
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:6px 0 18px"><tr><td style="background:#0b1b33;border-radius:8px">
+<a href="{{ lien_essai }}" style="display:inline-block;padding:12px 20px;color:#ffffff;font-weight:bold;text-decoration:none;font-size:15px">Essayer gratuitement {{ biz.essai_gratuit_jours }} jours</a>
+</td></tr></table>
+<p>Bonne semaine,</p>
+{% endblock %}
+{% block pied %}Vous recevez cette alerte gratuite (une par semaine) car vous l'avez demandée sur notre site. <a href="{{ stop }}" style="color:#7a8394">Se désinscrire</a> : envoyez simplement l'e-mail préparé, c'est pris en compte le jour ouvré suivant.<br>{% endblock %}

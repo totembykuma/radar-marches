@@ -54,6 +54,11 @@ def activer_suivi_clics(domaine):
     return False
 
 
+def lire_email(email_id):
+    """L'e-mail envoyé tel que Resend le connaît (destinataire, last_event…)."""
+    return _api("GET", f"/emails/{email_id}") or {}
+
+
 def dernier_evenement(email_id):
     """'delivered', 'opened', 'clicked', 'bounced'… pour un e-mail envoyé."""
     return (_api("GET", f"/emails/{email_id}") or {}).get("last_event")
