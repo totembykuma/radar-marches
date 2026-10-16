@@ -1,0 +1,18 @@
+{% extends "base.html" %}{% block main %}
+<section class="wrap rappel">
+  <p class="kicker">Inscription confirmée</p>
+  <h1>Merci, votre veille {{ biz.nom }} est active</h1>
+  <p class="lead">Votre essai gratuit de {{ biz.essai_gratuit_jours }} jours a commencé. Rien n'est débité avant la fin de l'essai, et vous pouvez arrêter à tout moment.</p>
+  <div class="card">
+    <h2>Ce qui se passe maintenant</h2>
+    <ol>
+      <li><b>Dans les minutes qui viennent</b> : vous recevez un e-mail de bienvenue qui récapitule vos critères (métier, départements).</li>
+      <li><b>Chaque matin ouvré, vers 6 h 30</b> : les nouveaux appels d'offres qui vous correspondent arrivent dans votre boîte mail.</li>
+      <li><b>3 jours avant la fin de l'essai</b> : un rappel vous prévient, pour décider en toute tranquillité.</li>
+    </ol>
+    <p><b>Pas de mot de passe, pas d'application :</b> tout arrive par e-mail, à l'adresse utilisée pour vous inscrire. Pensez à vérifier vos courriers indésirables et à ajouter {{ biz.email_expediteur.split('<')[-1].rstrip('>') }} à vos contacts.</p>
+  </div>
+  <p>Vous voulez changer de métier ou de département ? <a href="{{ root }}criteres/">Modifier mes critères</a>.
+  Factures, carte bancaire ou résiliation : <a href="{{ biz.portail_client }}">mon espace de facturation</a>.</p>
+</section>
+{% endblock %}
