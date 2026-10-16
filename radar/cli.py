@@ -19,6 +19,7 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 from . import avis, criteres, gratuit, ai, dossier, parrainage, boamp, finance, historique, barometre, laureats, mailer, prospects, site, subscribers
+from . import compte
 from .config import ROOT, business, dossier_actif, metiers as load_metiers
 from .matching import Matcher
 from .render import date_fr, date_limite_fr, render
@@ -124,13 +125,14 @@ def envoyer_bienvenues(subs, biz, metiers, state, run):
         if key in known:
             continue
         html = render("email_bienvenue.html", biz=biz, criteres=criteres_txt(s, metiers), sub=s,
-                      lien=parrainage.lien(biz, s))
+                      lien=parrainage.lien(biz, s), lien_compte=compte.lien(biz, s, metiers))
         try:
             res = mailer.send(s["email"], f"Bienvenue sur {biz['nom']} : votre veille est active", html,
                               biz["email_expediteur"], reply_to=biz.get("email_proprietaire") or biz["email_contact"])
             if not res.get("simulated") or os.getenv("RADAR_DEMO") == "1":  # en simulation, ne pas marquer comme envoyé
                 state["known"].append(key)
                 known.add(key)
+                state.setdefault("compte_lien_envoye", []).append(key)  # le lien de l'espace est dans la bienvenue
             run["bienvenues"] = run.get("bienvenues", 0) + 1
         except Exception as exc:
             run["erreurs"].append(f"bienvenue non envoyée : {safe(exc)}")
@@ -143,10 +145,13 @@ def run_bienvenue():
     biz["ia_active"] = bool(os.getenv("ANTHROPIC_API_KEY", "").strip()) and bool(state.get("premier_client_payant"))
     biz["dossier_actif"] = dossier_actif(biz)
     run = {"erreurs": []}
-    envoyer_bienvenues(subscribers.load_all(biz, metiers), biz, metiers, state, run)
-    if run.get("bienvenues"):
+    subs = subscribers.load_all(biz, metiers)
+    envoyer_bienvenues(subs, biz, metiers, state, run)
+    n, errs = compte.traiter(subs, biz, metiers, state)
+    run["erreurs"] += errs
+    if run.get("bienvenues") or n or state.get("compte_vus"):
         _save_json(DATA / "state.json", state)
-    return {"bienvenues": run.get("bienvenues", 0), "erreurs": run["erreurs"]}
+    return {"bienvenues": run.get("bienvenues", 0), "liens_espace_client": n, "erreurs": run["erreurs"]}
 
 
 def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, histo=None):
@@ -198,6 +203,8 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
 
     # 2b. Message de bienvenue aux nouveaux abonnés (aussi envoyé toutes les 10 min par bienvenue.yml)
     envoyer_bienvenues(subs, biz, metiers, state, run)
+    n, errs = compte.traiter(subs, biz, metiers, state)
+    run["liens_espace_client"], run["erreurs"] = n, run["erreurs"] + errs
 
     # 2c. Rappel 3 jours avant la fin de l'essai (une seule fois par essai)
     rappels = state.setdefault("rappel_essai", [])
@@ -211,7 +218,8 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
         if key in rappels:
             continue
         offre = biz["offres"][s["plan"]]
-        html = render("email_fin_essai.html", biz=biz, offre=offre, fin_fr=fin_fr, criteres=criteres_txt(s, metiers))
+        html = render("email_fin_essai.html", biz=biz, offre=offre, fin_fr=fin_fr, criteres=criteres_txt(s, metiers),
+                      lien_compte=compte.lien(biz, s, metiers))
         try:
             res = mailer.send(s["email"], f"Votre essai {biz['nom']} se termine le {fin_fr}", html,
                               biz["email_expediteur"], reply_to=biz.get("email_proprietaire") or biz["email_contact"])
@@ -275,7 +283,8 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
             a["fiche_complete"] = s.get("plan") == "pro"
             a["metier_libelle"] = metiers[m]["libelle"].lower() if m else ""
         html = render("email_digest.html", biz=biz, avis=sel, date_fr=date_fr(), criteres=criteres_txt(s, metiers),
-                      lien_parrainage=parrainage.lien(biz, s), lien_dossier=lien_dossier(biz, s))
+                      lien_parrainage=parrainage.lien(biz, s), lien_dossier=lien_dossier(biz, s),
+                      lien_compte=compte.lien(biz, s, metiers))
         subject = f"{len(sel)} appel{'s' if len(sel) > 1 else ''} d'offres : {sel[0]['objet'][:60]}"
         try:
             res = mailer.send(s["email"], subject, html, biz["email_expediteur"], reply_to=biz.get("email_proprietaire") or biz["email_contact"])

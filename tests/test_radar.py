@@ -770,3 +770,25 @@ def test_pages_entreprises_barometre_et_posts(tmp_path, monkeypatch):
     rss = (tmp_path / "s" / "linkedin" / "flux.xml").read_text()
     assert rss.startswith("<?xml") and rss.count("<item>") == sum(p["date"][:10] <= date.today().isoformat() for p in posts)
     assert any("PROPRE SAS" in p["texte"] for p in posts) and any("/appels-offres/nettoyage/" in p["texte"] for p in posts)
+
+
+def test_espace_client_lien_et_page(tmp_path):
+    import base64, json as _json
+    from radar import compte
+    from radar.config import business, metiers as load_metiers
+    biz, metiers = business(), load_metiers()
+    k = next(iter(metiers))
+    sub = {"email": "client@example.com", "plan": "essentiel", "statut": "trialing", "metiers": [k],
+           "departements": ["33"], "mots_cles": [], "source": "stripe", "stripe_subscription": "sub_X", "fin_essai": 1800000000}
+    url = compte.lien(biz, sub, metiers)
+    assert "/compte/#" in url
+    code = url.split("#", 1)[1]
+    d = _json.loads(base64.urlsafe_b64decode(code + "=" * (-len(code) % 4)))
+    assert d["e"] == "client@example.com" and d["d"] == ["33"] and d["m"][0][0] == k
+    # Clients d'avant l'espace : le lien part une seule fois ; les nouveaux l'ont dans la bienvenue.
+    import hashlib
+    h = hashlib.sha256(b"client@example.com").hexdigest()[:16]
+    state = {"known": [h]}
+    n1, _ = compte.traiter([sub], biz, metiers, state)
+    n2, _ = compte.traiter([sub], biz, metiers, state)
+    assert (n1, n2) == (1, 0)

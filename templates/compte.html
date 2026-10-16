@@ -1,0 +1,65 @@
+{% extends "base.html" %}{% block main %}
+<section class="wrap rappel">
+  <p class="kicker">Espace client</p>
+  <div id="c-vide">
+    <h1>Mon compte</h1>
+    <p class="lead">Pas de mot de passe à retenir : votre espace s'ouvre avec le lien personnel reçu par e-mail (bouton « Mon espace client » en bas de chaque alerte).</p>
+    <form class="card" id="c-form">
+      <h2>Lien perdu ?</h2>
+      <p><label>Votre adresse e-mail (celle utilisée pour payer)<br><input id="c-email" type="email" required style="width:100%"></label></p>
+      <button class="btn btn-lg" type="submit">Recevoir mon lien</button>
+      <p class="muted" id="c-info">Votre messagerie s'ouvre avec un e-mail déjà prêt : envoyez-le tel quel. Votre lien vous est renvoyé en une dizaine de minutes.</p>
+    </form>
+    <p>Pas encore client ? <a href="{{ root }}#tarifs">Essai gratuit de {{ biz.essai_gratuit_jours }} jours</a>.</p>
+  </div>
+  <div id="c-plein" hidden>
+    <h1>Bonjour</h1>
+    <p class="lead" id="c-qui"></p>
+    <div class="card"><h2>Mon abonnement</h2><p id="c-offre"></p>
+      <p><a class="btn" id="c-portail" href="{{ biz.portail_client }}">Factures, carte bancaire, changer d'offre ou résilier</a></p>
+      <p class="muted">Ouvre votre espace de facturation sécurisé Stripe : saisissez votre e-mail, vous recevez un lien de connexion.</p></div>
+    <div class="card"><h2>Mes critères d'alerte</h2><p id="c-crit"></p>
+      <p><a class="btn" href="{{ root }}criteres/">Modifier mes critères</a></p>
+      <p class="muted">Vos alertes arrivent chaque matin ouvré vers 6 h 30. Pas d'e-mail un jour donné = aucun nouvel avis pertinent.</p></div>
+    <div class="card"><h2>Mes appels d'offres</h2><p>Les marchés ouverts de votre métier, à consulter à tout moment :</p><ul id="c-liens"></ul></div>
+    <div class="card" id="c-parrain" hidden><h2>Parrainage : 1 mois offert</h2><p>Partagez votre lien à un confrère. Quand il devient client, vous recevez chacun 1 mois offert.</p><p><a id="c-plien"></a></p></div>
+    <p class="muted">Une question ? Répondez simplement à l'un de nos e-mails. <a href="#" id="c-sortir">Se déconnecter de cet appareil</a></p>
+  </div>
+</section>
+<script>
+(function () {
+  var cle = "radar-compte", code = location.hash.slice(1);
+  try { if (code) localStorage.setItem(cle, code); else code = localStorage.getItem(cle) || ""; } catch (e) {}
+  function txt(id, t) { document.getElementById(id).textContent = t; }
+  var d = null;
+  if (code) { try {
+    var b = code.replace(/-/g, "+").replace(/_/g, "/"); while (b.length % 4) b += "=";
+    d = JSON.parse(decodeURIComponent(escape(atob(b))));
+  } catch (e) { d = null; } }
+  if (!d || !d.e) {
+    document.getElementById("c-form").addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      var em = document.getElementById("c-email").value.trim();
+      location.href = "mailto:{{ biz.compte_adresse }}?subject=" + encodeURIComponent("Mon espace client") +
+        "&body=" + encodeURIComponent("Bonjour,\n\nMerci de m'envoyer le lien de mon espace client.\n\nAdresse du compte : " + em + "\n");
+    });
+    return;
+  }
+  history.replaceState(null, "", location.pathname);
+  document.getElementById("c-vide").hidden = true; document.getElementById("c-plein").hidden = false;
+  var statuts = {trialing: "essai gratuit en cours", active: "actif", past_due: "paiement en attente : mettez à jour votre carte"};
+  txt("c-qui", "Compte : " + d.e);
+  txt("c-offre", "Offre " + d.o + " · " + (statuts[d.s] || d.s) + (d.fe ? " jusqu'au " + d.fe + " (aucun débit avant cette date)" : "") + (d.db ? " · client depuis le " + d.db : ""));
+  txt("c-crit", (d.m.map(function (x) { return x[1]; }).join(", ") || "—") + " · " + (d.d.length ? "départements " + d.d.join(", ") : "toute la France") + (d.k.length ? " · mots-clés : " + d.k.join(", ") : ""));
+  var p = document.getElementById("c-portail"); p.href = p.href + (p.href.indexOf("?") < 0 ? "?" : "&") + "prefilled_email=" + encodeURIComponent(d.e);
+  var ul = document.getElementById("c-liens");
+  function lien(href, t) { var li = document.createElement("li"), a = document.createElement("a"); a.href = href; a.textContent = t; li.appendChild(a); ul.appendChild(li); }
+  d.m.forEach(function (x) { lien("{{ root }}appels-offres/" + x[0] + "/", x[1] + " : tous les marchés ouverts"); });
+  d.d.forEach(function (dep) { lien("{{ root }}appels-offres/departements/" + dep + ".html", "Tous les marchés du département " + dep); });
+  if (d.p) { document.getElementById("c-parrain").hidden = false; var pl = document.getElementById("c-plien"); pl.href = d.p; pl.textContent = d.p; }
+  document.getElementById("c-sortir").addEventListener("click", function (ev) {
+    ev.preventDefault(); try { localStorage.removeItem(cle); } catch (e) {} location.reload();
+  });
+})();
+</script>
+{% endblock %}
