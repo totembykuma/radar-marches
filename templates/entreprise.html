@@ -1,0 +1,36 @@
+{% extends "base.html" %}{% import "_ui.html" as ui %}{% block main %}
+<section class="page-head"><div class="wrap">
+  <p class="crumbs"><a href="{{ root }}">Accueil</a> › <a href="{{ root }}entreprises/">Qui a gagné quoi</a>{% if f.dep %} › <a href="{{ root }}entreprises/departements/{{ f.dep }}.html">{{ nom_dep(f.dep) }}</a>{% endif %} › {{ f.nom }}</p>
+  <h1>{{ h1 }}</h1>
+  <p class="lead">{% if f.commune %}Siège à {{ f.commune }}{% if f.dep %} ({{ f.dep }}){% endif %} · {% endif %}<b>{{ f.marches|length }}</b> marché{{ 's' if f.marches|length > 1 }} public{{ 's' if f.marches|length > 1 }} remporté{{ 's' if f.marches|length > 1 }} depuis le {{ date_lim(f.depuis) }}{% if f.total %} · <b>{{ euros(f.total) }}</b> au total{% endif %}</p>
+  {% if f.metiers %}<div class="deps"><span>Métiers :</span>{% for k in f.metiers %}<a href="{{ root }}appels-offres/{{ k }}/" style="--c:{{ ui.couleur(k) }}">{{ metiers[k].libelle }}</a>{% endfor %}</div>{% endif %}
+</div></section>
+
+<section class="wrap listing">
+  <div class="cards">
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>Date</th><th>Marché</th><th>Acheteur</th><th class="num">Montant</th><th class="num">Offres reçues</th></tr></thead>
+      <tbody>{% for r in f.marches[:60] %}
+        <tr><td class="nowrap">{{ date_lim(r.d) }}</td><td>{{ r.o }}{% if r.l %} <span class="fine">({{ r.l }})</span>{% endif %}</td><td>{{ r.acheteur or 'Acheteur public' }}</td>
+        <td class="num nowrap">{{ euros(r.m) if r.m else '–' }}</td><td class="num">{{ r.n or '–' }}</td></tr>
+      {% endfor %}</tbody>
+    </table></div>
+    {% if f.marches|length > 60 %}<p class="fine">Et {{ f.marches|length - 60 }} autres marchés.</p>{% endif %}
+    {% if metier_key and reperes[metier_key].offres_median %}
+    <p class="fine">Repère : en {{ metier.libelle|lower }}, un marché public reçoit en médiane {{ reperes[metier_key].offres_median|string|replace('.0', '')|replace('.', ',') }} offres{% if reperes[metier_key].montant_median %}, pour un montant médian de {{ euros(reperes[metier_key].montant_median) }}{% endif %} (12 derniers mois).</p>
+    {% endif %}
+    <div class="cta-box">
+      <p class="kicker">Vous êtes {{ f.nom }} ?</p>
+      <p><b>Recevez chaque matin les nouveaux appels d'offres{% if metier %} « {{ metier.libelle|lower }} »{% endif %}{% if dep %} du {{ dep }}{% endif %}</b>, avant vos concurrents.</p>
+      <a class="btn btn-block" href="{{ root }}#tarifs">Essai gratuit {{ biz.essai_gratuit_jours }} jours</a>
+      {% if metier_key %}<a class="cta-free" href="{{ root }}appels-offres/{{ metier_key }}/{% if dep %}{{ dep }}.html{% endif %}">Voir les marchés ouverts en ce moment</a>{% endif %}
+    </div>
+    {% if f.concurrents %}
+    <h2>Autres lauréats du même métier et du même département</h2>
+    <div class="deps">{% for c in f.concurrents %}<a href="{{ c.slug }}.html">{{ c.nom }} <small>{{ c.marches|length }}</small></a>{% endfor %}</div>
+    {% endif %}
+    <p class="fine">Source : données essentielles de la commande publique (data.economie.gouv.fr, Licence Ouverte) et annuaire des entreprises (recherche-entreprises.api.gouv.fr). Montants notifiés hors taxes ; pour un accord-cadre, il s'agit souvent du montant maximum. Une erreur, ou vous souhaitez que cette page soit retirée ? <a href="mailto:{{ biz.email_contact }}?subject=Page%20entreprise%20{{ f.siren }}">Écrivez-nous</a>.</p>
+  </div>
+  <aside class="side">{% if metier %}{% include "_cta.html" %}{% endif %}</aside>
+</section>
+{% endblock %}

@@ -716,3 +716,55 @@ def test_relance_unique_prospects(monkeypatch):
     n = cli.relancer(journal, business(), metiers(), {"expediteur": "b@x.fr"}, zone, ["client@pme.fr"], quota=10)
     assert n == 1 and envoyes == ["a@pme.fr"] and journal[0]["relance_faite"] and "relance_faite" not in journal[2]
     assert cli.relancer(journal, business(), metiers(), {"expediteur": "b@x.fr"}, zone, [], quota=10) == 0   # jamais deux fois
+
+
+class _FakeAnn:
+    def __init__(self, cache):
+        self.cache = cache
+
+
+def _lignes():
+    return [{"d": "2026-09-0%d" % (i + 1), "o": f"Nettoyage des écoles lot {i}", "m": 50000 + i, "n": 3, "a": "21690123000011",
+             "l": "69", "k": "nettoyage", "t": ["11122233300011" if i < 3 else "99988877700011"]} for i in range(5)]
+
+
+def test_laureats_exclut_les_entrepreneurs_individuels():
+    from radar import laureats
+    m = metiers()
+    assert laureats.metier_du_cpv("90911200-8", m) == "nettoyage"
+    assert laureats.metier_du_cpv("03000000-1", m) is None
+    ann = _FakeAnn({"111222333": ["PROPRE SAS", "5710", "LYON", "69"], "999888777": ["JEAN DUPONT", "1000", "BRON", "69"],
+                    "216901230": ["COMMUNE DE LYON", "7210", "LYON", "69"]})
+    data = laureats.preparer(_lignes(), ann, m)
+    assert [f["nom"] for f in data["fiches"]] == ["PROPRE SAS"]   # l'entrepreneur individuel n'a pas de page
+    f = data["fiches"][0]
+    assert f["slug"] == "propre-sas-111222333" and f["marches"][0]["acheteur"] == "Commune De Lyon"
+    assert data["reperes"]["nettoyage"]["offres_median"] == 3
+
+
+def test_pages_entreprises_barometre_et_posts(tmp_path, monkeypatch):
+    from radar import barometre, laureats, site
+    m = metiers()
+    monkeypatch.setattr(barometre, "DOSSIER", tmp_path / "baro")
+    b = {"mois": "2026-09", "avis_boamp": 9000, "appels": 1200,
+         "par_metier": {k: {"n": 100, "pme": 10, "top_deps": [["69", 12]]} for k in m},
+         "par_region": [["Auvergne-Rhône-Alpes", 150]], "top_deps": [["69", 40]], "top_acheteurs": [["Ville de Lyon", 9]],
+         "precedent": {"mois": "2026-08", "appels": 1000, "par_metier": {"nettoyage": 80}}, "reperes": {}}
+    barometre.enregistrer(b)
+    ann = _FakeAnn({"111222333": ["PROPRE SAS", "5710", "LYON", "69"], "216901230": ["COMMUNE DE LYON", "7210", "LYON", "69"]})
+    data = laureats.preparer(_lignes(), ann, m)
+    avis = [{"id": str(i), "objet": f"Nettoyage des locaux lot {i}", "acheteur": "Mairie de Lyon", "departements": ["69"],
+             "descripteurs": ["Nettoyage"], "date_parution": "2026-01-01", "date_limite": "2099-02-01", "url": "https://x/",
+             "nature": "", "type_marche": "", "texte": "", "pme": "", "ville": "Lyon", "metiers": ["nettoyage"]} for i in range(7)]
+    site.build(avis, business(), m, Matcher(m), tmp_path / "s", laureats=data)
+    page = (tmp_path / "s" / "entreprises" / "propre-sas-111222333.html").read_text()
+    assert "PROPRE SAS : marchés publics remportés" in page and "Commune De Lyon" in page
+    assert "propre-sas-111222333.html" in (tmp_path / "s" / "entreprises" / "departements" / "69.html").read_text()
+    baro = (tmp_path / "s" / "barometre" / "index.html").read_text()
+    assert "septembre 2026" in baro and "+20 %" in baro and "+25 %" in baro
+    assert (tmp_path / "s" / "barometre" / "2026-09.html").exists()
+    sm = (tmp_path / "s" / "sitemap.xml").read_text()
+    assert "/entreprises/propre-sas-111222333.html" in sm and "/barometre/2026-09.html" in sm
+    posts = json.loads((tmp_path / "s" / "linkedin" / "semaine.json").read_text())["posts"]
+    assert len(posts) >= 3 and all(p["date"].endswith("T09:00:00") for p in posts)
+    assert any("PROPRE SAS" in p["texte"] for p in posts) and any("/appels-offres/nettoyage/" in p["texte"] for p in posts)

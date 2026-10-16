@@ -18,7 +18,7 @@ from markupsafe import Markup
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
-from . import avis, criteres, gratuit, ai, dossier, parrainage, boamp, finance, historique, mailer, prospects, site, subscribers
+from . import avis, criteres, gratuit, ai, dossier, parrainage, boamp, finance, historique, barometre, laureats, mailer, prospects, site, subscribers
 from .config import ROOT, business, dossier_actif, metiers as load_metiers
 from .matching import Matcher
 from .render import date_fr, date_limite_fr, render
@@ -280,6 +280,7 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
         if avis_open is None:
             avis_open = boamp.fetch_open(days=30)
         res = site.build(avis_open, biz, metiers, matcher, OUT / "site", histo=None if os.getenv("RADAR_DEMO") else histo,
+                         laureats=None if os.getenv("RADAR_DEMO") else charger_laureats(metiers, run, budget=1500),
                          stats={"total": len(avis_new), "metiers_hits": run["avis_metiers"]})
         run["pages_site"] = res["pages"]
         if date.today().weekday() == 0 and os.getenv("GITHUB_ACTIONS") == "true" and not os.getenv("RADAR_DEMO"):
@@ -657,6 +658,39 @@ def run_demo():
     return run_daily(avis_new=avis, avis_open=[dict(a) for a in avis], subs=subs)
 
 
+def charger_laureats(metiers, run, budget=0):
+    """Entreprises lauréates (pages « qui a gagné quoi ») ; None si les données publiques sont indisponibles."""
+    try:
+        data = laureats.charger(metiers, budget=budget)
+        run["entreprises_lauréates"] = len(data["fiches"])
+        return data
+    except Exception as exc:
+        run.setdefault("erreurs", []).append(f"pages entreprises non générées : {safe(exc)}")
+        return None
+
+
+def run_entreprises(budget):
+    """Complète les noms des entreprises lauréates (annuaire officiel), sans e-mail ni site."""
+    metiers = load_metiers()
+    data = laureats.charger(metiers, budget=budget)
+    return {"marchés": data["nb_marches"], "entreprises_avec_page": len(data["fiches"]), "repères": data["reperes"]}
+
+
+def run_barometre(mois=None):
+    """Calcule et enregistre le baromètre du mois écoulé (data/barometre/AAAA-MM.json)."""
+    metiers = load_metiers()
+    matcher = Matcher(metiers)
+    mois = mois or barometre.mois_precedent()
+    try:
+        reperes = laureats.charger(metiers)["reperes"]
+    except Exception as exc:
+        log.warning("Repères indisponibles : %s", safe(exc))
+        reperes = {}
+    b = barometre.calculer(mois, metiers, matcher, reperes=reperes)
+    barometre.enregistrer(b)
+    return {"mois": mois, "appels": b["appels"], "mois_precedent": b["precedent"]["appels"]}
+
+
 def run_essai():
     """Essai à blanc sur les vraies données : aucun e-mail, aucune clé requise. Montre ce que le tri donne."""
     biz, metiers = business(), load_metiers()
@@ -669,6 +703,7 @@ def run_essai():
         report["par_metier"][k] = {"nombre": len(hits), "exemples": [a["objet"][:110] for a in hits[:4]]}
     avis_open = boamp.fetch_open(days=30)
     res = site.build(avis_open, biz, metiers, matcher, OUT / "site", histo=historique.Historique(metiers),
+                     laureats=charger_laureats(metiers, report),
                      stats={"total": len(avis), "metiers_hits": sum(v["nombre"] for v in report["par_metier"].values())})
     report["avis_ouverts_30_jours"] = len(avis_open)
     report["pages_site"] = res["pages"]
@@ -712,7 +747,9 @@ def run_dossiers():
 def main(argv=None):
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     p = argparse.ArgumentParser(prog="radar")
-    p.add_argument("cmd", choices=["daily", "weekly", "check-api", "demo", "essai", "abonnes", "prospection", "audit", "apercu-emails", "dossiers"])
+    p.add_argument("cmd", choices=["daily", "weekly", "check-api", "demo", "essai", "abonnes", "prospection", "audit", "apercu-emails", "dossiers", "entreprises", "barometre"])
+    p.add_argument("--mois", help="baromètre : mois AAAA-MM (par défaut le mois écoulé)")
+    p.add_argument("--budget", type=int, default=6000, help="entreprises : nombre maximum d'appels à l'annuaire")
     p.add_argument("--apercu", action="store_true", help="prospection : envoie un aperçu au propriétaire")
     args = p.parse_args(argv)
     try:
@@ -738,6 +775,10 @@ def main(argv=None):
             print(json.dumps(run_apercu_emails(), ensure_ascii=False))
         elif args.cmd == "dossiers":
             print(json.dumps(run_dossiers(), ensure_ascii=False))
+        elif args.cmd == "entreprises":
+            print(json.dumps(run_entreprises(args.budget), ensure_ascii=False, indent=1))
+        elif args.cmd == "barometre":
+            print(json.dumps(run_barometre(args.mois), ensure_ascii=False, indent=1))
         elif args.cmd == "demo":
             print(json.dumps(run_demo(), ensure_ascii=False, indent=1))
     except Exception:

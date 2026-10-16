@@ -2,10 +2,15 @@ name: Sonde données essentielles (temporaire)
 on:
   push:
     branches: [claude/project-thread-nlesq9]
-    paths: [scripts/sonde_decp.py, .github/workflows/sonde-decp.yml]
+    paths: [scripts/sonde_decp.py, .github/workflows/sonde-decp.yml, radar/laureats.py, radar/barometre.py]
 jobs:
   sonde:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: pip install requests && python scripts/sonde_decp.py
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - run: time python -m radar.cli entreprises --budget 200 | tail -c 1500
+      - run: time python -m radar.cli barometre --mois 2026-09 | tail -c 300
+      - run: python -m radar.cli essai | tail -c 300; ls out/site/entreprises | wc -l; head -c 1500 out/site/linkedin/semaine.json

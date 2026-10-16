@@ -10,6 +10,8 @@ import yaml
 from markupsafe import Markup
 
 from . import avis as avis_mod
+from . import barometre as baro_mod
+from . import linkedin
 from .config import ROOT
 from .render import date_fr, date_limite_fr, render, render_string
 from .textutil import slugify
@@ -110,7 +112,7 @@ def _zone(dep, nom, par_metier, today, slug=None):
             "acheteurs": [n for n, _ in acheteurs.most_common(5)]}
 
 
-def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=None):
+def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=None, laureats=None):
     out_dir = Path(out_dir)
     if out_dir.exists():
         shutil.rmtree(out_dir)
@@ -252,6 +254,16 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=Non
         write(f"{name}.html", render("legal.html", root="", path=f"/{name}.html", content=content, noindex=True,
                                      title=f"{name.replace('-', ' ').capitalize()} · {biz['nom']}", description="", **common))
 
+    baros = baro_mod.tous()
+    if laureats and laureats.get("fiches"):
+        _entreprises(write, common, laureats, metiers)
+    if baros:
+        _barometres(write, common, baros, metiers)
+    publics = {k: _publics(v, today)[0] for k, v in by_metier.items()}
+    posts = linkedin.semaine(biz, metiers, publics, laureats=laureats, barometre=baros[0] if baros else None, today=today)
+    (out_dir / "linkedin").mkdir(exist_ok=True)
+    (out_dir / "linkedin" / "semaine.json").write_text(json.dumps(posts, ensure_ascii=False, indent=1), encoding="utf-8")
+
     base = biz["site_url"].rstrip("/")
     # Les pages légales (adresse de l'éditeur) restent accessibles mais hors Google.
     pages = [p for p in pages if p not in ("mentions-legales.html", "cgv.html", "confidentialite.html", "rappel/index.html", "criteres/index.html", "avis/index.html", "dossier/envoyer/index.html")]
@@ -281,3 +293,65 @@ def indexnow(biz, out_dir, session=None):
     r = (session or requests).post("https://api.indexnow.org/indexnow", timeout=60, json={
         "host": base.split("://")[-1], "key": cle, "keyLocation": f"{base}/{cle}.txt", "urlList": urls})
     return r.status_code, len(urls)
+
+
+def _euros(n):
+    return f"{n:,}".replace(",", " ") + " €" if n else ""
+
+
+def _entreprises(write, common, data, metiers):
+    """Une page par entreprise lauréate, une page par département et un sommaire."""
+    fiches, reperes = data["fiches"], data["reperes"]
+    for f in fiches:
+        m = metiers.get(f["metiers"][0]) if f["metiers"] else None
+        ville = f" ({f['commune']})" if f["commune"] else ""
+        write(f"entreprises/{f['slug']}.html", render(
+            "entreprise.html", root="../", path=f"/entreprises/{f['slug']}.html", f=f, metier=m, metier_key=f["metiers"][0] if m else None,
+            dep=f["deps"][0] if f["deps"] else f["dep"], reperes=reperes, euros=_euros, nom_dep=_nom_dep, date_lim=date_limite_fr,
+            h1=f"{f['nom']} : marchés publics remportés",
+            title=f"{f['nom']}{ville} : {len(f['marches'])} marché{'s' if len(f['marches']) > 1 else ''} public{'s' if len(f['marches']) > 1 else ''} remporté{'s' if len(f['marches']) > 1 else ''}",
+            description=f"Les marchés publics attribués à {f['nom']}{ville} : acheteurs, montants, nombre d'offres reçues. Données officielles mises à jour chaque jour.",
+            **common))
+    par_dep = defaultdict(list)
+    for f in fiches:
+        if f["dep"]:
+            par_dep[f["dep"]].append(f)
+    for d, lst in par_dep.items():
+        write(f"entreprises/departements/{d}.html", render(
+            "entreprises.html", root="../../", path=f"/entreprises/departements/{d}.html", liste=lst, dep=d, nom_dep=_nom_dep, deps=[],
+            metier=None, euros=_euros, h1=f"Entreprises lauréates de marchés publics · {_nom_dep(d)}",
+            title=f"Qui a gagné les marchés publics · {_nom_dep(d)} : {len(lst)} entreprises",
+            description=f"Les {len(lst)} entreprises du département {_nom_dep(d)} qui ont remporté des marchés publics ces 12 derniers mois, avec acheteurs et montants.",
+            **common))
+    par_metier = {k: [f for f in fiches if f["metiers"] and f["metiers"][0] == k][:12] for k in metiers}
+    write("entreprises/index.html", render(
+        "entreprises.html", root="../", path="/entreprises/", liste=None, par_metier=par_metier, dep=None, nom_dep=_nom_dep,
+        deps=sorted((d, len(v)) for d, v in par_dep.items()), nb=len(fiches), nb_marches=data["nb_marches"], reperes=reperes,
+        metier=None, euros=_euros, h1="Qui a gagné quoi : les entreprises lauréates des marchés publics",
+        title="Qui a gagné les marchés publics ? Entreprises lauréates par métier et département",
+        description=f"{len(fiches)} entreprises qui ont remporté des marchés publics ces 12 derniers mois : acheteurs, montants, concurrents. Données officielles.",
+        **common))
+
+
+def _barometres(write, common, baros, metiers):
+    from .render import MOIS
+    for i, b in enumerate(baros):
+        a, m = b["mois"].split("-")
+        b["titre_mois"] = f"{MOIS[int(m) - 1]} {a}"
+    for i, b in enumerate(baros):
+        rows = []
+        for k, v in b["par_metier"].items():
+            if k in metiers:
+                avant = (b.get("precedent") or {}).get("par_metier", {}).get(k)
+                rows.append({"k": k, "n": v["n"], "pme": v["pme"], "var": baro_mod.variation(v["n"], avant), "top_deps": v["top_deps"],
+                             "rep": (b.get("reperes") or {}).get(k) or {}})
+        rows.sort(key=lambda r: -r["n"])
+        var = baro_mod.variation(b["appels"], (b.get("precedent") or {}).get("appels"))
+        ctx = dict(b=b, rows=rows, var=var, archives=baros, nom_dep=_nom_dep, euros=_euros,
+                   title=f"Baromètre des appels d'offres publics · {b['titre_mois']}",
+                   description=f"{b['appels']} appels d'offres publiés en {b['titre_mois']} dans 17 métiers : chiffres par métier, région et département, évolution sur un mois.")
+        write(f"barometre/{b['mois']}.html", render("barometre.html", root="../", path=f"/barometre/{b['mois']}.html",
+                                                     h1=f"Baromètre des appels d'offres · {b['titre_mois']}", **ctx, **common))
+        if i == 0:
+            write("barometre/index.html", render("barometre.html", root="../", path="/barometre/",
+                                                 h1=f"Baromètre des appels d'offres publics · {b['titre_mois']}", **ctx, **common))
