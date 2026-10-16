@@ -48,6 +48,9 @@ dossier:
   delai_min_jours: 5    # en dessous : remboursement automatique
 # Adresse de réception Resend (…@xxxx.resend.app) pour les changements de critères automatiques (vide = vers email_contact, traité à la main)
 criteres_adresse: "criteres@elkaurtel.resend.app"
+# Alerte gratuite limitée (radar/gratuit.py) : 3 marchés par semaine, inscription par e-mail via le formulaire /alerte-gratuite/
+alerte_gratuite:
+  adresse: "alerte@elkaurtel.resend.app"
 portail_client: "https://billing.stripe.com/p/login/dRm8wIfYk1j39r3aL63F600"
 # Statistiques de visites sans cookie (GoatCounter) : nom du compte, ex. "radarmarches"
 statistiques_goatcounter: "radarmarches"

@@ -15,6 +15,7 @@
         <a class="btn btn-lg" href="#tarifs">Essayer {{ biz.essai_gratuit_jours }} jours gratuitement</a>
         <a class="btn btn-ghost btn-lg" href="appels-offres/">Voir les marchés en cours</a>
       </div>
+      {% if biz.alerte_gratuite %}<p class="muted" style="margin-top:10px">Pas encore prêt ? <a href="alerte-gratuite/">Recevez 3 marchés gratuits par semaine</a>, sans carte bancaire.</p>{% endif %}
       <ul class="trust"><li>Sans engagement</li><li>Résiliable en 1 clic</li><li>Données officielles BOAMP</li></ul>
     </div>
     {% if exemple %}

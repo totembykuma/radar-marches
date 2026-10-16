@@ -225,6 +225,10 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=Non
         write(f"guides/{g['slug']}.html", render("guide.html", root="../", path=f"/guides/{g['slug']}.html", guide=g, guides=guides,
                                                  content=content, h1=g["titre"], title=g["titre"], description=g["description"], **common))
 
+    if biz.get("alerte_gratuite"):
+        write("alerte-gratuite/index.html", render("alerte_gratuite.html", root="../", path="/alerte-gratuite/",
+                                                   title=f"Alerte gratuite : 3 appels d'offres de votre métier par semaine · {biz['nom']}",
+                                                   description="Recevez gratuitement chaque semaine 3 marchés publics de votre métier et de votre département.", **common))
     write("criteres/index.html", render("criteres.html", root="../", path="/criteres/", noindex=True,
                                         title=f"Modifier mes critères · {biz['nom']}", description="", **common))
     write("avis/index.html", render("avis.html", root="../", path="/avis/", noindex=True,
@@ -255,7 +259,25 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=Non
     (out_dir / "sitemap.xml").write_text(
         f'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>', encoding="utf-8")
     (out_dir / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {base}/sitemap.xml\n", encoding="utf-8")
+    (out_dir / f"{indexnow_cle(biz)}.txt").write_text(indexnow_cle(biz), encoding="utf-8")
     cname = base.split("://")[-1]
     if not cname.endswith("github.io"):
         (out_dir / "CNAME").write_text(cname, encoding="utf-8")
     return {"pages": len(pages), "par_metier": {k: len(v) for k, v in by_metier.items()}}
+
+
+def indexnow_cle(biz):
+    """Clé IndexNow (publique par nature : Bing, Yandex, Seznam… vérifient le fichier du même nom à la racine du site)."""
+    return hashlib.md5(("indexnow|" + biz["site_url"]).encode()).hexdigest()
+
+
+def indexnow(biz, out_dir, session=None):
+    """Signale les pages du site aux moteurs IndexNow (Bing, Yandex…) : indexation plus rapide, sans compte."""
+    import re
+    import requests
+    base = biz["site_url"].rstrip("/")
+    urls = re.findall(r"<loc>([^<]+)</loc>", (Path(out_dir) / "sitemap.xml").read_text(encoding="utf-8"))[:10000]
+    cle = indexnow_cle(biz)
+    r = (session or requests).post("https://api.indexnow.org/indexnow", timeout=60, json={
+        "host": base.split("://")[-1], "key": cle, "keyLocation": f"{base}/{cle}.txt", "urlList": urls})
+    return r.status_code, len(urls)

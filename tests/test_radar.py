@@ -103,6 +103,7 @@ def test_demo_end_to_end(tmp_path, monkeypatch):
     assert len(mails) == 5 and sum("Bienvenue" in m for m in mails) == 2   # 2 bienvenues + 2 alertes + 1 rappel d'essai
     assert run["rappels_essai"] == 1 and sum("essai" in m for m in mails) == 1
     assert (tmp_path / "site" / "criteres" / "index.html").exists()
+    assert "mailto:alerte@" in (tmp_path / "site" / "alerte-gratuite" / "index.html").read_text()
     assert (tmp_path / "site" / "appels-offres" / "nettoyage" / "33.html").exists()
     assert (tmp_path / "site" / "rappel" / "index.html").exists()
     g = (tmp_path / "site" / "guides" / "mapa-procedure-adaptee.html").read_text()
@@ -664,3 +665,54 @@ def test_bouton_dossier_dans_les_alertes(monkeypatch):
     assert cli.lien_dossier(biz, {"plan": "essentiel"})["prix"] == 199
     biz["dossier_actif"] = False
     assert cli.lien_dossier(biz, {"plan": "pro"}) is None
+
+
+def test_alerte_gratuite(monkeypatch, tmp_path):
+    from radar import gratuit
+    monkeypatch.setenv("RESEND_INBOUND_KEY", "re_x")
+    monkeypatch.setenv("RADAR_DRY_RUN", "1")
+    monkeypatch.setattr("radar.mailer.OUTBOX", tmp_path / "out")
+    monkeypatch.setattr(gratuit, "FICHIER", tmp_path / "g.json")
+    biz = dict(business(), alerte_gratuite={"adresse": "alerte@abc.resend.app"})
+    dl = (date.today() + timedelta(days=20)).isoformat()
+    avis = [{**a, "date_limite": dl} for a in AVIS]
+    metier = next(k for k in metiers() if any(k in M.metiers_of(a) for a in avis))
+    lib = metiers()[metier]["libelle"]
+    rec = [{"id": "g1", "from": "Paul <Paul@PME.fr>", "to": ["alerte@abc.resend.app"], "subject": "Alerte gratuite"},
+           {"id": "g2", "from": "client@x.fr", "to": ["alerte@abc.resend.app"], "subject": "Alerte gratuite"}]
+    monkeypatch.setattr(gratuit, "_resend", lambda path, key, session=None: {"data": rec} if "limit" in path
+                        else {"text": f"Métier : {lib}\nDépartements : 33\n"})
+    subs = [{"email": "client@x.fr"}]
+    state = {}
+    st, err = gratuit.traiter(biz, metiers(), M, state, subs, avis, quota=50)
+    assert not err and st["inscrits"] == 1 and st["envoyes"] == 1 and st["total"] == 1
+    brut = (tmp_path / "g.json").read_text()
+    assert "paul@pme.fr" not in brut.lower()                       # adresse chiffrée dans le dépôt public
+    mail = next((tmp_path / "out").glob("*.html")).read_text()
+    assert "STOP" in mail and "Essayer gratuitement" in mail and "{{" not in mail
+    # même semaine : rien de plus ; désinscription : sortie de la liste
+    assert gratuit.traiter(biz, metiers(), M, state, subs, avis, quota=50)[0]["envoyes"] == 0
+    rec.append({"id": "g3", "from": "paul@pme.fr", "to": ["alerte@abc.resend.app"], "subject": "STOP alerte gratuite"})
+    st, _ = gratuit.traiter(biz, metiers(), M, state, subs, avis, quota=50)
+    assert st["desinscrits"] == 1 and st["total"] == 0
+
+
+def test_relance_unique_prospects(monkeypatch):
+    import radar.cli as cli
+    from radar import gratuit
+    monkeypatch.setattr(gratuit, "emails_connus", lambda: set())
+    monkeypatch.setattr(cli.time, "sleep", lambda s: None)
+    evts = {"a": {"to": ["a@pme.fr"], "last_event": "clicked"}, "b": {"to": ["b@pme.fr"], "last_event": "delivered"},
+            "c": {"to": ["client@pme.fr"], "last_event": "clicked"}, "old": {"to": ["o@pme.fr"], "last_event": "clicked"}}
+    monkeypatch.setattr(cli.mailer, "lire_email", lambda i: evts[i])
+    envoyes = []
+    monkeypatch.setattr(cli.mailer, "send", lambda to, *a, **k: envoyes.append(to) or {"id": "x"})
+    m = next(iter(metiers()))
+    il_y_a = (date.today() - timedelta(days=5)).isoformat()
+    journal = [{"date": il_y_a, "envoyes": 3, "ids": ["a", "b", "c"], "suivi": {i: [m, "33"] for i in "abc"}},
+               {"date": il_y_a, "envoyes": 1, "ids": ["old"]},                                    # ancien e-mail sans annonce de rappel
+               {"date": date.today().isoformat(), "envoyes": 1, "ids": ["a"], "suivi": {"a": [m, "33"]}}]   # trop récent
+    zone = lambda metier, dep, source="": (4, "dans le département 33", None, "https://x")
+    n = cli.relancer(journal, business(), metiers(), {"expediteur": "b@x.fr"}, zone, ["client@pme.fr"], quota=10)
+    assert n == 1 and envoyes == ["a@pme.fr"] and journal[0]["relance_faite"] and "relance_faite" not in journal[2]
+    assert cli.relancer(journal, business(), metiers(), {"expediteur": "b@x.fr"}, zone, [], quota=10) == 0   # jamais deux fois

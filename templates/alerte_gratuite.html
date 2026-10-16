@@ -1,0 +1,25 @@
+{% extends "base.html" %}{% block main %}
+<section class="wrap rappel">
+  <p class="kicker">Gratuit, sans carte bancaire</p>
+  <h1>Recevez 3 marchés publics de votre métier chaque semaine</h1>
+  <p class="lead">Choisissez votre métier et votre département : votre messagerie s'ouvre avec la demande déjà rédigée, il ne reste qu'à l'envoyer. Vous recevez vos 3 premiers marchés le jour ouvré suivant, puis 3 chaque semaine.</p>
+  <form class="card" id="g-form">
+    <p><label>Votre métier<br><select id="g-metier" style="width:100%">{% for k, m in metiers.items() %}<option>{{ m.libelle }}</option>{% endfor %}</select></label></p>
+    <p><label>Votre département (ex. 33), ou laissez vide pour toute la France<br><input id="g-dep" style="width:100%" inputmode="numeric" maxlength="3"></label></p>
+    <button class="btn btn-lg" type="submit">Recevoir mon alerte gratuite</button>
+    <p class="muted" id="g-aide" hidden>Votre messagerie ne s'est pas ouverte ? Écrivez à <b>{{ biz.alerte_gratuite.adresse }}</b> avec l'objet « Alerte gratuite » et, dans le message, « Métier : … » et « Départements : … ».</p>
+  </form>
+  <p class="muted">Désinscription en un clic dans chaque e-mail. Votre adresse sert uniquement à cette alerte, elle n'est ni revendue ni partagée (<a href="{{ root }}confidentialite.html">confidentialité</a>).</p>
+  <p>Vous voulez <b>tous</b> les marchés, chaque matin ? <a href="{{ root }}#tarifs">Essai complet gratuit {{ biz.essai_gratuit_jours }} jours</a>.</p>
+</section>
+<script>
+document.getElementById("g-form").addEventListener("submit", function (ev) {
+  ev.preventDefault();
+  function v(id) { return document.getElementById(id).value.trim(); }
+  var corps = "Bonjour,\n\nJe souhaite recevoir l'alerte gratuite :\n\nMétier : " + v("g-metier") +
+    "\nDépartements : " + (v("g-dep") || "France") + "\n";
+  location.href = "mailto:{{ biz.alerte_gratuite.adresse }}?subject=" + encodeURIComponent("Alerte gratuite") + "&body=" + encodeURIComponent(corps);
+  document.getElementById("g-aide").hidden = false;
+});
+</script>
+{% endblock %}

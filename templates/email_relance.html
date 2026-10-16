@@ -1,0 +1,19 @@
+{% from "_email_signature.html" import signature %}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff"><tr><td style="padding:8px 0">
+<table role="presentation" cellpadding="0" cellspacing="0" style="max-width:540px;width:100%;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#1d2433">
+<tr><td style="padding-bottom:20px">
+<p style="margin:0 0 14px">Bonjour,</p>
+<p style="margin:0 0 14px">Il y a quelques jours, vous avez consulté les marchés publics « {{ metier.libelle|lower }} » ouverts {{ zone }}.</p>
+<p style="margin:0 0 14px"><b>Il y en a {{ n }} en ce moment.</b>{% if ex %} Par exemple : « {{ ex.objet|truncate(80) }} »{% if ex.date_limite_fr %}, réponse avant le {{ ex.date_limite_fr }}{% endif %}.{% endif %}</p>
+<p style="margin:0 0 18px">Pour les recevoir chaque matin dès leur parution, sans les chercher, essayez {{ biz.nom }} gratuitement pendant {{ biz.essai_gratuit_jours }} jours. Sans engagement, résiliable en un clic.</p>
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 16px"><tr><td style="background:#0b1b33;border-radius:8px">
+<a href="{{ lien_essai }}" style="display:inline-block;padding:12px 20px;color:#ffffff;font-weight:bold;text-decoration:none;font-size:15px">Essayer gratuitement {{ biz.essai_gratuit_jours }} jours</a>
+</td></tr></table>
+{% if lien_gratuit %}<p style="margin:0 0 18px">Pas encore prêt ? <a href="{{ lien_gratuit }}" style="color:#0b1b33;font-weight:bold">Recevez 3 marchés gratuits par semaine</a>, sans carte bancaire.</p>{% endif %}
+<p style="margin:0 0 14px">Bonne journée,</p>
+{{ signature(biz, logo=True) }}
+</td></tr>
+<tr><td style="font-size:11.5px;line-height:1.5;color:#9aa1ad;padding-top:20px;border-top:1px solid #e6e9ef">
+Dernier message de notre part : c'est l'unique rappel annoncé dans notre premier e-mail, vous ne serez plus recontacté. Pour faire supprimer vos données, répondez à ce message.
+</td></tr>
+</table>
+</td></tr></table>
