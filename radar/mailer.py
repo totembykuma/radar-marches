@@ -1,9 +1,13 @@
 """Envoi d'e-mails via Resend (gratuit jusqu'à 3 000 e-mails/mois). Mode simulation si pas de clé."""
+import hashlib
 import logging
 import os
+from datetime import date
 from pathlib import Path
 
 import requests
+
+from .reprise import avec_reessais
 
 log = logging.getLogger(__name__)
 OUTBOX = Path(os.getenv("RADAR_OUTBOX", "out/outbox"))
@@ -27,11 +31,18 @@ def send(to, subject, html, sender, reply_to=None, session=None, headers=None, t
         body["text"] = text
     if attachments:
         body["attachments"] = attachments       # [{"filename": ..., "content": base64}]
-    r = http.post("https://api.resend.com/emails", json=body, timeout=30,
-                  headers={"Authorization": f"Bearer {key}"})
-    if r.status_code >= 400:
-        raise RuntimeError(f"Resend a refusé l'envoi ({r.status_code}) : {r.text[:300]}")
-    return r.json()
+    # Même clé pour le même e-mail le même jour : si une tentative a abouti sans réponse, Resend n'envoie pas de doublon.
+    cle = hashlib.sha256(f"{to}|{subject}|{date.today()}|{html}".encode()).hexdigest()[:48]
+
+    def poster():
+        r = http.post("https://api.resend.com/emails", json=body, timeout=30,
+                      headers={"Authorization": f"Bearer {key}", "Idempotency-Key": cle})
+        if r.status_code >= 400:
+            exc = RuntimeError(f"Resend a refusé l'envoi ({r.status_code}) : {r.text[:300]}")
+            exc.status_code = r.status_code
+            raise exc
+        return r.json()
+    return avec_reessais(poster, "Resend", pauses=(5, 20))
 
 
 def _api(method, path, **kw):
