@@ -195,3 +195,17 @@ def test_webhook_idempotent_et_compte_verifie(pg):
     assert pg.q(appel.format(e="evt_3", m="sans@exemple.fr", p="price_ess", s="canceled", sub="sub_old")) == "ignore"
     assert pg.q(appel.format(e="evt_4", m="sans@exemple.fr", p="price_pro", s="canceled", sub="sub_new")) == "applique"
     assert pg.q(f"select statut from public.comptes where user_id = '{U['sans']}'") == "inactif"
+
+
+def test_criteres_acces_offert_modifiables(pg):
+    pg.q(f"update public.comptes set stripe_subscription = null, source = 'interne' where user_id = '{U['cle']}'")
+    try:
+        e = json.loads(pg.q("select public.mon_espace()", uid=U["cle"]))
+        assert e["gere_par_stripe"] is True
+        e = json.loads(pg.q("select public.modifier_criteres('peinture', '{33}', '{}')", uid=U["cle"]))
+        assert e["criteres"]["metier"] == "peinture"
+        pg.q(f"update public.comptes set source = 'fichier' where user_id = '{U['cle']}'")
+        with pytest.raises(RuntimeError, match="géré par le support"):   # autres comptes hors Stripe : toujours par le support
+            pg.q("select public.modifier_criteres('nettoyage', '{33}', '{}')", uid=U["cle"])
+    finally:
+        pg.q(f"update public.comptes set stripe_subscription = 'sub_cle', source = null where user_id = '{U['cle']}'")
