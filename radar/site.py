@@ -80,6 +80,25 @@ def _nom_dep(d):
 MOIS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."]
 
 
+def _film_scenes():
+    """Texte (config/film.yaml) et minutage de la voix off (config/film_temps.json, écrit par scripts/film_audio.py)."""
+    from .config import ROOT
+    scenes = yaml.safe_load((ROOT / "config" / "film.yaml").read_text(encoding="utf-8"))["scenes"]
+    p = ROOT / "config" / "film_temps.json"
+    temps = json.loads(p.read_text(encoding="utf-8"))["scenes"] if p.exists() else {}
+    out = {}
+    for s in scenes:
+        t = temps.get(s["id"]) or {"ms": round(1000 * (1.1 + sum(len(x) / 15.5 + .38 for x in s["voix"]))), "marks": []}
+        marks = list(t["marks"])
+        if len(marks) != len(s["voix"]):   # texte changé ou voix pas encore enregistrée : estimation
+            pos, marks = 700, []
+            for x in s["voix"]:
+                marks.append(pos)
+                pos += round(1000 * (len(x) / 15.5 + .38))
+        out[s["id"]] = {"titre": s["titre"], "cap": s["cap"], "ms": t["ms"], "m": [m / 1000 for m in marks]}
+    return out
+
+
 def _film(by_metier, histo=None, essais=8):
     """Données réelles du film de l'accueil : un vrai avis ouvert et, si possible, l'historique DECP de son acheteur."""
     cands = [(k, a) for k, lst in by_metier.items() for a in lst
@@ -108,7 +127,9 @@ def _film(by_metier, histo=None, essais=8):
             d["date_fr"] = f"{d['date'][5:7]}/{d['date'][:4]}" if len(d["date"]) >= 7 else ""
         fiche["median_pct"] = round(100 * fiche["montant_median"] / top)
         fiche["gagne"] = next(d for d in fiche["derniers"] if d.get("montant"))
+    sc = _film_scenes()
     return {"metier": key, "dep": dep, "avis": a, "autre": autres[0] if autres else None, "n_dep": 1 + len(autres),
+            "sc": sc, "duree": round(sum(x["ms"] for x in sc.values()) / 1000),
             "fiche": fiche, "dl_jour": dl.day, "dl_mois": MOIS[dl.month - 1], "dl": dl.strftime("%d/%m"),
             "depot": (dl - timedelta(days=2)).strftime("%d/%m")}
 
