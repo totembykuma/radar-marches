@@ -60,10 +60,32 @@
         if (r.error && /password/i.test(r.error.code || r.error.message)) return msg("m-inscription", "Mot de passe trop faible : allongez-le ou mélangez lettres et chiffres.");
         if (r.error) return msg("m-inscription", erreurServeur(r.error));
         f.reset();
-        msg("m-inscription", "C'est presque fini : ouvrez l'e-mail envoyé à " + email + " et cliquez sur « Confirmer mon adresse ». " +
-            "Rien reçu ? Regardez dans les courriers indésirables. Si un compte existe déjà avec cette adresse, connectez-vous ou utilisez « Mot de passe oublié ».", true);
+        msg("m-inscription", "C'est presque fini : ouvrez l'e-mail envoyé à " + email + " et cliquez sur « Confirmer mon adresse » (même depuis votre téléphone). " +
+            "Cette page s'ouvrira alors toute seule. Rien reçu ? Regardez dans les courriers indésirables. Si un compte existe déjà avec cette adresse, connectez-vous ou utilisez « Mot de passe oublié ».", true);
+        attendreConfirmation(email, mdp);
       });
   });
+
+  // Après l'inscription, la confirmation se fait souvent sur un autre appareil (téléphone) :
+  // cette page retente la connexion en silence (toutes les 15 s et au retour sur l'onglet), 30 min au plus.
+  // Le mot de passe reste seulement en mémoire de cet onglet et est oublié dès la fin.
+  function attendreConfirmation(email, mdp) {
+    var fin = Date.now() + 30 * 60 * 1000, encours = false, minuterie;
+    function arreter() { mdp = null; clearInterval(minuterie); document.removeEventListener("visibilitychange", essayer); window.removeEventListener("focus", essayer); }
+    function essayer() {
+      if (encours || !mdp || document.hidden || $("v-inscription").hidden) return;
+      if (Date.now() > fin) return arreter();
+      encours = true;
+      sb.auth.signInWithPassword({ email: email, password: mdp }).then(function (r) {
+        encours = false;
+        if (!r.error) { arreter(); return ouvrirEspace(); }
+        if (r.error.code !== "email_not_confirmed" && r.error.status !== 429) arreter();   // compte déjà existant, autre mot de passe…
+      }, function () { encours = false; });
+    }
+    minuterie = setInterval(essayer, 15000);
+    document.addEventListener("visibilitychange", essayer);
+    window.addEventListener("focus", essayer);
+  }
 
   $("f-oubli").addEventListener("submit", function (ev) {
     ev.preventDefault();
