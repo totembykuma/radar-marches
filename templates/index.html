@@ -8,9 +8,9 @@
   <div class="radar-bg" aria-hidden="true"><span></span><span></span><span></span><i></i></div>
   <div class="wrap hero-grid">
     <div>
-      <p class="live"><span class="dot"></span>En direct · {{ stats.ouverts }} marchés publics ouverts en ce moment</p>
-      <h1>Les marchés publics de <em>votre métier</em>, chaque matin dans votre boîte mail.</h1>
-      <p class="lead">Fini les heures à fouiller les sites d'annonces. Chaque matin, vous recevez <b>uniquement</b> les appels d'offres de votre métier près de chez vous, le jour même de leur publication. Vous répondez plus tôt, vous en gagnez plus.</p>
+      <p class="hero-chips"><span class="c1">● {{ stats.ouverts }} marchés ouverts en ce moment</span><span class="c2">{{ metiers|length }} métiers</span><span class="c3">101 départements</span></p>
+      <h1>Les marchés publics de votre métier, <em>avant vos concurrents.</em></h1>
+      <p class="lead">Chaque matin à 6 h 20, les appels d'offres de votre métier, près de chez vous. <b>Rien d'autre.</b></p>
       <div class="cta-row">
         <a class="btn btn-lg" href="#tarifs">Essayer {{ biz.essai_gratuit_jours }} jours gratuitement</a>
         <a class="btn btn-ghost btn-lg" href="appels-offres/">Voir les marchés en cours</a>
@@ -20,13 +20,13 @@
     </div>
     {% if exemple %}
     <div class="mail" aria-label="Exemple d'alerte reçue le matin">
-      <div class="mail-bar"><span></span><span></span><span></span></div>
+      <div class="mail-bar" aria-hidden="true"><span>6:20</span><span>●●●</span></div>
       <div class="mail-head">
         <span class="mail-ico" style="--c:{{ ui.couleur(ex_key) }}">{{ ui.icone(ex_key, 20) }}</span>
         <div><b>{{ biz.nom }}</b> <small>· aujourd'hui, 6h20</small><br><span>{{ counts[ex_key] }} marchés « {{ metiers[ex_key].libelle|lower }} » ouverts</span></div>
       </div>
       {% for a in exemple %}
-      <div class="mail-item">
+      <div class="mail-item" style="--c:{{ loop.cycle('#ffb020', '#22d3a6', '#4c7dff') }}">
         <div class="mail-top"><span class="chip">Dép. {{ a.departements|join(', ') or '—' }}</span>{{ ui.echeance(a.jours_restants) }}</div>
         <p>{{ a.objet|truncate(90) }}</p>
         <small>{{ a.acheteur|truncate(60) }}</small>
@@ -41,8 +41,8 @@
 {% if vitrine %}{% from "_flou.html" import carte as carte_floue %}
 <section class="wrap block" id="derniers">
   <p class="kicker">En direct du BOAMP</p>
-  <h2>Les derniers appels d'offres publiés</h2>
-  <p class="lead">{{ vitrine.recents }} marchés publiés ces {{ recents_jours }} derniers jours. Les plus récents sont réservés aux abonnés, qui les reçoivent le matin même : les autres sont en accès libre.</p>
+  <h2>Les derniers marchés publiés.</h2>
+  <p class="lead">{{ vitrine.recents }} marchés en {{ recents_jours }} jours. Les plus récents sont réservés aux abonnés.</p>
   <div class="vitrine">
   {% for t, k, a in vitrine.cartes %}{% if t == 'flou' %}{{ carte_floue(a, root, biz, metiers) }}{% else %}
     <article class="avis" style="--c:{{ ui.couleur(k) }}">
@@ -59,48 +59,17 @@
 </section>
 {% endif %}
 
-<section class="band"><div class="wrap stats">
-  <div><b>{{ stats.ouverts }}</b><span>marchés ouverts aujourd'hui</span></div>
-  <div><b>{{ metiers|length }}</b><span>métiers suivis</span></div>
-  <div><b>101</b><span>départements couverts</span></div>
-  <div><b>6h20</b><span>votre alerte, chaque jour ouvré</span></div>
-</div></section>
-
-<section class="wrap block" id="avantages">
-  <p class="kicker">Ce que vous y gagnez</p>
-  <h2>Les marchés publics, sans y passer vos soirées</h2>
-  <p class="sub">Chaque jour, des centaines d'avis sont publiés, éparpillés et écrits en jargon administratif. {{ biz.nom }} fait le tri à votre place.</p>
-  <div class="compare">
-    <div class="col sans"><h3>Sans {{ biz.nom }}</h3><ul>
-      <li>Vous fouillez plusieurs sites d'annonces, quand vous avez le temps</li>
-      <li>Vous lisez des dizaines d'avis hors sujet pour en trouver un bon</li>
-      <li>Vous découvrez les marchés tard, quand il reste quelques jours pour répondre</li>
-      <li>Les bons marchés partent chez vos concurrents mieux organisés</li></ul></div>
-    <div class="col avec"><h3>Avec {{ biz.nom }}</h3><ul>
-      <li>Un seul e-mail à 6h20, chaque jour ouvré : 2 minutes de lecture</li>
-      <li>Uniquement votre métier, dans votre secteur, sans faux amis</li>
-      <li>Vous voyez chaque marché le jour de sa publication : plus de temps pour bien répondre</li>
-      <li>L'objet, l'acheteur, le lieu, la date limite et le lien officiel, d'un coup d'œil</li></ul></div>
-  </div>
-  <div class="gains">
-    <div><b>Du temps gagné</b><span>Plus besoin de chercher : les marchés viennent à vous.</span></div>
-    <div><b>Plus aucun marché raté</b><span>Tous les avis du BOAMP sont lus, chaque jour ouvré.</span></div>
-    <div><b>Que du pertinent</b><span>Un filtre par métier qui écarte les annonces hors sujet.</span></div>
-    <div><b>Une longueur d'avance</b><span>Vous préparez votre offre dès le premier jour.</span></div>
-  </div>
-</section>
-
 <section class="wrap block" id="metiers">
   <p class="kicker">Votre métier</p>
-  <h2>Des marchés concrets, pour des artisans et des PME comme vous</h2>
-  <p class="sub">Le nombre de marchés ouverts est mis à jour chaque matin. Cliquez pour les voir, c'est gratuit.</p>
+  <h2>Votre métier a des marchés. Aujourd'hui.</h2>
+  <p class="sub">Marchés ouverts ce matin. Consultation gratuite.</p>
   <div class="tiles">{% for k, m in metiers.items() %}{{ ui.tuile(k, m, counts[k], 'appels-offres/' ~ k ~ '/') }}{% endfor %}</div>
 </section>
 
 {% if apercu %}<section class="wrap block" id="apercu">
   <p class="kicker">Essayez maintenant</p>
-  <h2>Combien de marchés pour vous aujourd'hui ?</h2>
-  <p class="sub">Choisissez votre métier et votre département : voici les appels d'offres réellement ouverts ce matin, d'après le BOAMP.</p>
+  <h2>Combien pour vous, ce matin ?</h2>
+  <p class="sub">Votre métier, votre département : les vrais chiffres du BOAMP.</p>
   <form class="card form apercu-outil" id="ap-form">
     <p><label for="ap-metier">Métier</label><select id="ap-metier">{% for k, m in metiers.items() %}<option value="{{ k }}">{{ m.libelle }}</option>{% endfor %}</select></p>
     <p><label for="ap-dep">Département</label><select id="ap-dep"><option value="">Toute la France</option>{% for d, n in noms_dep|dictsort %}<option value="{{ d }}">{{ d }} · {{ n }}</option>{% endfor %}</select></p>
@@ -143,8 +112,8 @@
 
 <section class="soft"><div class="wrap block">
   <p class="kicker">Comment ça marche</p>
-  <h2>Trois étapes, puis plus rien à faire</h2>
-  <p class="sub">Le parcours complet d'un client, de la première alerte au chantier terminé :</p>
+  <h2>3 étapes. Puis plus rien à faire.</h2>
+  <p class="sub">De la première alerte au chantier signé.</p>
   {% include "_film.html" %}
   <div class="steps">
     <div class="step"><span class="num">1</span><h3>Vous choisissez</h3><p>Votre métier et votre département, ou plusieurs départements et toute la France avec l'offre Pro. Ça prend une minute.</p></div>
@@ -153,23 +122,10 @@
   </div>
 </div></section>
 
-<section class="wrap block roi">
-  <div>
-    <p class="kicker">Le calcul est vite fait</p>
-    <h2>Un seul marché gagné peut rembourser des années d'abonnement</h2>
-    <p class="sub">Le nettoyage d'une école, l'entretien d'un parc, la peinture d'un gymnase : ce sont des contrats réguliers, souvent de plusieurs milliers d'euros. Les petits marchés locaux se jouent en 2 à 4 semaines. Il faut les voir tôt, pas les découvrir trop tard.</p>
-  </div>
-  <div class="roi-card">
-    <div><small>Votre abonnement</small><b>{{ biz.offres.essentiel.prix_mensuel }} €<span>/mois</span></b></div>
-    <div class="vs">vs</div>
-    <div><small>Un marché public local</small><b class="big">plusieurs milliers d'€</b></div>
-  </div>
-</section>
-
 <section class="wrap block" id="fiche">
   <p class="kicker">Offre Pro · la fiche « avant de répondre »</p>
-  <h2>Sachez en 30 secondes si un marché vaut le coup</h2>
-  <p class="sub">Sous chaque appel d'offres, vous voyez ce que le même acheteur a déjà payé, combien d'entreprises ont répondu et qui a gagné. Voici à quoi elle ressemble dans votre e-mail :</p>
+  <h2>Ce marché vaut-il le coup ? Réponse en 30 secondes.</h2>
+  <p class="sub">Ce que l'acheteur a déjà payé. Combien d'entreprises ont répondu. Qui a gagné. Directement dans votre e-mail :</p>
   {% if film and film.fiche %}{% set av = film.avis %}{% set fi = film.fiche %}
   <div style="max-width:560px;margin:18px 0 0;background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px;font-size:15px;line-height:1.5;text-align:left">
     <span style="font-size:13px;color:#5a6478">{{ av.acheteur }} · Dép. {{ av.departements|join(', ') }}</span><br>
@@ -208,10 +164,10 @@
   </div>
   <p class="muted">Avis publiés uniquement par des abonnés (adresse vérifiée), sans tri sur la note et sans contrepartie. <a href="cgv.html">En savoir plus</a>.</p>
 </section>
-{% endif %}<section id="tarifs" class="soft"><div class="wrap block">
+{% endif %}<section id="tarifs" class="nuit"><div class="wrap block">
   <p class="kicker">Tarifs</p>
-  <h2>Simple, sans engagement, {{ biz.essai_gratuit_jours }} jours offerts</h2>
-  <p class="sub">Aucun prélèvement pendant l'essai, et nous vous prévenons par e-mail 3 jours avant sa fin. Vous arrêtez quand vous voulez, en un clic.</p>
+  <h2>Un marché gagné paie des années d'abonnement.</h2>
+  <p class="sub">{{ biz.essai_gratuit_jours }} jours offerts. Sans engagement. Rappel par e-mail 3 jours avant la fin de l'essai.</p>
   {% set annuel = biz.offres.essentiel.lien_annuel and biz.offres.pro.lien_annuel and biz.stripe_mode == 'réel' %}
   {% if annuel %}<div class="periode" role="group" aria-label="Période de paiement"><button type="button" data-p="mois" class="on" aria-pressed="true">Mensuel</button><button type="button" data-p="an" aria-pressed="false">Annuel <em>2 mois offerts</em></button></div>{% endif %}
   <div class="prices{% if biz.cle_actif %} prices-3{% endif %}">
@@ -296,7 +252,7 @@
 
 <section class="wrap block faq">
   <p class="kicker">Questions fréquentes</p>
-  <h2>Vous vous demandez sans doute…</h2>
+  <h2>Vos questions.</h2>
   <details open><summary>D'où viennent les annonces ?</summary><p>Du BOAMP, le Bulletin officiel des annonces des marchés publics, publié en open data par l'État. Nous lisons chaque avis publié, tous les jours ouvrés.</p></details>
   <details><summary>Est-ce que vous répondez aux appels d'offres à ma place ?</summary><p>{% if biz.dossier_actif %}Nous pouvons rédiger votre réponse. Avec l'option <a href="dossier/">Dossier prêt à signer</a> ({{ biz.dossier.prix }} €, {{ biz.dossier.prix_pro }} € pour les abonnés Pro){% if biz.cle_actif %} ou l'offre Clé en main ({{ biz.offres.cle.dossiers_inclus }} dossiers inclus par mois){% endif %}, vous recevez votre mémoire technique, votre lettre de candidature et la liste des pièces au format Word. Vous relisez, mettez vos prix, signez et déposez vous-même l'offre sur la plateforme de l'acheteur.{% else %}Non. Nous repérons {% if biz.ia_active %}et résumons {% endif %}les opportunités ; vous décidez et répondez sur la plateforme de l'acheteur, dont le lien est dans chaque alerte.{% endif %}</p></details>
   <details><summary>Je suis une petite entreprise, c'est pour moi ?</summary><p>Oui. Beaucoup de marchés locaux (nettoyage d'une mairie, entretien d'un parc, travaux dans une école) sont à la portée des artisans et des TPE. Le plus dur, c'est de les voir à temps.</p></details>
@@ -311,7 +267,7 @@
 </section>
 
 <section class="final"><div class="wrap">
-  <h2>Le prochain marché de votre secteur sera peut-être publié demain matin.</h2>
+  <h2>Demain, 6 h 20. Le prochain marché de votre secteur.</h2>
   <a class="btn btn-lg" href="#tarifs">Je commence mon essai gratuit</a>
 </div></section>
 {% endblock %}
