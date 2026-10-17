@@ -4,67 +4,72 @@
   <b>Cette semaine</b> : l'offre {{ biz.offres[promo.offre].nom }} à <b>{{ promo.prix }} €/mois au lieu de {{ biz.offres[promo.offre].prix_mensuel }} €</b> pendant {{ promo.mois }} mois ({{ promo.places_par_jour }} places par jour).
   <a href="#tarifs">J'en profite →</a>
 </div></div>{% endif %}
-<section class="hero">
-  <div class="radar-bg" aria-hidden="true"><span></span><span></span><span></span><i></i></div>
+<section class="hero hero2">
   <div class="wrap hero-grid">
-    <div>
-      <p class="hero-chips"><span class="c1">● {{ stats.ouverts }} marchés ouverts en ce moment</span><span class="c2">{{ metiers|length }} métiers</span><span class="c3">101 départements</span></p>
-      <h1>Les marchés publics de votre métier, <em>avant vos concurrents.</em></h1>
-      <p class="lead">Chaque matin à 6 h 20, les appels d'offres de votre métier, près de chez vous. <b>Rien d'autre.</b></p>
-      <div class="cta-row">
+    <div class="hero-txt">
+      <p class="live rv"><span class="dot"></span>En direct du BOAMP · mis à jour ce matin</p>
+      <h1 class="rv">Les marchés publics de votre métier, <em>avant vos concurrents.</em></h1>
+      <p class="lead rv">Chaque matin à 6 h 20, les appels d'offres de votre métier, près de chez vous. <b>Rien d'autre.</b></p>
+      <div class="cta-row rv">
         <a class="btn btn-lg" href="#tarifs">Essayer {{ biz.essai_gratuit_jours }} jours gratuitement</a>
         <a class="btn btn-ghost btn-lg" href="appels-offres/">Voir les marchés en cours</a>
       </div>
       {% if biz.alerte_gratuite %}<p class="muted" style="margin-top:10px">Pas encore prêt ? <a href="alerte-gratuite/">Recevez 3 marchés gratuits par semaine</a>, sans carte bancaire.</p>{% endif %}
-      <ul class="trust"><li>Sans engagement</li><li>Résiliable en 1 clic</li><li>Données officielles BOAMP</li></ul>
+      <ul class="trust rv"><li>Sans engagement</li><li>Résiliable en 1 clic</li><li>Données officielles BOAMP</li></ul>
     </div>
-    {% if exemple %}
-    <div class="mail" aria-label="Exemple d'alerte reçue le matin">
-      <div class="mail-bar" aria-hidden="true"><span>6:20</span><span>●●●</span></div>
-      <div class="mail-head">
-        <span class="mail-ico" style="--c:{{ ui.couleur(ex_key) }}">{{ ui.icone(ex_key, 20) }}</span>
-        <div><b>{{ biz.nom }}</b> <small>· aujourd'hui, 6h20</small><br><span>{{ counts[ex_key] }} marchés « {{ metiers[ex_key].libelle|lower }} » ouverts</span></div>
-      </div>
-      {% for a in exemple %}
-      <div class="mail-item" style="--c:{{ loop.cycle('#ffb020', '#22d3a6', '#4c7dff') }}">
-        <div class="mail-top"><span class="chip">Dép. {{ a.departements|join(', ') or '—' }}</span>{{ ui.echeance(a.jours_restants) }}</div>
-        <p>{{ a.objet|truncate(90) }}</p>
-        <small>{{ a.acheteur|truncate(60) }}</small>
+    <div class="hero-vis" aria-label="Carte de France des marchés publics ouverts ce matin">
+      <svg class="fr" viewBox="0 0 630 610" role="img" aria-hidden="true">
+        <defs><linearGradient id="bal" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffb020" stop-opacity="0"/><stop offset="1" stop-color="#ffb020" stop-opacity=".35"/></linearGradient></defs>
+        <g class="fr-deps">{% for d in (radar.deps if radar else []) %}<path d="{{ d }}"/>{% endfor %}</g>
+        <g class="fr-ondes"><circle cx="315" cy="305" r="95"/><circle cx="315" cy="305" r="190"/><circle cx="315" cy="305" r="285"/></g>
+        <g class="fr-bal"><path d="M315,305L315,5A300,300 0 0 1 527,93Z" fill="url(#bal)"/><line x1="315" y1="305" x2="527" y2="93"/></g>
+        <g class="fr-pts">{% for pt in (radar.points if radar else []) %}<circle class="halo" cx="{{ pt.x }}" cy="{{ pt.y }}" r="{{ pt.r }}" style="animation-delay:{{ pt.delai }}s"/><circle class="pt" cx="{{ pt.x }}" cy="{{ pt.y }}" r="{{ pt.r * 0.55 }}"><title>{{ pt.nom }} · {{ pt.n }} marché{{ 's' if pt.n > 1 }}</title></circle>{% endfor %}</g>
+      </svg>
+      {% for a in (exemple or [])[:3] %}
+      <div class="notif notif{{ loop.index }}" style="--c:{{ loop.cycle('#ffb020', '#22d3a6', '#4c7dff') }}">
+        <span class="notif-ico">{{ ui.icone(ex_key, 18) }}</span>
+        <div><small>Nouveau · {{ metiers[ex_key].libelle }}{% if a.departements %} · {{ a.departements[0] }}{% endif %}</small><b>{{ a.objet|truncate(58) }}</b></div>
+        {{ ui.echeance(a.jours_restants) }}
       </div>
       {% endfor %}
-      <p class="mail-foot">Exemple réel, tiré des avis publiés au BOAMP</p>
     </div>
-    {% endif %}
+  </div>
+  <div class="wrap chiffres">
+    <div class="rv"><b data-compte="{{ stats.ouverts }}">{{ stats.ouverts }}</b><span>marchés ouverts aujourd'hui</span></div>
+    <div class="rv"><b data-compte="{{ metiers|length }}">{{ metiers|length }}</b><span>métiers suivis</span></div>
+    <div class="rv"><b data-compte="101">101</b><span>départements couverts</span></div>
+    <div class="rv"><b>6 h 20</b><span>votre alerte, chaque jour ouvré</span></div>
   </div>
 </section>
 
-{% if vitrine %}{% from "_flou.html" import carte as carte_floue %}
-<section class="wrap block" id="derniers">
-  <p class="kicker">En direct du BOAMP</p>
-  <h2>Les derniers marchés publiés.</h2>
-  <p class="lead">{{ vitrine.recents }} marchés en {{ recents_jours }} jours. Les plus récents sont réservés aux abonnés.</p>
-  <div class="vitrine">
-  {% for t, k, a in vitrine.cartes %}{% if t == 'flou' %}{{ carte_floue(a, root, biz, metiers) }}{% else %}
-    <article class="avis" style="--c:{{ ui.couleur(k) }}">
-      <div class="avis-top"><span class="chip">{{ metiers[k].libelle }}</span>{% if a.departements %}<span class="chip">Dép. {{ a.departements|join(', ') }}</span>{% endif %}{% if a.pme %}<span class="chip chip-pme">✔ Accessible PME</span>{% endif %}{{ ui.echeance(a.jours_restants) }}</div>
-      <h3><a href="{{ a.url }}" rel="nofollow noopener" target="_blank">{{ a.objet|truncate(110) }}</a></h3>
-      <p class="buyer">{{ a.acheteur }}</p>
-      <p class="flou-montant">{% if a.montant_estime %}Montant estimé par l'acheteur : <b>{{ "{:,}".format(a.montant_estime).replace(",", " ") }} € HT</b>{% else %}Publié le {{ a.date_parution_fr }}{% endif %}</p>
-      <div class="avis-foot">{% if a.date_limite %}<span>Réponse avant le <b>{{ a.date_limite_fr }}</b></span>{% endif %}<a href="{{ a.url }}" rel="nofollow noopener" target="_blank">Avis officiel →</a></div>
-    </article>{% endif %}
-  {% endfor %}
-  </div>
-  <div class="cta-row" style="justify-content:center;margin-top:22px"><a class="btn btn-lg" href="#tarifs">Essayez {{ biz.nom }} pour voir tous les appels d'offres</a></div>
-  <p class="muted" style="text-align:center"><a href="appels-offres/">Voir les marchés en accès libre →</a></p>
-</section>
-{% endif %}
+{% if vitrine %}<div class="ticker" aria-hidden="true"><div class="ticker-in">{% for _ in range(4) %}{% for t, k, a in vitrine.cartes %}<span class="tk" style="--c:{{ ui.couleur(k) }}"><i></i>{{ metiers[k].libelle }}{% if a.departements %} · Dép. {{ a.departements[0] }}{% endif %} · {% if t == 'flou' %}{% if a.montant_estime %}{{ "{:,}".format(a.montant_estime).replace(",", " ") }} € HT · {% endif %}<b>🔒 réservé aux abonnés</b>{% else %}{{ a.objet|truncate(56) }}{% endif %}</span>{% endfor %}{% endfor %}</div></div>{% endif %}
 
-<section class="wrap block" id="metiers">
+<section class="etapes2" id="comment"><div class="wrap block">
+  <p class="kicker">Comment ça marche</p>
+  <h2>3 étapes. Puis plus rien à faire.</h2>
+  <div class="e3">
+    <article class="e3-c rv" style="--c:#4c7dff">
+      <svg class="e3-ill" viewBox="0 0 240 150" aria-hidden="true"><rect x="30" y="22" width="180" height="34" rx="17" fill="#fff"/><circle cx="50" cy="39" r="9" fill="#4c7dff"/><rect x="66" y="34" width="90" height="10" rx="5" fill="#c9d6ff"/><rect x="30" y="68" width="84" height="30" rx="15" fill="#ffb020"/><rect x="122" y="68" width="88" height="30" rx="15" fill="#fff" fill-opacity=".35"/><rect x="30" y="106" width="64" height="30" rx="15" fill="#fff" fill-opacity=".35"/><rect x="102" y="106" width="108" height="30" rx="15" fill="#22d3a6"/><path class="e3-curs" d="M168 88l22 52 7-20 20-6z" fill="#0b1b33" stroke="#fff" stroke-width="3" stroke-linejoin="round"/></svg>
+      <span class="e3-n">1</span><h3>Vous choisissez</h3><p>Votre métier et votre département. Une minute, et vos {{ biz.essai_gratuit_jours }} jours d'essai commencent.</p>
+    </article>
+    <article class="e3-c rv" style="--c:#ff5c8a">
+      <svg class="e3-ill" viewBox="0 0 240 150" aria-hidden="true"><g class="e3-pluie"><circle cx="60" cy="14" r="7" fill="#fff"/><circle cx="96" cy="8" r="7" fill="#fff" fill-opacity=".5"/><circle cx="126" cy="18" r="7" fill="#ffb020"/><circle cx="158" cy="6" r="7" fill="#fff" fill-opacity=".5"/><circle cx="186" cy="16" r="7" fill="#fff"/></g><path d="M40 40h160l-56 54v34l-48 14V94z" fill="#fff"/><path d="M58 52h124" stroke="#ffd0dd" stroke-width="6" stroke-linecap="round"/><circle class="e3-sort" cx="120" cy="138" r="8" fill="#ffb020"/></svg>
+      <span class="e3-n">2</span><h3>On trie chaque nuit</h3><p>Tout le BOAMP est lu. Seul votre métier passe le filtre : « peinture routière » n'arrive pas chez un peintre en bâtiment.</p>
+    </article>
+    <article class="e3-c rv" style="--c:#16a37a">
+      <svg class="e3-ill" viewBox="0 0 240 150" aria-hidden="true"><rect x="78" y="6" width="84" height="150" rx="16" fill="#0b1b33"/><rect x="85" y="18" width="70" height="132" rx="10" fill="#fff"/><text x="120" y="38" text-anchor="middle" font-size="12" font-weight="800" fill="#0b1b33">6:20</text><g class="e3-notif"><rect x="90" y="48" width="60" height="26" rx="7" fill="#ffb020"/><rect x="96" y="55" width="40" height="5" rx="2.5" fill="#0b1b33"/><rect x="96" y="63" width="28" height="5" rx="2.5" fill="#0b1b33" fill-opacity=".45"/></g><rect x="90" y="80" width="60" height="22" rx="7" fill="#d9f6ee"/><rect x="90" y="108" width="60" height="22" rx="7" fill="#e3eaff"/><circle class="e3-cloche" cx="176" cy="34" r="14" fill="#ff5c8a"/><text x="176" y="39" text-anchor="middle" font-size="14" font-weight="800" fill="#fff">3</text></svg>
+      <span class="e3-n">3</span><h3>6 h 20 : vous répondez</h3><p>Un e-mail clair, seulement s'il y a du nouveau : objet, acheteur, lieu, date limite, lien officiel.</p>
+    </article>
+  </div>
+  <div class="film-wrap rv">{% include "_film.html" %}</div>
+</div></section>
+
+<section class="metiers2" id="metiers"><div class="wrap block">
   <p class="kicker">Votre métier</p>
   <h2>Votre métier a des marchés. Aujourd'hui.</h2>
   <p class="sub">Marchés ouverts ce matin. Consultation gratuite.</p>
   <div class="tiles">{% for k, m in metiers.items() %}{{ ui.tuile(k, m, counts[k], 'appels-offres/' ~ k ~ '/') }}{% endfor %}</div>
-</section>
+</div></section>
 
 {% if apercu %}<section class="wrap block" id="apercu">
   <p class="kicker">Essayez maintenant</p>
@@ -110,49 +115,48 @@
 })();
 </script>{% endif %}
 
-<section class="soft"><div class="wrap block">
-  <p class="kicker">Comment ça marche</p>
-  <h2>3 étapes. Puis plus rien à faire.</h2>
-  <p class="sub">De la première alerte au chantier signé.</p>
-  {% include "_film.html" %}
-  <div class="steps">
-    <div class="step"><span class="num">1</span><h3>Vous choisissez</h3><p>Votre métier et votre département, ou plusieurs départements et toute la France avec l'offre Pro. Ça prend une minute.</p></div>
-    <div class="step"><span class="num">2</span><h3>Nous trions chaque nuit</h3><p>Tous les nouveaux avis du BOAMP sont lus et filtrés. Les faux amis sont écartés : « peinture routière » n'arrive pas chez un peintre en bâtiment.</p></div>
-    <div class="step"><span class="num">3</span><h3>Vous répondez</h3><p>Un e-mail clair chaque jour ouvré, seulement s'il y a du nouveau : objet, acheteur, lieu, date limite et lien vers l'avis officiel.</p></div>
+{% if vitrine %}{% from "_flou.html" import carte as carte_floue %}
+<section class="wrap block" id="derniers">
+  <p class="kicker">En direct du BOAMP</p>
+  <h2>Les derniers marchés publiés.</h2>
+  <p class="lead">{{ vitrine.recents }} marchés en {{ recents_jours }} jours. Les plus récents sont réservés aux abonnés.</p>
+  <div class="vitrine">
+  {% for t, k, a in vitrine.cartes %}{% if t == 'flou' %}{{ carte_floue(a, root, biz, metiers) }}{% else %}
+    <article class="avis" style="--c:{{ ui.couleur(k) }}">
+      <div class="avis-top"><span class="chip">{{ metiers[k].libelle }}</span>{% if a.departements %}<span class="chip">Dép. {{ a.departements|join(', ') }}</span>{% endif %}{% if a.pme %}<span class="chip chip-pme">✔ Accessible PME</span>{% endif %}{{ ui.echeance(a.jours_restants) }}</div>
+      <h3><a href="{{ a.url }}" rel="nofollow noopener" target="_blank">{{ a.objet|truncate(110) }}</a></h3>
+      <p class="buyer">{{ a.acheteur }}</p>
+      <p class="flou-montant">{% if a.montant_estime %}Montant estimé par l'acheteur : <b>{{ "{:,}".format(a.montant_estime).replace(",", " ") }} € HT</b>{% else %}Publié le {{ a.date_parution_fr }}{% endif %}</p>
+      <div class="avis-foot">{% if a.date_limite %}<span>Réponse avant le <b>{{ a.date_limite_fr }}</b></span>{% endif %}<a href="{{ a.url }}" rel="nofollow noopener" target="_blank">Avis officiel →</a></div>
+    </article>{% endif %}
+  {% endfor %}
+  </div>
+  <div class="cta-row" style="justify-content:center;margin-top:22px"><a class="btn btn-lg" href="#tarifs">Essayez {{ biz.nom }} pour voir tous les appels d'offres</a></div>
+  <p class="muted" style="text-align:center"><a href="appels-offres/">Voir les marchés en accès libre →</a></p>
+</section>
+{% endif %}
+
+<section class="fiche2" id="fiche"><div class="wrap block fiche2-grid">
+  <div>
+    <p class="kicker">Offre Pro · la fiche « avant de répondre »</p>
+    <h2>Ce marché vaut-il le coup ? Réponse en 30 secondes.</h2>
+    <ul class="f3">
+      <li class="rv"><span style="--c:#4c7dff">€</span><div><b>Ce que l'acheteur a déjà payé</b>pour le même type de travaux.</div></li>
+      <li class="rv"><span style="--c:#ff5c8a">#</span><div><b>Combien d'entreprises ont répondu</b>pour savoir si la place est chère.</div></li>
+      <li class="rv"><span style="--c:#16a37a">★</span><div><b>Qui a gagné</b>et à quel prix, dans votre e-mail.</div></li>
+    </ul>
+  </div>
+  {% if film and film.fiche %}{% set av = film.avis %}{% set fi = film.fiche %}{% set barres = fi.derniers|selectattr("montant")|list %}{% set lib = metiers[film.metier].libelle|lower %}{% set reel = true %}
+  {% else %}{% set av = {"acheteur": "Commune de Saint-Exemple", "departements": ["33"], "objet": "Entretien des espaces verts des écoles et du cimetière", "date_limite_fr": "12/11", "pme": true} %}{% set fi = {"n": 3, "mois": 24, "montant_median": 38000, "offres_median": 4} %}{% set barres = [{"date_fr": "03/2026", "montant": 41200, "offres": 5}, {"date_fr": "09/2025", "montant": 36800, "offres": 3}, {"date_fr": "02/2025", "montant": 34500, "offres": 4}] %}{% set lib = "espaces verts" %}{% set reel = false %}{% endif %}
+  <div class="fiche-carte rv">
+    <small>{{ av.acheteur }} · Dép. {{ av.departements|join(', ') }}</small>
+    <h3>{{ av.objet|truncate(100) }}</h3>
+    <p class="fiche-meta">Réponse avant le <b>{{ av.date_limite_fr }}</b>{% if av.pme %} · <span class="ok">✔ Accessible PME</span>{% endif %}</p>
+    <div class="fiche-kpi"><div><b>{{ "{:,}".format(fi.montant_median).replace(",", " ") }} €</b><span>montant habituel HT</span></div>{% if fi.offres_median %}<div><b>{{ fi.offres_median }}</b><span>offres reçues en général</span></div>{% endif %}<div><b>{{ fi.n }}</b><span>marchés « {{ lib }} » en {{ fi.mois // 12 }} ans</span></div></div>
+    {% if barres %}{% set mx = barres|map(attribute="montant")|max %}<div class="barres">{% for d in barres %}<div class="barre"><span>{{ d.date_fr }}</span><i style="--w:{{ (100 * d.montant / mx)|round(1) }}%"></i><b>{{ "{:,}".format(d.montant).replace(",", " ") }} €</b></div>{% endfor %}</div>{% endif %}
+    <p class="fiche-note">{% if reel %}Exemple réel, mis à jour chaque jour (BOAMP et données officielles de la commande publique).{% else %}Exemple d'affichage avec des données fictives.{% endif %}</p>
   </div>
 </div></section>
-
-<section class="wrap block" id="fiche">
-  <p class="kicker">Offre Pro · la fiche « avant de répondre »</p>
-  <h2>Ce marché vaut-il le coup ? Réponse en 30 secondes.</h2>
-  <p class="sub">Ce que l'acheteur a déjà payé. Combien d'entreprises ont répondu. Qui a gagné. Directement dans votre e-mail :</p>
-  {% if film and film.fiche %}{% set av = film.avis %}{% set fi = film.fiche %}
-  <div style="max-width:560px;margin:18px 0 0;background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px;font-size:15px;line-height:1.5;text-align:left">
-    <span style="font-size:13px;color:#5a6478">{{ av.acheteur }} · Dép. {{ av.departements|join(', ') }}</span><br>
-    <b>{{ av.objet|truncate(110) }}</b><br>
-    <span style="font-size:13px">Réponse avant le {{ av.date_limite_fr }}{% if av.pme %} · <span style="color:#15803d">✔ Accessible PME</span>{% endif %}</span>
-    <div style="margin-top:10px;background:#f4f7fb;border-left:3px solid #2563eb;border-radius:6px;padding:10px 12px;font-size:14px">
-      <b>Avant de répondre</b> · cet acheteur a attribué {{ fi.n }} marché{{ "s" if fi.n > 1 }} « {{ metiers[film.metier].libelle|lower }} » en {{ fi.mois // 12 }} ans.<br>
-      Montant habituel : <b>{{ "{:,}".format(fi.montant_median).replace(",", " ") }} € HT</b>{% if fi.offres_median %} · en général <b>{{ fi.offres_median }} offres reçues</b>{% endif %}<br>
-      {% for d in fi.derniers if d.montant %}· {{ d.date_fr }} : {{ "{:,}".format(d.montant).replace(",", " ") }} €{% if d.offres %} ({{ d.offres }} offres){% endif %}<br>{% endfor %}
-    </div>
-    <p style="margin:10px 0 0;font-size:12.5px;color:#5a6478">Exemple réel, mis à jour chaque jour : avis BOAMP en cours et données officielles de la commande publique (DECP). Dans votre e-mail, la fiche indique aussi le nom des entreprises gagnantes.</p>
-  </div>
-  {% else %}
-  <div style="max-width:560px;margin:18px 0 0;background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 20px;font-size:15px;line-height:1.5;text-align:left">
-    <span style="font-size:13px;color:#5a6478">Commune de Saint-Exemple · Dép. 33</span><br>
-    <b>Entretien des espaces verts des écoles et du cimetière</b><br>
-    <span style="font-size:13px">Réponse avant le 12/11 · <span style="color:#15803d">✔ Accessible PME</span></span>
-    <div style="margin-top:10px;background:#f4f7fb;border-left:3px solid #2563eb;border-radius:6px;padding:10px 12px;font-size:14px">
-      <b>Avant de répondre</b> · cet acheteur a attribué 3 marchés « espaces verts » en 2 ans.<br>
-      Montant habituel : <b>38 000 € HT</b> · en général <b>4 offres reçues</b><br>
-      · 03/2026 : Entreprise A, 41 200 € (5 offres)<br>
-      · 09/2025 : Entreprise B, 36 800 € (3 offres)
-    </div>
-    <p style="margin:10px 0 0;font-size:12.5px;color:#5a6478">Exemple d'affichage avec des données fictives. Les vraies fiches viennent des données officielles de la commande publique.</p>
-  </div>
-  {% endif %}
-</section>
 
 {% if avis_clients %}<section class="wrap block" id="avis">
   <p class="kicker">Avis clients vérifiés</p>
@@ -250,7 +254,7 @@
   <p class="fine">{{ biz.fiscalite.tva }}. Paiement sécurisé par Stripe. Résiliation à tout moment depuis {% if biz.portail_client %}<a href="{{ biz.portail_client }}">votre espace client</a>{% else %}votre espace client{% endif %}.</p>
 </div></section>
 
-<section class="wrap block faq">
+<section class="wrap block faq faq2">
   <p class="kicker">Questions fréquentes</p>
   <h2>Vos questions.</h2>
   <details open><summary>D'où viennent les annonces ?</summary><p>Du BOAMP, le Bulletin officiel des annonces des marchés publics, publié en open data par l'État. Nous lisons chaque avis publié, tous les jours ouvrés.</p></details>
@@ -266,8 +270,26 @@
   <details><summary>Qui est derrière {{ biz.nom }} ?</summary><p>Un service français indépendant, édité par une micro-entreprise (voir les <a href="mentions-legales.html">mentions légales</a>). Pas de centre d'appels ni de robot au support : une vraie personne lit vos e-mails et vous répond, à <a href="mailto:{{ biz.email_contact }}">{{ biz.email_contact }}</a>. Votre adresse e-mail sert uniquement à vous envoyer vos alertes : elle n'est jamais revendue.</p></details>
 </section>
 
-<section class="final"><div class="wrap">
+<section class="final final2"><div class="wrap">
   <h2>Demain, 6 h 20. Le prochain marché de votre secteur.</h2>
   <a class="btn btn-lg" href="#tarifs">Je commence mon essai gratuit</a>
 </div></section>
+<script>/* Animations : apparition au défilement et compteurs (désactivées si l'utilisateur limite les mouvements). */
+(function () {
+  var calme = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var els = document.querySelectorAll(".rv");
+  if (calme || !("IntersectionObserver" in window)) { els.forEach(function (e) { e.classList.add("in"); }); return; }
+  document.documentElement.classList.add("anim");
+  var io = new IntersectionObserver(function (es) {
+    es.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      e.target.classList.add("in"); io.unobserve(e.target);
+      var b = e.target.querySelector("[data-compte]");
+      if (b) { var fin = +b.dataset.compte, t0 = performance.now();
+        (function pas(t) { var k = Math.min(1, (t - t0) / 1200); b.textContent = Math.round(fin * (1 - Math.pow(1 - k, 3))).toLocaleString("fr-FR"); if (k < 1) requestAnimationFrame(pas); })(t0); }
+    });
+  }, { threshold: .15 });
+  els.forEach(function (e) { io.observe(e); });
+})();
+</script>
 {% endblock %}
