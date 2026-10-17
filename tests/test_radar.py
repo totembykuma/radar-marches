@@ -894,3 +894,126 @@ def test_cle_visible_seulement_avec_ia(monkeypatch, tmp_path):
     code = lien.split("#")[1]
     d = json.loads(base64.urlsafe_b64decode(code + "=" * (-len(code) % 4)))
     assert d["pro"] and d["cle"]["n"] == 2
+
+
+def test_reessais_passagers_seulement(monkeypatch):
+    import requests
+    from radar import reprise
+    appels = []
+
+    def flaky():
+        appels.append(1)
+        if len(appels) < 3:
+            raise requests.ConnectionError("coupure")
+        return "ok"
+    assert reprise.avec_reessais(flaky, "test", pauses=(0, 0)) == "ok" and len(appels) == 3
+    refus = RuntimeError("400")
+    refus.status_code = 400
+    appels.clear()
+
+    def mauvais():
+        appels.append(1)
+        raise refus
+    try:
+        reprise.avec_reessais(mauvais, "test", pauses=(0, 0))
+    except RuntimeError:
+        pass
+    assert len(appels) == 1                                    # une erreur définitive n'est pas répétée
+
+
+def test_resend_reessaie_sans_doublon(monkeypatch):
+    from radar import mailer, reprise
+    monkeypatch.setattr(reprise, "PAUSES", (0, 0))
+    monkeypatch.setenv("RESEND_API_KEY", "re_x")
+    monkeypatch.delenv("RADAR_DRY_RUN", raising=False)
+    cles = []
+
+    class R:
+        def __init__(self, code):
+            self.status_code, self.text = code, "x"
+
+        def json(self):
+            return {"id": "e1"}
+
+    class S:
+        def post(self, url, json=None, timeout=None, headers=None):
+            cles.append(headers["Idempotency-Key"])
+            return R(503 if len(cles) == 1 else 200)
+    monkeypatch.setattr(mailer, "avec_reessais", lambda fn, quoi, pauses=None: reprise.avec_reessais(fn, quoi, pauses=(0, 0)))
+    assert mailer.send("a@example.com", "Sujet", "<p>x</p>", "from@example.com", session=S()) == {"id": "e1"}
+    assert len(cles) == 2 and cles[0] == cles[1]                 # même clé : Resend n'enverra pas deux fois
+
+
+def test_collecte_anormale():
+    import radar.cli as cli
+    ok = [{"id": str(i), "objet": "x"} for i in range(1000)]
+    assert cli.collecte_anormale(ok, [1900, 2000, 1800]) is None
+    assert "seulement 100" in cli.collecte_anormale(ok[:100], [1900, 2000, 1800])
+    assert "sans numéro" in cli.collecte_anormale([{"id": "1", "objet": ""}] * 10, [])
+    assert cli.collecte_anormale(ok[:100], [1900]) is None           # trop peu d'historique pour juger
+
+
+def test_daily_reporte_les_alertes_si_collecte_vide(tmp_path, monkeypatch):
+    import radar.cli as cli
+    monkeypatch.setattr(cli, "DATA", tmp_path)
+    monkeypatch.setattr(cli, "OUT", tmp_path / "out")
+    monkeypatch.setenv("RADAR_OUTBOX", str(tmp_path / "outbox"))
+    monkeypatch.setattr(cli.mailer, "OUTBOX", tmp_path / "outbox")
+    monkeypatch.setenv("OWNER_EMAIL", "owner@example.com")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "")
+    (tmp_path / "runs").mkdir()
+    for d in ("2026-10-12", "2026-10-13", "2026-10-14"):
+        (tmp_path / "runs" / f"{d}.json").write_text(json.dumps({"avis_recuperes": 1900}))
+    monkeypatch.setattr(cli.boamp, "fetch_since", lambda since: [dict(a) for a in AVIS])   # quelques avis seulement
+    subs = [{"email": "c@example.com", "plan": "essentiel", "statut": "trialing", "source": "stripe", "metiers": ["nettoyage"],
+             "departements": ["33"], "mots_cles": []}]
+    run = cli.run_daily(avis_open=[], subs=subs)
+    assert run["collecte_anormale"] and run["emails_envoyes"] == 0
+    assert not json.loads((tmp_path / "state.json").read_text())["sent"]   # rien marqué envoyé : rattrapé le lendemain
+
+
+def test_ia_cache_cout_et_reessai(monkeypatch):
+    from radar import ai
+    monkeypatch.setattr(ai, "PAUSE", 0)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-x")
+    appels = []
+
+    class R:
+        def __init__(self, txt):
+            self.txt = txt
+
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"content": [{"type": "text", "text": self.txt}], "usage": {"input_tokens": 1000, "output_tokens": 200}}
+
+    class S:
+        def post(self, url, timeout=None, headers=None, json=None):
+            appels.append(1)
+            if len(appels) == 1:
+                return R("pas du json")                          # 1re réponse invalide : retentée
+            return R('[{"id": "a1", "resume": "Ménage école", "score": 4, "a_verifier": ["Visite obligatoire"], "hors_metier": false}]')
+    cache = {}
+    avis = [{"id": "a1", "objet": "Nettoyage", "acheteur": "Ville", "departements": ["33"]}]
+    st = ai.enrich(avis, session=S(), cache=cache)
+    assert avis[0]["resume"] == "Ménage école" and avis[0]["a_verifier"] == ["Visite obligatoire"] and len(appels) == 2
+    assert st["lots_ok"] == 1 and st["cout_usd"] == round(ai.cout_usd("claude-haiku-5-5", 2000, 400), 4)  # la réponse ratée est payée aussi
+    autre = [{"id": "a1", "objet": "Nettoyage", "acheteur": "Ville", "departements": ["33"]}]
+    st = ai.enrich(autre, session=S(), cache=cache)
+    assert autre[0]["resume"] == "Ménage école" and st["depuis_cache"] == 1 and len(appels) == 2   # pas de nouvel appel payant
+    st = ai.enrich([{"id": "b2", "objet": "x", "acheteur": "y", "departements": []}], session=S(), cache=cache, budget_usd=0)
+    assert st["budget_atteint"] and len(appels) == 2
+
+
+def test_veille_relance_si_pas_d_envoi(tmp_path, monkeypatch):
+    import radar.cli as cli
+    monkeypatch.setattr(cli, "DATA", tmp_path)
+    monkeypatch.setattr(cli, "OUT", tmp_path / "out")
+    monkeypatch.setattr(cli.mailer, "OUTBOX", tmp_path / "outbox")
+    (tmp_path / "runs").mkdir()
+    res = cli.run_veille()
+    if date.today().weekday() < 5:
+        assert res["relance"] and (tmp_path / "out" / "relancer").exists()
+        (tmp_path / "runs" / f"{date.today().isoformat()}.json").write_text("{}")
+        assert cli.run_veille()["ok"]

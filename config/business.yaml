@@ -92,6 +92,7 @@ couts_fixes_mensuels:
 ia:
   modele: "claude-haiku-5-5"
   max_avis_par_appel: 25
+  budget_mensuel_usd: 3     # au-delà, alertes sans résumé jusqu'au mois suivant (résumés seuls ; dossiers et rapports à part)
 
 # Mentions légales (obligatoires avant la mise en vente)
 editeur:

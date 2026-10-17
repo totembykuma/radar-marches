@@ -32,3 +32,4 @@ tout tourne dans GitHub Actions. Propriétaire non technique, en français, une 
 - Ne pas relire un fichier déjà lu ; utiliser `grep -n` / `sed -n` sur la zone utile.
 - Toujours `git pull -q --rebase origin main` avant `git push` (le robot commit data/ souvent).
 - Ne jamais écrire d'e-mail, clé ou adresse personnelle dans le dépôt (public).
+- Fiabilité (`reprise.py`) : 3 tentatives BOAMP/Resend (clé Idempotency-Key = pas de doublon), lot IA retenté 1 fois. Collecte vide/anormale (< 35 % de la médiane des 10 derniers runs, ou avis sans objet) → alertes clients reportées au lendemain + mail propriétaire. IA : cache `data/ia_cache.json` (45 j), coût/mois dans state `ia_usage`, plafond `ia.budget_mensuel_usd`, champs `a_verifier` (affiché) et `hors_metier` (observation seule, compté au bilan). `veille.yml` 10 h lun-ven : relance daily s'il n'a pas tourné.

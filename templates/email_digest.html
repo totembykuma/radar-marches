@@ -15,6 +15,7 @@
   <div style="font-size:12px;color:#5a6478">{{ a.acheteur }}{% if a.departements %} · Dép. {{ a.departements|join(', ') }}{% endif %}</div>
   <div style="font-size:16px;font-weight:bold;margin:4px 0"><a href="{{ a.url }}" style="color:#0b1b33;text-decoration:none">{{ a.objet }}</a></div>
   {% if a.resume %}<div style="font-size:14px;line-height:1.45">{{ a.resume }}</div>{% endif %}
+  {% if a.a_verifier %}<div style="font-size:13px;line-height:1.45;color:#8a5a00;margin-top:4px">À vérifier : {{ a.a_verifier|join(' · ') }}</div>{% endif %}
   <div style="font-size:12px;color:#5a6478;margin-top:6px">
     {% if a.date_limite %}Réponse avant le <b>{{ a.date_limite_fr }}</b>{% endif %}
     {% if a.score %} · Accessibilité TPE : {{ '★' * a.score }}{{ '☆' * (5 - a.score) }}{% endif %}

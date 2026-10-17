@@ -6,6 +6,8 @@ from datetime import date, timedelta
 
 import requests
 
+from .reprise import avec_reessais
+
 API = "https://boamp-datadila.opendatasoft.com/api/explore/v2.1/catalog/datasets/boamp"
 log = logging.getLogger(__name__)
 
@@ -269,9 +271,12 @@ def fetch_since(since: date, until: date | None = None, session=None, limit=None
     if limit:
         params["limit"] = limit
     http = session or requests
-    r = http.get(f"{API}/exports/json", params=params, timeout=120)
-    r.raise_for_status()
-    rows = r.json()
+
+    def lire():
+        r = http.get(f"{API}/exports/json", params=params, timeout=120)
+        r.raise_for_status()
+        return r.json()
+    rows = avec_reessais(lire, "BOAMP")
     log.info("BOAMP: %d avis récupérés (%s → %s)", len(rows), since, until)
     return [normalize(x) for x in rows]
 

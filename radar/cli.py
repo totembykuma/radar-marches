@@ -158,18 +158,88 @@ def run_bienvenue():
     return {"bienvenues": run.get("bienvenues", 0), "liens_espace_client": n, "erreurs": run["erreurs"]}
 
 
+def _historique_collecte(n=10):
+    """Nombre d'avis récupérés lors des derniers envois quotidiens (hors aujourd'hui)."""
+    vals = []
+    for f in sorted((DATA / "runs").glob("*.json"), reverse=True):
+        if f.stem == date.today().isoformat() or len(vals) >= n:
+            continue
+        r = _load_json(f, {})
+        if r.get("avis_recuperes") and not r.get("collecte_anormale"):
+            vals.append(r["avis_recuperes"])
+    return vals
+
+
+def collecte_anormale(avis_new, historique, seuil=0.35):
+    """Motif si la collecte du jour semble incomplète ou mal lue, sinon None."""
+    if avis_new:
+        vides = sum(1 for a in avis_new if not a.get("id") or not a.get("objet"))
+        if vides > len(avis_new) / 2:
+            return f"{vides} avis sur {len(avis_new)} sans numéro ou sans objet (format BOAMP changé ?)"
+    if len(historique) >= 3:
+        med = sorted(historique)[len(historique) // 2]
+        if med >= 200 and len(avis_new) < seuil * med:
+            return f"seulement {len(avis_new)} avis récupérés contre {med} d'habitude (collecte incomplète ?)"
+    return None
+
+
+def resumer_ia(avis_list, biz, metiers, state, run):
+    mois = date.today().strftime("%Y-%m")
+    usage = state.setdefault("ia_usage", {}).setdefault(mois, {"entree": 0, "sortie": 0, "cout_usd": 0.0})
+    budget = biz["ia"].get("budget_mensuel_usd")
+    reste = None if budget is None else max(0.0, budget - usage["cout_usd"])
+    cache = _load_json(DATA / "ia_cache.json", {})
+    for a in avis_list:
+        a["metiers_libelles"] = [metiers[m]["libelle"] for m in a.get("metiers") or [] if m in metiers]
+    st = ai.enrich(avis_list, model=biz["ia"]["modele"], batch=biz["ia"]["max_avis_par_appel"], cache=cache, budget_usd=reste) or {}
+    for k in ("entree", "sortie"):
+        usage[k] += st.get(k, 0)
+    usage["cout_usd"] = round(usage["cout_usd"] + st.get("cout_usd", 0), 4)
+    limite = (date.today() - timedelta(days=45)).isoformat()
+    for a in avis_list:
+        if a["id"] in cache:
+            cache[a["id"]].setdefault("jour", date.today().isoformat())
+    _save_json(DATA / "ia_cache.json", {k: v for k, v in cache.items() if v.get("jour", "") >= limite})
+    run["ia"] = {**st, "hors_metier": sum(1 for a in avis_list if a.get("hors_metier")), "avis": len(avis_list)}
+    if st.get("lots_echoues") and not st.get("lots_ok"):
+        run["erreurs"].append("résumés IA indisponibles aujourd'hui : alertes envoyées sans résumé")
+    if (st.get("budget_atteint") or reste == 0.0) and usage.get("alerte_budget") != mois:
+        usage["alerte_budget"] = mois
+        alert_owner(biz, "Budget IA du mois atteint", f"<p>Les résumés IA ont coûté {usage['cout_usd']} $ ce mois-ci "
+                    f"(plafond {budget} $). Les alertes continuent sans résumé jusqu'au 1er du mois prochain. Rien à faire.</p>")
+
+
+def run_veille():
+    """Contrôle de 10 h : l'envoi quotidien a-t-il tourné ce matin ? Sinon prévenir et demander une relance."""
+    biz = business()
+    jour = date.today()
+    if jour.weekday() >= 5 or (DATA / "runs" / f"{jour.isoformat()}.json").exists():
+        return {"ok": True}
+    OUT.mkdir(parents=True, exist_ok=True)
+    (OUT / "relancer").write_text("daily")
+    alert_owner(biz, "Envoi quotidien absent ce matin : relancé automatiquement",
+                "<p>L'envoi de 6 h 20 n'a pas tourné (retard ou panne de GitHub). Il vient d'être relancé tout seul. "
+                "Rien à faire ; si ce message revient plusieurs jours de suite, dites-le à Claude.</p>")
+    return {"ok": False, "relance": True}
+
+
 def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, histo=None):
     biz, metiers = business(), load_metiers()
     matcher = Matcher(metiers)
     state = _load_json(DATA / "state.json", {"sent": {}})
     run = {"date": datetime.now(timezone.utc).isoformat(timespec="minutes"), "erreurs": []}
 
-    # 1. Nouveaux avis
+    # 1. Nouveaux avis (3 tentatives ; si la collecte échoue ou paraît anormale, les alertes attendent le lendemain)
+    collecte_ko = None
     if avis_new is None:
         since = date.today() - timedelta(days=4)  # couvre le week-end ; les doublons sont filtrés
-        avis_new = boamp.fetch_since(since)
+        try:
+            avis_new = boamp.fetch_since(since)
+        except Exception as exc:
+            avis_new, collecte_ko = [], f"BOAMP injoignable après 3 tentatives : {safe(exc)}"
         jour = date.today().isoformat()  # jamais d'avis déjà clos (rectificatifs publiés après la date limite)
         avis_new = [a for a in avis_new if not a["date_limite"] or a["date_limite"][:10] >= jour]
+        collecte_ko = collecte_ko or collecte_anormale(avis_new, _historique_collecte())
     for a in avis_new:
         a["metiers"] = matcher.metiers_of(a)
     run["avis_recuperes"] = len(avis_new)
@@ -263,9 +333,9 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
             for a in sel:
                 to_enrich[a["id"]] = a
 
-    # 4. Résumés IA (une seule fois par avis, même s'il intéresse plusieurs abonnés)
-    if biz["ia_active"]:
-        ai.enrich(list(to_enrich.values()), model=biz["ia"]["modele"], batch=biz["ia"]["max_avis_par_appel"])
+    # 4. Résumés IA (une seule fois par avis : résultats gardés dans data/ia_cache.json, coût suivi par mois, budget plafonné)
+    if biz["ia_active"] and to_enrich and not collecte_ko:
+        resumer_ia(list(to_enrich.values()), biz, metiers, state, run)
 
     # 4b. Fiche « avant de répondre » : ce que l'acheteur a déjà attribué dans le métier de l'abonné
     histo = histo or historique.Historique(metiers)
@@ -278,9 +348,15 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
     histo.sauver()
     run["fiches_acheteur"] = n_fiches
 
-    # 5. Envoi
+    # 5. Envoi (suspendu si la collecte a échoué : rien n'est marqué envoyé, la fenêtre de 4 jours rattrape le lendemain)
     sent = 0
-    for key, (s, sel) in plans.items():
+    if collecte_ko:
+        run["collecte_anormale"] = collecte_ko
+        run["erreurs"].append(f"alertes clients reportées à demain : {collecte_ko}")
+        plans_envoi = {}
+    else:
+        plans_envoi = plans
+    for key, (s, sel) in plans_envoi.items():
         sel.sort(key=lambda a: (-(a.get("score") or 0), not a.get("pme"), a["date_limite"] or "9999"))
         for a in sel:
             a["date_limite_fr"] = date_limite_fr(a["date_limite"])
@@ -339,7 +415,7 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
 
     # 7. Contrôles
     weekday = date.today().weekday() < 5
-    if weekday and run["avis_recuperes"] == 0:
+    if weekday and run["avis_recuperes"] == 0 and not collecte_ko:
         run["erreurs"].append("aucun avis BOAMP récupéré un jour ouvré (API en panne ou format changé ?)")
     _save_json(DATA / "state.json", state)
     _save_json(DATA / "runs" / f"{date.today().isoformat()}.json", run)
@@ -383,6 +459,11 @@ def run_weekly():
                                   if (x.get("livre") or "") >= (today - timedelta(days=7)).isoformat()),
     }
     kpi["visites_7j"] = visites(biz, today - timedelta(days=7), today)
+    ia_mois = _load_json(DATA / "state.json", {}).get("ia_usage", {}).get(today.strftime("%Y-%m"), {})
+    kpi["ia_cout_mois_usd"] = ia_mois.get("cout_usd", 0)
+    kpi["ia_avis_7j"] = sum((r.get("ia") or {}).get("avis", 0) for r in runs)
+    kpi["ia_hors_metier_7j"] = sum((r.get("ia") or {}).get("hors_metier", 0) for r in runs)
+    kpi["collectes_reportees_7j"] = sum(1 for r in runs if r.get("collecte_anormale"))
     pj = _load_json(DATA / "prospection.json", {}).get("journal", [])
     debut = (today - timedelta(days=7)).isoformat()
     kpi["prospects_contactes_7j"] = sum(j.get("envoyes", 0) for j in pj if j.get("date", "") >= debut)
@@ -397,6 +478,8 @@ def run_weekly():
         decisions.append(f"{len(impayes)} abonnement(s) impayé(s) : Stripe relance automatiquement, rien à faire sauf si cela dure.")
     if kpi["runs_7j"] < 5:
         decisions.append("Moins de 5 envois quotidiens cette semaine : vérifier l'onglet Actions de GitHub.")
+    if kpi["collectes_reportees_7j"]:
+        decisions.append(f"Alertes reportées {kpi['collectes_reportees_7j']} jour(s) (BOAMP en panne ou incomplet) : rattrapées le lendemain, rien à faire sauf si cela dure.")
     if kpi["resilies_7j"] > kpi["nouveaux_7j"] and kpi["resilies_7j"]:
         decisions.append("Plus de résiliations que de nouveaux clients : lire les réponses clients pour comprendre pourquoi.")
     analyse = biz["ia_active"] and ai.ask(
@@ -421,6 +504,8 @@ def run_weekly():
               + ligne("Résiliations", kpi["resilies_7j"], "")
               + (ligne("Dossiers prêts à signer livrés", kpi["dossiers_livres_7j"], f"{biz['dossier']['prix']} € l'unité") if biz.get("dossier_actif") else "")
               + ligne("Clients payants", kpi["abonnes_payants"], f"revenu mensuel récurrent {kpi['mrr']} €")
+              + (ligne("Avis résumés par l'IA", kpi["ia_avis_7j"], f"dont {kpi['ia_hors_metier_7j']} jugés hors métier (observation, rien n'est filtré) · "
+                       f"coût du mois {kpi['ia_cout_mois_usd']} $") if kpi["ia_avis_7j"] or kpi["ia_cout_mois_usd"] else "")
               + "</table>")
     html = (f"<h2>{biz['nom']} · bilan de la semaine ({date_fr(today)})</h2>" + resume
             + f"<p>Mois en cours : CA {bilan['chiffre_affaires']} € · bénéfice {bilan['benefice_apres_depenses']} € · "
@@ -785,7 +870,7 @@ def run_dossiers():
 def main(argv=None):
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     p = argparse.ArgumentParser(prog="radar")
-    p.add_argument("cmd", choices=["daily", "weekly", "check-api", "demo", "essai", "abonnes", "prospection", "audit", "apercu-emails", "dossiers", "entreprises", "barometre", "bienvenue"])
+    p.add_argument("cmd", choices=["daily", "weekly", "check-api", "demo", "essai", "abonnes", "prospection", "audit", "apercu-emails", "dossiers", "entreprises", "barometre", "bienvenue", "veille"])
     p.add_argument("--mois", help="baromètre : mois AAAA-MM (par défaut le mois écoulé)")
     p.add_argument("--budget", type=int, default=6000, help="entreprises : nombre maximum d'appels à l'annuaire")
     p.add_argument("--apercu", action="store_true", help="prospection : envoie un aperçu au propriétaire")
@@ -801,6 +886,8 @@ def main(argv=None):
             missing = [k for k, cands in boamp.FIELDS.items() if not set(cands) & set(fields)]
             print("Champs logiques non trouvés :", missing or "aucun")
             sys.exit(1 if {"id", "objet", "date_parution"} & set(missing) else 0)
+        elif args.cmd == "veille":
+            print(json.dumps(run_veille(), ensure_ascii=False))
         elif args.cmd == "bienvenue":
             print(json.dumps(run_bienvenue(), ensure_ascii=False))
         elif args.cmd == "abonnes":
