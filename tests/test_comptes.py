@@ -347,3 +347,27 @@ def test_menage_conservation():
     comptes.menage(db, date(2026, 10, 19))
     assert [a["id"] for a in db.t["alertes"]] == [2]
     assert list(db.fichiers) == ["u/b/resultat/y.docx"] and db.t["demandes"][0]["fichier"] is None
+
+
+def test_acces_offert_au_proprietaire(biz, metiers, monkeypatch):
+    from radar import subscribers
+    monkeypatch.delenv("OWNER_EMAIL", raising=False)
+    assert subscribers.from_proprietaire(biz) == []                  # sans secret : aucun accès offert
+    monkeypatch.setenv("OWNER_EMAIL", "Patron@Exemple.fr")
+    subs = subscribers.from_proprietaire(biz)
+    assert subs[0]["plan"] == "cle" and subs[0]["statut"] == "active" and subs[0]["source"] == "interne"
+    assert "stripe_subscription" not in subs[0]                       # aucun abonnement ni prélèvement Stripe
+    db = FausseBase([_u("u1", "patron@exemple.fr")])
+    comptes.synchroniser(db, subs, biz, metiers, MAINTENANT)
+    c = db.t["comptes"][0]
+    assert c["offre"] == "cle" and c["source"] == "interne" and comptes.droits(biz, c["offre"], c["statut"])["dossiers_mois"] == 2
+    assert db.t["criteres"][0]["metier"] == "nettoyage"
+    # critères changés dans l'espace : appliqués sans Stripe, sans erreur, et jamais écrasés par les réglages
+    db.update("criteres", {"metier": "peinture", "departements": ["33"], "maj": (MAINTENANT + timedelta(minutes=5)).isoformat()},
+              user_id="eq.u1")
+    n, errs = comptes.pousser_criteres(db, subs, biz, metiers, cli.criteres_txt, lambda *a: pytest.fail("Stripe appelé"),
+                                       MAINTENANT + timedelta(minutes=10))
+    assert not errs and subs[0]["metiers"] == ["peinture"] and subs[0]["departements"] == ["33"]
+    frais = subscribers.from_proprietaire(biz)
+    comptes.synchroniser(db, frais, biz, metiers, MAINTENANT + timedelta(minutes=11))
+    assert db.t["criteres"][0]["metier"] == "peinture"

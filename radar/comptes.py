@@ -257,7 +257,12 @@ def synchroniser(supa, subs, biz, metiers, maintenant=None):
             a_ecrire.append({**row, "maj": maintenant.isoformat()})
         # Critères : à la 1re liaison, ou quand ils ont changé dans Stripe (support, ancien formulaire) sans demande en attente.
         c = criteres.get(u["id"])
-        if s and s.get("stripe_subscription"):
+        if s and s.get("source") == "interne":        # accès offert : critères initiaux, ensuite ceux de l'espace
+            if not c and _criteres_de(s)["metier"] in metiers:
+                crit_ecrire.append({"user_id": u["id"], **_criteres_de(s), "maj": maintenant.isoformat(),
+                                    "pousse_stripe": maintenant.isoformat(), "erreur": None})
+                stats["criteres_importes"] += 1
+        elif s and s.get("stripe_subscription"):
             stripe_c = _criteres_de(s)
             en_attente = c and (not c.get("pousse_stripe") or _ts(c["pousse_stripe"]) < _ts(c["maj"]))
             if not c or (not en_attente and {k: (sorted(c.get(k) or []) if k == "departements" else c.get(k))
@@ -328,11 +333,22 @@ def pousser_criteres(supa, subs, biz, metiers, criteres_txt, stripe_update, main
     maintenant = maintenant or datetime.now(timezone.utc)
     comptes = {c["user_id"]: c for c in supa.select("comptes", select="user_id,email,offre,statut,stripe_subscription")}
     par_sub = {s.get("stripe_subscription"): s for s in subs if s.get("stripe_subscription")}
+    internes = {s["email"].lower(): s for s in subs if s.get("source") == "interne"}
     faits, erreurs = 0, []
     for c in supa.select("criteres", select="*"):
+        compte = comptes.get(c["user_id"]) or {}
+        interne = internes.get((compte.get("email") or "").lower())
+        if interne:                                    # accès offert, sans Stripe : critères de l'espace appliqués à chaque passage
+            try:
+                interne.update(valider_criteres(biz, metiers, interne["plan"], c)[1])
+            except Exception:
+                pass
+            if not c.get("pousse_stripe") or _ts(c["pousse_stripe"]) < _ts(c["maj"]):
+                supa.update("criteres", {"pousse_stripe": maintenant.isoformat(), "erreur": None},
+                            user_id=f"eq.{c['user_id']}", maj=f"eq.{c['maj']}")
+            continue
         if c.get("pousse_stripe") and _ts(c["pousse_stripe"]) >= _ts(c["maj"]):
             continue
-        compte = comptes.get(c["user_id"]) or {}
         s = par_sub.get(compte.get("stripe_subscription"))
         try:
             if not s or s.get("statut") not in STATUTS_ACTIFS:

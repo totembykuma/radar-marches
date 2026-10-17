@@ -3,6 +3,8 @@
 Le client choisit son métier, ses départements et ses mots-clés dans les champs
 personnalisés du lien de paiement Stripe. On relit ces champs à chaque envoi.
 Un fichier data/abonnes_manuels.yaml permet d'ajouter des comptes test ou offerts.
+Le propriétaire peut avoir un accès offert (acces_proprietaire dans business.yaml, adresse = secret OWNER_EMAIL) :
+source « interne », jamais compté dans les ventes ni les abonnés.
 """
 import logging
 import os
@@ -108,8 +110,20 @@ def from_file():
     return rows
 
 
+def from_proprietaire(biz):
+    """Accès offert au propriétaire pour tester (rien de personnel dans le dépôt : l'adresse vient du secret)."""
+    acces = biz.get("acces_proprietaire") or {}
+    email = (os.getenv("OWNER_EMAIL") or "").strip()
+    if not acces or "@" not in email:
+        return []
+    plan = acces.get("plan") if acces.get("plan") in biz["offres"] else "cle"
+    return [{"email": email, "plan": plan, "statut": "active", "metiers": list(acces.get("metiers") or []),
+             "departements": parse_departements(",".join(map(str, acces.get("departements") or []))),
+             "mots_cles": list(acces.get("mots_cles") or []) if plan in PLANS_PRO else [], "source": "interne"}]
+
+
 def load_all(biz, metiers, session=None):
-    subs = from_file()
+    subs = from_proprietaire(biz) + from_file()
     try:
         subs += from_stripe(biz, metiers, session=session)
     except Exception as exc:
