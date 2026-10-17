@@ -168,7 +168,7 @@ begin
   return jsonb_build_object(
     'email', c.email, 'offre', c.offre, 'offre_nom', (select nom from public.offres where cle = c.offre),
     'statut', coalesce(c.statut, 'aucun'), 'fin_essai', c.fin_essai, 'parrainage', c.parrainage,
-    'gere_par_stripe', c.stripe_subscription is not null, 'maj', c.maj, 'droits', d,
+    'gere_par_stripe', c.stripe_subscription is not null or c.source = 'interne', 'maj', c.maj, 'droits', d,
     'criteres', case when cr.user_id is null then null else jsonb_build_object(
        'metier', cr.metier, 'departements', cr.departements, 'mots_cles', cr.mots_cles, 'maj', cr.maj,
        'applique', cr.pousse_stripe is not null and cr.pousse_stripe >= cr.maj, 'erreur', cr.erreur) end,
@@ -186,7 +186,7 @@ begin
   select * into c from public.comptes where user_id = u;
   d := public.droits(c.offre, coalesce(c.statut, 'aucun'));
   if not (d->>'veille')::boolean then raise exception 'Aucun abonnement actif sur ce compte.' using errcode = '42501'; end if;
-  if c.stripe_subscription is null then raise exception 'Abonnement géré par le support : écrivez-nous pour modifier vos critères.' using errcode = '42501'; end if;
+  if c.stripe_subscription is null and c.source is distinct from 'interne' then raise exception 'Abonnement géré par le support : écrivez-nous pour modifier vos critères.' using errcode = '42501'; end if;
   if p_metier is null or not exists (select 1 from public.metiers where cle = p_metier) then
     raise exception 'Métier inconnu.' using errcode = '22023'; end if;
   select coalesce(array_agg(distinct upper(trim(x))), '{}') into deps from unnest(coalesce(p_departements, '{}')) x where trim(x) <> '';
