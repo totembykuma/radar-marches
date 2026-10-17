@@ -1,5 +1,7 @@
 # Radar Marchés : mémo pour Claude (lire ceci au lieu d'explorer le code)
 
+> Nouvelle conversation : lire d'abord `RADAR_MARCHES_CONTEXT.md` (état vérifié, décisions) puis `RADAR_MARCHES_WORKFLOW.md` (quels fichiers ouvrir selon la tâche).
+
 Service d'alertes d'appels d'offres BOAMP par e-mail. Site statique sur GitHub Pages (branche gh-pages),
 tout tourne dans GitHub Actions. Propriétaire non technique, en français, une étape à la fois.
 
