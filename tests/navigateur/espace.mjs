@@ -24,7 +24,7 @@ const browser = await chromium.launch({ executablePath: process.env.CHROME || "/
 const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
 page.on("console", (m) => { if (m.type() === "error") erreurs.push(m.text()); });
 page.on("pageerror", (e) => erreurs.push(String(e)));
-let favori = false;
+let favori = false, confirme = false;
 await page.route("https://abcdefgh.supabase.co/**", async (route) => {
   const req = route.request(), u = new URL(req.url()), p = u.pathname;
   log.push(`${req.method()} ${p}`);
@@ -32,8 +32,10 @@ await page.route("https://abcdefgh.supabase.co/**", async (route) => {
   if (req.method() === "OPTIONS") return route.fulfill({ status: 200, headers: { "access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "*" } });
   if (p === "/auth/v1/token") {
     const body = JSON.parse(req.postData() || "{}");
+    if (body.email === "nouveau@exemple.fr") return confirme ? json(200, session) : json(400, { code: 400, error_code: "email_not_confirmed", msg: "Email not confirmed" });
     return body.password === "bonmotdepasse1" ? json(200, session) : json(400, { code: 400, error_code: "invalid_credentials", msg: "Invalid login credentials" });
   }
+  if (p === "/auth/v1/signup") return json(200, { ...user, id: "u2", email: "nouveau@exemple.fr", confirmed_at: null });
   if (p === "/auth/v1/user" && req.method() === "GET") return json(200, user);
   if (p === "/auth/v1/user" && req.method() === "PUT") return json(200, user);
   if (p === "/auth/v1/verify") return json(200, session);
@@ -95,6 +97,17 @@ verifier(/département 33/.test(await page.textContent("#i-choix")), "choix affi
 await page.fill("#i-mdp", "abcdefghij"); await page.fill("#i-mdp2", "abcdefghik");
 await page.click("#f-inscription button[type=submit]");
 verifier((await page.textContent("#m-inscription")).includes("pas identiques"), "mots de passe différents");
+// inscription réussie, confirmation faite ailleurs (téléphone) : la page s'ouvre toute seule au retour sur l'onglet
+await page.fill("#i-mdp2", "abcdefghij"); await page.check("#i-cgv");
+await page.click("#f-inscription button[type=submit]");
+await page.waitForFunction(() => document.querySelector("#m-inscription").textContent.includes("toute seule"));
+await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+await page.waitForTimeout(300);
+verifier(await page.isVisible("#v-inscription"), "pas encore confirmé : reste sur l'inscription");
+confirme = true;
+await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+await page.waitForSelector("#v-espace:not([hidden])", { timeout: 5000 });
+ok++;
 
 // 3. lien de réinitialisation
 await page.goto(`${BASE}/compte/confirmation/?token_hash=abc&type=recovery`);

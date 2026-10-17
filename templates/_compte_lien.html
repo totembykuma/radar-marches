@@ -5,7 +5,7 @@
     <p class="lead">Pas de mot de passe à retenir : votre espace s'ouvre avec le lien personnel reçu par e-mail (bouton « Mon espace client » en bas de chaque alerte).</p>
     <form class="card" id="c-form">
       <h2>Lien perdu ?</h2>
-      <p><label>Votre adresse e-mail (celle utilisée pour payer)<br><input id="c-email" type="email" required style="width:100%"></label></p>
+      <p><label>Votre adresse e-mail (celle utilisée pour payer)<br><input id="c-email-lien" type="email" required style="width:100%"></label></p>
       <button class="btn btn-lg" type="submit">Recevoir mon lien</button>
       <p class="muted" id="c-info">Vous ouvrez votre messagerie (Gmail, Outlook…) avec un e-mail déjà prêt : envoyez-le tel quel. Votre lien vous est renvoyé en une dizaine de minutes.</p>
     </form>
@@ -51,7 +51,7 @@ function ancienEspace(nouveau) {
     if (nouveau) return false;
     document.getElementById("c-form").addEventListener("submit", function (ev) {
       ev.preventDefault();
-      var em = document.getElementById("c-email").value.trim();
+      var em = document.getElementById("c-email-lien").value.trim();
       envoyerMail("{{ biz.compte_adresse }}", "Mon espace client", "Bonjour,\n\nMerci de m'envoyer le lien de mon espace client.\n\nAdresse du compte : " + em + "\n");
     });
     return false;
