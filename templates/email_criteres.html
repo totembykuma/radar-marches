@@ -5,7 +5,7 @@
 <p>Bonjour,</p>
 <p>C'est fait. À partir de la prochaine alerte, vous recevrez les appels d'offres correspondant à :</p>
 <p style="background:#f4f5f7;padding:12px 14px;border-radius:8px;border-left:3px solid #ffb020"><b>{{ criteres }}</b></p>
-<p>Pour changer à nouveau, utilisez le même <a href="{{ biz.site_url }}/criteres/">formulaire</a>.</p>
+{% if espace %}<p>Pour changer à nouveau : <a href="{{ biz.site_url }}/compte/">Mon compte</a>, rubrique « Mes critères ».</p>{% else %}<p>Pour changer à nouveau, utilisez le même <a href="{{ biz.site_url }}/criteres/">formulaire</a>.</p>{% endif %}
 {% else %}
 <h2 style="color:#0b1b33;font-size:21px;margin:0 0 14px">Adresse non reconnue</h2>
 <p>Bonjour,</p>

@@ -1,0 +1,41 @@
+name: Comptes clients (mise en service)
+# À lancer à la main, une fois, après avoir ajouté le secret SUPABASE_ACCESS_TOKEN (voir docs/architecture-comptes-clients.md).
+# Rejouable sans risque : met à jour la base, l'authentification, le stockage privé et le webhook Stripe.
+on:
+  workflow_dispatch: {}
+permissions: { contents: write, actions: write }
+concurrency: { group: radar-daily, cancel-in-progress: false }
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt pytest
+      - name: Tests de la base (PostgreSQL du serveur GitHub)
+        run: python -m pytest -q tests/test_comptes_sql.py tests/test_comptes.py
+      - name: Base, authentification, stockage, webhook, première synchronisation
+        id: setup
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          OWNER_EMAIL: ${{ secrets.OWNER_EMAIL }}
+        run: python -m radar.cli comptes-setup
+      - name: Déployer le webhook Stripe (outil officiel Supabase)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: npx --yes supabase@2.48.3 functions deploy stripe-webhook --project-ref "${{ steps.setup.outputs.ref }}" --no-verify-jwt --use-api
+      - name: Enregistrer config/comptes.json (adresse + clé publique) → le site se republie
+        run: |
+          git config user.name "radar-bot"
+          git config user.email "radar-bot@users.noreply.github.com"
+          git add config/comptes.json
+          git diff --cached --quiet && exit 0
+          git commit -m "Comptes clients : configuration publique"
+          git pull -q --rebase origin main && git push
+      - name: Publier le site avec la connexion par mot de passe
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: gh workflow run site.yml --ref main || true

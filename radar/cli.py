@@ -19,7 +19,7 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 from . import avis, criteres, gratuit, ai, dossier, parrainage, boamp, finance, historique, barometre, laureats, mailer, prospects, site, subscribers
-from . import compte, rapport
+from . import compte, comptes, rapport
 from .config import ROOT, business, cle_actif, dossier_actif, metiers as load_metiers
 from .matching import Matcher
 from .render import date_fr, date_limite_fr, render
@@ -63,6 +63,33 @@ def alert_owner(biz, subject, body_html):
             log.error("Alerte propriétaire non envoyée : %s", safe(exc))
     else:
         log.warning("Alerte non envoyée (pas d'e-mail propriétaire) : %s", subject)
+
+
+def comptes_espace(biz, metiers, subs, run, state=None):
+    """Comptes avec mot de passe (Supabase) : recopie les abonnements Stripe et applique les critères modifiés
+    dans l'espace client. Renvoie le client robot (ou None si les comptes ne sont pas configurés)."""
+    try:
+        supa = comptes.connexion()
+    except Exception as exc:
+        run["erreurs"].append(f"comptes clients injoignables : {safe(exc)}")
+        return None
+    if not supa:
+        return None
+    try:
+        if os.getenv("STRIPE_SECRET_KEY", "").strip():   # sans clé Stripe, on ne touche à aucun droit
+            st = comptes.synchroniser(supa, subs, biz, metiers)
+            utilisateurs = st.pop("_utilisateurs")
+            run["comptes"] = st
+            if state is not None:   # clients d'avant les mots de passe : 1 invitation chacun
+                n, errs = comptes.inviter(subs, biz, utilisateurs, state)
+                run["invitations_compte"], run["erreurs"] = n, run["erreurs"] + errs
+        n, errs = comptes.pousser_criteres(supa, subs, biz, metiers, criteres_txt, criteres._stripe_update)
+        if n:
+            run["criteres_espace"] = n
+        run["erreurs"] += errs
+    except Exception as exc:
+        run["erreurs"].append(f"comptes clients non synchronisés : {safe(exc)}")
+    return supa
 
 
 def lien_dossier(biz, sub):
@@ -153,9 +180,11 @@ def run_bienvenue():
     envoyer_bienvenues(subs, biz, metiers, state, run)
     n, errs = compte.traiter(subs, biz, metiers, state)
     run["erreurs"] += errs
-    if run.get("bienvenues") or n or state.get("compte_vus"):
+    comptes_espace(biz, metiers, subs, run, state)
+    if run.get("bienvenues") or n or state.get("compte_vus") or run.get("invitations_compte"):
         _save_json(DATA / "state.json", state)
-    return {"bienvenues": run.get("bienvenues", 0), "liens_espace_client": n, "erreurs": run["erreurs"]}
+    return {"bienvenues": run.get("bienvenues", 0), "liens_espace_client": n, "comptes": run.get("comptes"),
+            "criteres_espace": run.get("criteres_espace", 0), "erreurs": run["erreurs"]}
 
 
 def _historique_collecte(n=10):
@@ -258,6 +287,9 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
         run["erreurs"] += errs
     except Exception as exc:
         run["erreurs"].append(f"lecture des demandes de critères impossible : {safe(exc)}")
+
+    # 2a. bis Critères modifiés dans l'espace client (mot de passe) : copiés dans Stripe avant la sélection du jour
+    supa = comptes_espace(biz, metiers, subs, run, state)
 
     # 2a bis. Parrainage : 1 mois offert au filleul (dès l'inscription) et au parrain (quand le filleul devient payant)
     try:
@@ -373,9 +405,23 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
             if not res.get("simulated") or os.getenv("RADAR_DEMO") == "1":
                 state["sent"][key] = (state["sent"].get(key, []) + [a["id"] for a in sel])[-500:]
             sent += 1
+            if supa:   # historique privé « Mes alertes » de l'espace client
+                try:
+                    comptes.enregistrer_alertes(supa, s["email"], sel)
+                except Exception as exc:
+                    run["erreurs"].append(f"historique des alertes non enregistré : {safe(exc)}")
         except Exception as exc:
             run["erreurs"].append(f"envoi échoué : {safe(exc)}")
     run["emails_envoyes"] = sent
+
+    # 5a. Espace client : rappel 3 jours avant la date limite des favoris, durées de conservation
+    if supa:
+        try:
+            n, errs = comptes.rappels_favoris(supa, biz, subs)
+            run["rappels_favoris"], run["erreurs"] = n, run["erreurs"] + errs
+            comptes.menage(supa)
+        except Exception as exc:
+            run["erreurs"].append(f"rappels de favoris non envoyés : {safe(exc)}")
 
     # 5b. Offre Pro : bilan « qui a gagné » le lundi
     if date.today().weekday() == 0 or os.getenv("RADAR_FORCE_RESULTATS") == "1":
@@ -859,18 +905,93 @@ def run_dossiers():
     metiers = load_metiers()
     cles = [s for s in subscribers.load_all(biz, metiers) if s.get("plan") == "cle"] if biz["cle_actif"] else []
     livres, erreurs = dossier.traiter(biz, state, alerte=lambda sujet, html: alert_owner(biz, sujet, html), abonnes=cles)
-    rapports, errs = rapport.traiter(biz, state, cles, metiers, histo=historique.Historique(metiers)) if cles else (0, [])
+    histo = historique.Historique(metiers)
+    rapports, errs = rapport.traiter(biz, state, cles, metiers, histo=histo) if cles else (0, [])
     erreurs += errs
     _save_json(path, state)
+    espace, errs = demandes_espace(biz, metiers, cles, histo)
+    erreurs += errs
     if erreurs:
         log.warning("Dossiers : %s", [safe(e) for e in erreurs])
-    return {"actif": True, "livres": livres, "rapports": rapports, "erreurs": len(erreurs)}
+    return {"actif": True, "livres": livres, "rapports": rapports, "demandes_espace": espace, "erreurs": len(erreurs)}
+
+
+def demandes_espace(biz, metiers, cles, histo, supa=None, generer_rapport=None, generer_dossier=None, avis_fn=None):
+    """Rapports et dossiers inclus demandés depuis l'espace client (offre Clé en main) : résultat déposé dans le
+    stockage privé du client + e-mail. Les demandes par e-mail (rapport.traiter / dossier.traiter) restent possibles."""
+    if not biz.get("cle_actif"):
+        return 0, []
+    supa = supa or comptes.connexion()
+    if not supa:
+        return 0, []
+    d = biz.get("dossier") or {}
+    modele = d.get("modele") or "claude-opus-5-5"
+    generer_rapport = generer_rapport or (lambda avis, fiche, metier: rapport.generer(avis, fiche, metier, "", modele))
+    generer_dossier = generer_dossier or (lambda dce, infos: dossier.generer(dce, infos, modele))
+    avis_fn = avis_fn or boamp.fetch_one
+    par_email = {s["email"].lower(): s for s in cles}
+
+    def metier_de(c, avis):
+        ms = (par_email.get((c.get("email") or "").lower()) or {}).get("metiers") or []
+        return next((m for m in ms if m in (avis.get("metiers") or [])), None) or next(iter(ms), None)
+
+    def faire_rapport(dem, c):
+        avis = avis_fn(dem["avis_ref"])
+        if not avis:
+            return None, f"Avis {dem['avis_ref']} introuvable au BOAMP : vérifiez la référence. Non décompté."
+        m = metier_de(c, avis)
+        fiche = histo.fiche(avis.get("acheteur_siret"), m) if histo and m and avis.get("acheteur_siret") else None
+        r = generer_rapport(avis, fiche, (metiers.get(m) or {}).get("libelle", ""))
+        kw = dict(r=r, avis=avis, fiche=fiche, avec_dce=False,
+                  lien_dossier=f"{biz['site_url'].rstrip('/')}/compte/#demandes")
+        chemin = f"{dem['user_id']}/{dem['id']}/resultat/{comptes.nom_fichier('rapport ' + avis['objet'], '.html')}"
+        supa.deposer(chemin, render("email_rapport.html", biz=biz, cas="rapport", **kw).encode(), "text/html")
+        rapport._envoyer(biz, c["email"], f"comment gagner « {avis['objet'][:60]} »", "rapport", **kw)
+        return chemin, None
+
+    def faire_dossier(dem, c, pieces):
+        textes = []
+        for p in pieces:
+            if p.lower().endswith(comptes.DCE_TYPES):
+                textes += dossier.extraire_texte(p.rsplit("/", 1)[-1], supa.lire(p))
+        dce = dossier.assembler(textes)
+        if len(dce) < 2000:
+            return None, "Pièces illisibles ou incomplètes : ajoutez le règlement et le cahier des charges (PDF ou Word). Non décompté."
+        doc = generer_dossier(dce, (dem.get("infos") or "") + f"\nAvis BOAMP : {dem['avis_ref']}")
+        reste = dossier.jours_avant(doc.get("date_limite"))
+        if reste is not None and reste < int(d.get("delai_min_jours") or 5):
+            return None, f"Date limite trop proche ({max(reste, 0)} jour(s)) pour préparer un dossier sérieux. Non décompté."
+        fichier = dossier.construire_docx(doc, biz["nom"])
+        nom = comptes.nom_fichier("dossier " + (doc.get("objet") or "reponse"), ".docx")
+        chemin = f"{dem['user_id']}/{dem['id']}/resultat/{nom}"
+        supa.deposer(chemin, fichier, "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+        import base64
+        dossier._envoyer(biz, c["email"], "votre dossier est prêt", "livre", objet=doc.get("objet"), date_limite=doc.get("date_limite"),
+                         inclus=True, pj=[{"filename": nom, "content": base64.b64encode(fichier).decode()}])
+        return chemin, None
+
+    return comptes.traiter_demandes(supa, biz, metiers, faire_rapport, faire_dossier)
+
+
+def run_comptes(installer=False):
+    """Comptes clients : mise en service (installer=True, workflow comptes-setup.yml) puis synchronisation Stripe."""
+    biz, metiers = business(), load_metiers()
+    out = {}
+    if installer:
+        from . import comptes_setup
+        out = comptes_setup.installer(biz)
+        os.environ.setdefault("SUPABASE_PROJECT_REF", out["projet"])
+    run = {"erreurs": []}
+    subs = subscribers.load_all(biz, metiers)
+    supa = comptes_espace(biz, metiers, subs, run)
+    out.update(actif=bool(supa), comptes=run.get("comptes"), criteres_espace=run.get("criteres_espace", 0), erreurs=run["erreurs"])
+    return out
 
 
 def main(argv=None):
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     p = argparse.ArgumentParser(prog="radar")
-    p.add_argument("cmd", choices=["daily", "weekly", "check-api", "demo", "essai", "abonnes", "prospection", "audit", "apercu-emails", "dossiers", "entreprises", "barometre", "bienvenue", "veille"])
+    p.add_argument("cmd", choices=["daily", "weekly", "check-api", "demo", "essai", "abonnes", "prospection", "audit", "apercu-emails", "dossiers", "entreprises", "barometre", "bienvenue", "veille", "comptes", "comptes-setup"])
     p.add_argument("--mois", help="baromètre : mois AAAA-MM (par défaut le mois écoulé)")
     p.add_argument("--budget", type=int, default=6000, help="entreprises : nombre maximum d'appels à l'annuaire")
     p.add_argument("--apercu", action="store_true", help="prospection : envoie un aperçu au propriétaire")
@@ -888,6 +1009,8 @@ def main(argv=None):
             sys.exit(1 if {"id", "objet", "date_parution"} & set(missing) else 0)
         elif args.cmd == "veille":
             print(json.dumps(run_veille(), ensure_ascii=False))
+        elif args.cmd in ("comptes", "comptes-setup"):
+            print(json.dumps(run_comptes(installer=args.cmd == "comptes-setup"), ensure_ascii=False, indent=1))
         elif args.cmd == "bienvenue":
             print(json.dumps(run_bienvenue(), ensure_ascii=False))
         elif args.cmd == "abonnes":
