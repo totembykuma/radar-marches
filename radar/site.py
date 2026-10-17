@@ -1,6 +1,7 @@
 """Génère le site statique : page de vente + pages SEO par métier et département, mises à jour chaque jour."""
 import hashlib
 import json
+import re
 import shutil
 from collections import Counter, defaultdict
 from datetime import date, timedelta
@@ -170,6 +171,35 @@ def _zone(dep, nom, par_metier, today, slug=None):
             "acheteurs": [n for n, _ in acheteurs.most_common(5)]}
 
 
+def _arrondi(d):
+    """Tracé allégé pour la carte décorative de l'accueil : 1 point sur 2, coordonnées entières."""
+    out = []
+    for sous in re.findall(r"M[^MZ]*Z?", d):
+        pts = re.findall(r"(-?\d+\.?\d*),(-?\d+\.?\d*)", sous)
+        pts = [pts[0]] + pts[1:-1:2] + [pts[-1]] if len(pts) > 6 else pts
+        out.append("M" + "L".join(f"{round(float(x))},{round(float(y))}" for x, y in pts) + "Z")
+    return "".join(out)
+
+
+def _radar_accueil(by_metier):
+    """Carte de France de l'accueil : départements de métropole + un point par département ayant des marchés ouverts."""
+    n = Counter(d for lst in by_metier.values() for a in {id(a): a for a in lst}.values() for d in a["departements"] if d)
+    deps, points = [], []
+    for d in CARTE["departements"]:
+        nums = [float(x) for x in re.findall(r"-?\d+\.?\d*", d["d"])]
+        xs, ys = nums[0::2], nums[1::2]
+        if max(xs) >= 630:  # outre-mer, dessiné en encart sur la vraie carte
+            continue
+        deps.append(_arrondi(d["d"]))
+        if n.get(d["code"]):
+            points.append({"x": round((min(xs) + max(xs)) / 2), "y": round((min(ys) + max(ys)) / 2), "n": n[d["code"]], "nom": d["nom"]})
+    top = max((p["n"] for p in points), default=1)
+    for i, p in enumerate(sorted(points, key=lambda p: -p["n"])):
+        p["r"] = round(2.5 + 6 * (p["n"] / top) ** .5, 1)
+        p["delai"] = round((i * 0.37) % 4, 2)
+    return {"deps": deps, "points": points}
+
+
 def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=None, laureats=None):
     out_dir = Path(out_dir)
     if out_dir.exists():
@@ -213,7 +243,7 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=Non
     apercu = _apercu(by_metier, metiers, today)
     write("index.html", render("index.html", root="", path="/", stats=stats, counts=counts, apercu=apercu,
                                noms_dep=NOMS_DEP, comptes_actifs=bool(comptes.config_publique()),
-                               ex_key=ex_key, exemple=exemple, film=film, vitrine=vitrine, avis_clients=avis_clients,
+                               ex_key=ex_key, exemple=exemple, film=film, vitrine=vitrine, avis_clients=avis_clients, radar=_radar_accueil(by_metier),
                                title=f"{biz['nom']} · Appels d'offres publics par métier, triés" + (" par IA" if biz.get("ia_active") else ""),
                                description=biz["slogan"], **common))
     villes = _villes(by_metier, metiers)
