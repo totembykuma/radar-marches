@@ -100,7 +100,7 @@ class Supa:
     def _req(self, method, path, params=None, json_=None, headers=None, data=None, attendu=None):
         r = self.http.request(method, f"{self.url}{path}", params=params, json=json_, data=data,
                               headers={**self.h, **(headers or {})}, timeout=120)
-        if r.status_code >= 400 and r.status_code != attendu:
+        if r.status_code >= 400 and r.status_code not in (attendu if isinstance(attendu, tuple) else (attendu,)):
             raise RuntimeError(f"Supabase {method} {path.split('?')[0]} : {r.status_code} {r.text[:200]}")
         return r
 

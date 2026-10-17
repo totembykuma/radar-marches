@@ -66,7 +66,7 @@ def config_auth(biz, smtp_pass):
 
 def _bucket(supa):
     corps = {"id": BUCKET, "name": BUCKET, "public": False, "file_size_limit": DCE_MAX_OCTETS, "allowed_mime_types": TYPES_MIME}
-    r = supa._req("POST", "/storage/v1/bucket", json_=corps, attendu=409)
+    r = supa._req("POST", "/storage/v1/bucket", json_=corps, attendu=(400, 409))
     if r.status_code >= 400:                                # existe déjà (409, ou 400 selon la version) : mise à jour
         supa._req("PUT", f"/storage/v1/bucket/{BUCKET}", json_={k: v for k, v in corps.items() if k != "name"})
 
