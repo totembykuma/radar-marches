@@ -277,7 +277,7 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
     # 2. Abonnés
     if subs is None:
         subs = subscribers.load_all(biz, metiers)
-    run["abonnes"] = len(subs)
+    run["abonnes"] = sum(1 for s in subs if s.get("source") != "interne")
 
     # 2a. Changements de critères demandés via le formulaire du site (lecture automatique)
     try:
@@ -589,7 +589,7 @@ def run_abonnes():
         u, _, d = e.partition("@")
         return f"{u[:2]}***@{d}"
     return {"mode_stripe": biz.get("stripe_mode"), "nombre": len(subs),
-            "abonnes": [{"email": mask(s["email"]), "plan": s["plan"], "statut": s["statut"], "metiers": s["metiers"],
+            "abonnes": [{"email": mask(s["email"]), "plan": s["plan"], "statut": s["statut"], "source": s.get("source"), "metiers": s["metiers"],
                          "departements": s["departements"], "mots_cles": s["mots_cles"]} for s in subs]}
 
 
