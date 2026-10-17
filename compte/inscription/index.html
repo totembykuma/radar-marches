@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="fr"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Créer mon compte · Radar Marchés</title>
+<meta name="description" content=""><meta name="google-site-verification" content="SZybI2SsjlqSJ8IoP4km9vdFVcCDOwgf5n3LTYSsxe4"><meta name="robots" content="noindex">
+<link rel="canonical" href="https://www.radar-marches.fr/compte/inscription/">
+<meta property="og:title" content="Créer mon compte · Radar Marchés"><meta property="og:description" content=""><meta property="og:type" content="website">
+<meta name="theme-color" content="#0b1b33">
+<link rel="icon" href="../../static/icons/icon.svg" type="image/svg+xml"><link rel="icon" href="../../static/icons/favicon-32.png" sizes="32x32"><link rel="icon" href="https://www.radar-marches.fr/static/icons/favicon-48.png" sizes="48x48"><link rel="icon" href="https://www.radar-marches.fr/static/icons/icon-192.png" sizes="192x192"><link rel="shortcut icon" href="https://www.radar-marches.fr/favicon.ico"><meta property="og:image" content="https://www.radar-marches.fr/static/icons/icon-512.png"><link rel="apple-touch-icon" href="../../static/icons/apple-touch-icon.png"><link rel="manifest" href="../../static/site.webmanifest"><meta name="apple-mobile-web-app-title" content="Radar Marchés">
+<link rel="stylesheet" href="../../static/style.css?v=4dcfe51e">
+
+
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://gc.zgo.at; connect-src 'self' https://kuibecanphbatqabdtbd.supabase.co https://*.goatcounter.com; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; font-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="no-referrer">
+</head><body>
+<header class="top"><div class="wrap">
+  <a class="logo" href="../../"><span class="logo-mark"><svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#0b1b33"/><circle cx="16" cy="16" r="10" fill="none" stroke="#ffb020" stroke-opacity=".35" stroke-width="1.6"/><circle cx="16" cy="16" r="6" fill="none" stroke="#ffb020" stroke-opacity=".7" stroke-width="1.6"/><path d="M16 16L24 9" stroke="#ffb020" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="16" r="2.4" fill="#ffb020"/></svg></span>Radar Marchés</a>
+  <nav><a href="../../appels-offres/" class="hide-sm">Appels d'offres</a><a href="../../guides/" class="hide-sm">Guides</a><a href="../../#tarifs" class="hide-sm">Tarifs</a><a href="../../compte/">Mon compte</a><a href="../../#tarifs" class="btn btn-sm">Essai gratuit</a></nav>
+</div></header>
+<main>
+
+<section class="wrap rappel compte" id="compte" data-vue="inscription">
+  <p class="kicker">Espace client</p>
+  <p id="v-chargement" class="muted" role="status">Chargement de votre espace…</p>
+  <noscript><p class="msg msg-err">Votre navigateur bloque JavaScript : il est nécessaire pour vous connecter.</p></noscript>
+
+  
+  <div id="v-connexion" hidden>
+    <h1>Mon compte</h1>
+    <form class="card form" id="f-connexion" novalidate>
+      <p><label for="c-email">Adresse e-mail</label><input id="c-email" type="email" autocomplete="email" required></p>
+      <p><label for="c-mdp">Mot de passe</label><input id="c-mdp" type="password" autocomplete="current-password" required></p>
+      <p class="msg" id="m-connexion" role="alert" hidden></p>
+      <button class="btn btn-lg btn-block" type="submit">Se connecter</button>
+      <p class="liens"><a href="../../compte/oubli/">Mot de passe oublié ?</a></p>
+    </form>
+    <div class="card"><h2>Nouveau client ?</h2>
+      <p>Créez votre compte, puis démarrez votre essai gratuit de 14 jours (carte demandée, aucun débit pendant l'essai).</p>
+      <p><a class="btn" href="../../compte/inscription/">Créer mon compte</a></p>
+      <p class="muted">Déjà abonné sans mot de passe ? Créez votre compte avec l'adresse de votre abonnement : il s'y relie tout seul.</p></div>
+  </div>
+  <div id="ancien" hidden><section class="wrap rappel">
+  <p class="kicker">Espace client</p>
+  <div id="c-vide">
+    <h1>Mon compte</h1>
+    <p class="lead">Pas de mot de passe à retenir : votre espace s'ouvre avec le lien personnel reçu par e-mail (bouton « Mon espace client » en bas de chaque alerte).</p>
+    <form class="card" id="c-form">
+      <h2>Lien perdu ?</h2>
+      <p><label>Votre adresse e-mail (celle utilisée pour payer)<br><input id="c-email-lien" type="email" required style="width:100%"></label></p>
+      <button class="btn btn-lg" type="submit">Recevoir mon lien</button>
+      <p class="muted" id="c-info">Vous ouvrez votre messagerie (Gmail, Outlook…) avec un e-mail déjà prêt : envoyez-le tel quel. Votre lien vous est renvoyé en une dizaine de minutes.</p>
+    </form>
+    <p>Pas encore client ? <a href="../../#tarifs">Essai gratuit de 14 jours</a>.</p>
+  </div>
+  <div id="c-plein" hidden>
+    <div class="card note-nouveau" id="c-invite" hidden><h2>Nouveau : votre compte avec mot de passe</h2>
+      <p>Retrouvez vos alertes, vos favoris et vos demandes, et modifiez vos critères en direct. Utilisez la même adresse que pour votre abonnement.</p>
+      <p><a class="btn" id="c-invite-lien" href="../../compte/inscription/">Créer mon mot de passe</a> <a href="../../compte/?connexion">J'ai déjà un mot de passe</a></p></div>
+    <h1>Bonjour</h1>
+    <p class="lead" id="c-qui"></p>
+    <div class="card"><h2>Mon abonnement</h2><p id="c-offre"></p>
+      <p><a class="btn" id="c-portail" href="https://billing.stripe.com/p/login/dRm8wIfYk1j39r3aL63F600">Factures, carte bancaire, changer d'offre ou résilier</a></p>
+      <p class="muted">Ouvre votre espace de facturation sécurisé Stripe : saisissez votre e-mail, vous recevez un lien de connexion.</p></div>
+    <div class="card"><h2>Mes critères d'alerte</h2><p id="c-crit"></p>
+      <p><a class="btn" href="../../criteres/">Modifier mes critères</a></p>
+      <p class="muted">Vos alertes arrivent chaque matin ouvré vers 6 h 30. Pas d'e-mail un jour donné = aucun nouvel avis pertinent.</p></div>
+    <div class="card"><h2>Mes appels d'offres</h2><p>Les marchés ouverts de votre métier, à consulter à tout moment :</p><ul id="c-liens"></ul></div>
+    <div class="card" id="c-cle" hidden><h2>Mon service Clé en main</h2>
+      <p><b>Rapport « comment gagner »</b> : critères de notation, pièces à fournir, pièges, prix de repère et plan d'action pour un marché. Reçu dans l'heure (jours ouvrés). <span id="c-rmax"></span></p>
+      <form id="c-rform"><p><label>Lien ou référence de l'appel d'offres (ex. 26-123456)<br><input id="c-ravis" required style="width:100%"></label></p>
+      <button class="btn" type="submit">Demander le rapport</button></form>
+      <p style="margin-top:18px"><b>Dossier prêt à signer</b> : <span id="c-dinclus"></span> Envoyez le dossier de consultation, vous recevez un Word complet à relire, chiffrer, signer et déposer.</p>
+      <p><a class="btn" href="../../dossier/envoyer/">Envoyer mon dossier de consultation</a> <a id="c-dplus" hidden></a></p></div>
+    <div class="card" id="c-parrain" hidden><h2>Parrainage : 1 mois offert</h2><p>Partagez votre lien à un confrère. Quand il devient client, vous recevez chacun 1 mois offert.</p><p><a id="c-plien"></a></p></div>
+    <p class="muted">Une question ? Répondez simplement à l'un de nos e-mails. <a href="#" id="c-sortir">Se déconnecter de cet appareil</a></p>
+  </div>
+</section>
+<script>
+/* Ancien espace par lien personnel (#…). Reste en service pendant la transition vers les comptes avec mot de passe.
+   Renvoie true s'il a affiché un espace. */
+function ancienEspace(nouveau) {
+  var cle = "radar-compte", code = location.hash.slice(1);
+  if (/^(token_hash|access_token|email=|alertes|favoris|demandes|criteres|parametres)/.test(code)) code = "";
+  try { if (code) localStorage.setItem(cle, code); else code = localStorage.getItem(cle) || ""; } catch (e) {}
+  function txt(id, t) { document.getElementById(id).textContent = t; }
+  var d = null;
+  if (code) { try {
+    var b = code.replace(/-/g, "+").replace(/_/g, "/"); while (b.length % 4) b += "=";
+    d = JSON.parse(decodeURIComponent(escape(atob(b))));
+  } catch (e) { d = null; } }
+  if (!d || !d.e) {
+    if (nouveau) return false;
+    document.getElementById("c-form").addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      var em = document.getElementById("c-email-lien").value.trim();
+      envoyerMail("compte@elkaurtel.resend.app", "Mon espace client", "Bonjour,\n\nMerci de m'envoyer le lien de mon espace client.\n\nAdresse du compte : " + em + "\n");
+    });
+    return false;
+  }
+  if (nouveau) {
+    var inv = document.getElementById("c-invite"); inv.hidden = false;
+    document.getElementById("c-invite-lien").href = "../../compte/inscription/#email=" + encodeURIComponent(d.e);
+  }
+  history.replaceState(null, "", location.pathname);
+  document.getElementById("c-vide").hidden = true; document.getElementById("c-plein").hidden = false;
+  var statuts = {trialing: "essai gratuit en cours", active: "actif", past_due: "paiement en attente : mettez à jour votre carte"};
+  txt("c-qui", "Compte : " + d.e);
+  txt("c-offre", "Offre " + d.o + " · " + (statuts[d.s] || d.s) + (d.fe ? " jusqu'au " + d.fe + " (aucun débit avant cette date)" : "") + (d.db ? " · client depuis le " + d.db : ""));
+  txt("c-crit", (d.m.map(function (x) { return x[1]; }).join(", ") || "—") + " · " + (d.d.length ? "départements " + d.d.join(", ") : "toute la France") + (d.k.length ? " · mots-clés : " + d.k.join(", ") : ""));
+  var p = document.getElementById("c-portail"); p.href = p.href + (p.href.indexOf("?") < 0 ? "?" : "&") + "prefilled_email=" + encodeURIComponent(d.e);
+  var ul = document.getElementById("c-liens");
+  function lien(href, t) { var li = document.createElement("li"), a = document.createElement("a"); a.href = href; a.textContent = t; li.appendChild(a); ul.appendChild(li); }
+  d.m.forEach(function (x) { lien("../../appels-offres/" + x[0] + "/", x[1] + " : tous les marchés ouverts"); });
+  d.d.forEach(function (dep) { lien("../../appels-offres/departements/" + dep + ".html", "Tous les marchés du département " + dep); });
+  if (d.cle) {
+    document.getElementById("c-cle").hidden = false;
+    txt("c-rmax", "Jusqu'à " + d.cle.rm + " rapports par mois.");
+    txt("c-dinclus", d.cle.n + " dossiers inclus chaque mois" + (d.s === "trialing" ? " à partir de votre premier paiement." : "."));
+    if (d.cle.u) { var x = document.getElementById("c-dplus"); x.hidden = false; x.href = d.cle.u + "?prefilled_email=" + encodeURIComponent(d.e); x.textContent = "Un dossier de plus : " + d.cle.x + " €"; }
+    document.getElementById("c-rform").addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      var ref = document.getElementById("c-ravis").value.trim();
+      envoyerMail(d.cle.r, "Rapport " + ref, 
+        "Bonjour,\n\nMerci de m'envoyer le rapport « comment gagner » pour l'appel d'offres : " + ref +
+        "\n\n(Facultatif : joignez le dossier de consultation pour un rapport encore plus précis.)\n");
+    });
+  }
+  if (d.p) { document.getElementById("c-parrain").hidden = false; var pl = document.getElementById("c-plien"); pl.href = d.p; pl.textContent = d.p; }
+  document.getElementById("c-sortir").addEventListener("click", function (ev) {
+    ev.preventDefault(); try { localStorage.removeItem(cle); } catch (e) {} location.reload();
+  });
+  return true;
+}
+</script></div>
+
+  
+  <div id="v-inscription" hidden>
+    <h1>Créer mon compte</h1>
+    <p class="lead" id="i-choix" hidden></p>
+    <form class="card form" id="f-inscription" novalidate>
+      <p><label for="i-email">Adresse e-mail</label><input id="i-email" type="email" autocomplete="email" required>
+        <small class="muted">Déjà abonné ? Utilisez l'adresse de votre abonnement.</small></p>
+      <p><label for="i-mdp">Mot de passe (10 caractères minimum)</label><input id="i-mdp" type="password" autocomplete="new-password" minlength="10" required></p>
+      <p><label for="i-mdp2">Confirmez le mot de passe</label><input id="i-mdp2" type="password" autocomplete="new-password" minlength="10" required></p>
+      <p class="check"><label><input id="i-cgv" type="checkbox" required> J'accepte les <a href="../../cgv.html" target="_blank">conditions de vente</a> et la <a href="../../confidentialite.html" target="_blank">politique de confidentialité</a>.</label></p>
+      <p class="msg" id="m-inscription" role="alert" hidden></p>
+      <button class="btn btn-lg btn-block" type="submit">Créer mon compte</button>
+      <p class="muted">Vous recevez un e-mail pour confirmer votre adresse. Ensuite : choix de l'offre et essai gratuit de 14 jours.</p>
+    </form>
+    <p>Déjà un compte ? <a href="../../compte/?connexion">Se connecter</a></p>
+  </div>
+
+  
+  <div id="v-oubli" hidden>
+    <h1>Mot de passe oublié</h1>
+    <form class="card form" id="f-oubli" novalidate>
+      <p><label for="o-email">Adresse e-mail du compte</label><input id="o-email" type="email" autocomplete="email" required></p>
+      <p class="msg" id="m-oubli" role="alert" hidden></p>
+      <button class="btn btn-lg btn-block" type="submit">Recevoir un lien</button>
+      <p class="muted">Le lien fonctionne une seule fois, pendant 1 heure.</p>
+    </form>
+    <p><a href="../../compte/?connexion">Retour à la connexion</a></p>
+  </div>
+
+  
+  <div id="v-confirmation" hidden>
+    <h1 id="cf-titre">Vérification…</h1>
+    <p class="msg" id="m-confirmation" role="alert" hidden></p>
+    <form class="card form" id="f-nouveau" hidden novalidate>
+      <p><label for="n-mdp">Nouveau mot de passe (10 caractères minimum)</label><input id="n-mdp" type="password" autocomplete="new-password" minlength="10" required></p>
+      <p><label for="n-mdp2">Confirmez</label><input id="n-mdp2" type="password" autocomplete="new-password" minlength="10" required></p>
+      <p class="msg" id="m-nouveau" role="alert" hidden></p>
+      <button class="btn btn-lg btn-block" type="submit">Enregistrer</button>
+    </form>
+    <p id="cf-suite" hidden><a class="btn" href="../../compte/">Ouvrir mon espace</a> <a href="../../compte/oubli/">Recevoir un nouveau lien</a></p>
+  </div>
+
+  
+  <div id="v-espace" hidden>
+    <div class="espace-tete"><div><h1>Bonjour</h1><p class="lead" id="e-qui"></p></div>
+      <button class="btn btn-sm btn-ghost-dark" id="e-sortir" type="button">Se déconnecter</button></div>
+    <nav class="espace-nav" aria-label="Rubriques"><a href="#abonnement">Abonnement</a><a href="#criteres">Critères</a><a href="#alertes">Alertes et favoris</a><a href="#demandes" id="nav-demandes" hidden>Demandes</a><a href="#parametres">Mon compte</a></nav>
+
+    <div class="card" id="abonnement"><h2>Mon abonnement</h2>
+      <p id="e-offre"></p>
+      <p class="msg msg-err" id="e-impaye" hidden>Le dernier paiement a échoué : mettez à jour votre carte pour garder vos alertes.</p>
+      <div id="e-sans" hidden>
+        <p id="e-sans-txt">Aucun abonnement n'est relié à cette adresse.</p>
+        <div class="offres-mini" id="e-offres"></div>
+        <p class="muted">Utilisez la même adresse e-mail sur la page de paiement. Après paiement, votre abonnement apparaît ici en quelques minutes (rechargez la page).</p>
+      </div>
+      <p id="e-portail-p" hidden><a class="btn" id="e-portail" href="https://billing.stripe.com/p/login/dRm8wIfYk1j39r3aL63F600">Factures, carte, changer d'offre ou résilier</a></p>
+      <p class="muted" id="e-portail-aide" hidden>Espace de facturation sécurisé Stripe : saisissez votre e-mail, vous recevez un code de connexion. Résiliation en un clic.</p>
+    </div>
+
+    <div class="card" id="criteres"><h2>Mes critères de veille</h2>
+      <form class="form" id="f-criteres" novalidate>
+        <p><label for="k-metier">Métier</label><select id="k-metier" required></select></p>
+        <p><label for="k-deps" id="k-deps-label">Département</label><input id="k-deps" inputmode="text" autocomplete="off" placeholder="ex. 33">
+          <small class="muted" id="k-deps-aide"></small></p>
+        <p id="k-mots-p" hidden><label for="k-mots">Mots-clés (séparés par des virgules, facultatif)</label><input id="k-mots" autocomplete="off" placeholder="ex. vitrerie, désinfection"></p>
+        <p class="msg" id="m-criteres" role="status" hidden></p>
+        <button class="btn" type="submit" id="k-ok">Enregistrer mes critères</button>
+      </form>
+      <p class="muted">Alertes chaque matin ouvré vers 6 h 30. Un changement est appliqué à la prochaine alerte (confirmation par e-mail).</p>
+    </div>
+
+    <div class="card" id="alertes"><h2>Mes alertes et favoris</h2>
+      <div class="onglets" role="tablist"><button type="button" role="tab" aria-selected="true" id="t-toutes">Alertes reçues</button><button type="button" role="tab" aria-selected="false" id="t-favoris">Favoris</button></div>
+      <ul class="liste-alertes" id="l-alertes"></ul>
+      <p class="muted" id="l-vide" hidden></p>
+      <p class="muted">Favori = rappel par e-mail 3 jours avant la date limite. Historique conservé 13 mois.</p>
+    </div>
+
+    <div class="card" id="demandes" hidden><h2>Mes demandes</h2>
+      <p id="d-quotas"></p>
+      <div id="d-cle" hidden>
+        <form class="form" id="f-rapport" novalidate>
+          <h3>Rapport « comment gagner »</h3>
+          <p class="muted">Critères, pièces, pièges, prix de repère publiés et plan d'action pour un marché. Prêt en général dans l'heure (jours ouvrés, 7 h - 21 h).</p>
+          <p><label for="r-ref">Référence ou lien de l'avis (ex. 26-123456)</label><input id="r-ref" required autocomplete="off"></p>
+          <p class="msg" id="m-rapport" role="status" hidden></p>
+          <button class="btn" type="submit">Demander le rapport</button>
+        </form>
+        <form class="form" id="f-dossier" novalidate>
+          <h3>Dossier de candidature (inclus)</h3>
+          <p class="muted">Word modifiable : mémoire technique, lettre de candidature, DUME, pièces à fournir. À relire, chiffrer, signer et déposer vous-même. Les passages à compléter sont signalés.</p>
+          <p><label for="dd-ref">Référence de l'avis</label><input id="dd-ref" required autocomplete="off"></p>
+          <p><label for="dd-infos">Votre entreprise (activité, effectif, références, certifications…)</label><textarea id="dd-infos" rows="4" maxlength="4000"></textarea></p>
+          <p><label for="dd-fichiers">Dossier de consultation (PDF, Word ou ZIP, 20 Mo max par fichier)</label><input id="dd-fichiers" type="file" multiple accept=".pdf,.doc,.docx,.odt,.zip,.txt"></p>
+          <p class="msg" id="m-dossier" role="status" hidden></p>
+          <button class="btn" type="submit">Envoyer pour préparation</button>
+        </form>
+      </div>
+      <div id="d-achat" hidden><h3>Dossier prêt à signer</h3><p id="d-achat-txt"></p><p><a class="btn" id="d-achat-lien" href="#">Commander un dossier</a></p></div>
+      <ul class="liste-demandes" id="l-demandes"></ul>
+    </div>
+
+    <div class="card" id="parametres"><h2>Mon compte</h2>
+      <form class="form" id="f-email" novalidate><p><label for="p-email">Changer d'adresse e-mail</label><input id="p-email" type="email" autocomplete="email" required></p>
+        <p class="msg" id="m-email" role="status" hidden></p><button class="btn btn-sm" type="submit">Changer d'adresse</button>
+        <p class="muted">Un lien de confirmation est envoyé à l'ancienne et à la nouvelle adresse. Pensez à changer aussi l'adresse de facturation dans Stripe.</p></form>
+      <form class="form" id="f-mdp" novalidate><p><label for="p-mdp">Nouveau mot de passe (10 caractères minimum)</label><input id="p-mdp" type="password" autocomplete="new-password" minlength="10" required></p>
+        <p class="msg" id="m-mdp" role="status" hidden></p><button class="btn btn-sm" type="submit">Changer de mot de passe</button></form>
+      <div id="p-parrain" hidden><h3>Parrainage : 1 mois offert</h3><p>Partagez ce lien à un confrère : quand il devient client, vous recevez chacun 1 mois offert.</p><p><a id="p-parrain-lien"></a></p></div>
+      <p class="muted">Support : répondez à n'importe quel e-mail ou écrivez à <a href="mailto:contact@radar-marches.fr">contact@radar-marches.fr</a>. Suppression du compte et de vos données : <a href="mailto:contact@radar-marches.fr?subject=Suppression%20de%20mon%20compte">demandez-la par e-mail</a> (traitée sous 30 jours).</p>
+    </div>
+  </div>
+</section>
+<script type="application/json" id="compte-conf">{"cle": "sb_publishable_em8Qyzd6rxO1SxlqABefKw_tRMKn819", "dossier": null, "essai": 14, "max_octets": 20971520, "metiers": [["carrelage-sols", "Carrelage et sols"], ["communication-web", "Communication, web et graphisme"], ["couverture", "Couverture, charpente, \u00e9tanch\u00e9it\u00e9"], ["espaces-verts", "Espaces verts et paysage"], ["formation", "Formation professionnelle"], ["informatique", "Informatique et num\u00e9rique"], ["maconnerie-gros-oeuvre", "Ma\u00e7onnerie et gros \u0153uvre"], ["menuiserie", "Menuiserie et serrurerie"], ["nettoyage", "Nettoyage et propret\u00e9"], ["peinture", "Peinture et rev\u00eatements"], ["plomberie-cvc", "Plomberie, chauffage, ventilation"], ["platrerie", "Pl\u00e2trerie, plaquiste, isolation"], ["restauration", "Restauration et traiteur"], ["securite", "S\u00e9curit\u00e9 et gardiennage"], ["transport", "Transport et d\u00e9m\u00e9nagement"], ["voirie-vrd", "Voirie, VRD et travaux publics"], ["electricite", "\u00c9lectricit\u00e9"]], "metiers_nom": {"carrelage-sols": "Carrelage et sols", "communication-web": "Communication, web et graphisme", "couverture": "Couverture, charpente, \u00e9tanch\u00e9it\u00e9", "electricite": "\u00c9lectricit\u00e9", "espaces-verts": "Espaces verts et paysage", "formation": "Formation professionnelle", "informatique": "Informatique et num\u00e9rique", "maconnerie-gros-oeuvre": "Ma\u00e7onnerie et gros \u0153uvre", "menuiserie": "Menuiserie et serrurerie", "nettoyage": "Nettoyage et propret\u00e9", "peinture": "Peinture et rev\u00eatements", "platrerie": "Pl\u00e2trerie, plaquiste, isolation", "plomberie-cvc": "Plomberie, chauffage, ventilation", "restauration": "Restauration et traiteur", "securite": "S\u00e9curit\u00e9 et gardiennage", "transport": "Transport et d\u00e9m\u00e9nagement", "voirie-vrd": "Voirie, VRD et travaux publics"}, "offres": {"essentiel": {"annuel": 290, "lien": "https://buy.stripe.com/eVqdR2eUg7HrdHj9H23F602", "lien_annuel": "https://buy.stripe.com/8x23cocM82n7cDfdXi3F604", "nom": "Essentiel", "prix": 29}, "pro": {"annuel": 490, "lien": "https://buy.stripe.com/00w8wI4fC1j36eRbPa3F603", "lien_annuel": "https://buy.stripe.com/28E9AM6nK8Lvbzb06s3F605", "nom": "Pro", "prix": 49}}, "portail": "https://billing.stripe.com/p/login/dRm8wIfYk1j39r3aL63F600", "root": "/", "site": "https://www.radar-marches.fr", "url": "https://kuibecanphbatqabdtbd.supabase.co"}</script>
+<script src="../../static/vendor/supabase-2.99.3.js"></script>
+<script src="../../static/compte.js?v=4dcfe51e"></script>
+
+</main>
+<footer><div class="wrap foot">
+  <div><a class="logo" href="../../">Radar Marchés</a><p>Les appels d'offres publics de votre métier, chaque matin. Données officielles du BOAMP (open data DILA, Licence Ouverte). Service indépendant, non affilié à l'administration.</p></div>
+  <div class="foot-links"><a href="../../appels-offres/">Appels d'offres par métier</a><a href="../../guides/">Guides pour répondre</a><a href="../../entreprises/">Qui a gagné quoi</a><a href="../../barometre/">Baromètre mensuel</a><a href="../../#tarifs">Tarifs</a><a href="../../compte/">Espace client</a><a href="../../parrainage/">Parrainage</a><a href="mailto:contact@radar-marches.fr">Contact</a></div>
+  <div class="foot-links"><a href="../../mentions-legales.html">Mentions légales</a><a href="../../cgv.html">CGV</a><a href="../../confidentialite.html">Confidentialité</a></div>
+</div></footer>
+
+<div id="ra" class="ra" aria-live="polite">
+  <button class="ra-btn" type="button" aria-expanded="false" aria-controls="ra-panel"><span class="ra-dot"></span>Une question ?</button>
+  <div class="ra-panel" id="ra-panel" role="dialog" aria-label="Assistant Radar Marchés" hidden>
+    <div class="ra-head"><b>Assistant Radar Marchés</b><span>Réponse immédiate</span><button type="button" class="ra-x" aria-label="Fermer">×</button></div>
+    <div class="ra-body"></div>
+    <div class="ra-chips"></div>
+  </div>
+</div>
+<script>
+(function () {
+  var Q = [
+    ["Comment ça marche ?", "Chaque matin à 6h20, nous lisons tous les nouveaux appels d'offres publiés au BOAMP. Vous recevez par e-mail uniquement ceux de votre métier, dans votre secteur : objet, acheteur, lieu, date limite et lien vers l'avis officiel."],
+    ["Combien ça coûte ?", "Essentiel : 29 €/mois (1 métier, 1 département). Pro : 49 €/mois (départements illimités ou toute la France, vos mots-clés, la fiche « avant de répondre » sur chaque marché : prix payés par l'acheteur, nombre de concurrents, derniers gagnants, et le bilan du lundi).  Les deux commencent par 14 jours gratuits. En payant à l'année, vous avez 2 mois offerts."],
+    ["Quelle offre choisir ?", "Vous travaillez dans un seul département ? L'offre Essentiel suffit. Vous intervenez sur plusieurs départements, ou vous voulez surveiller vos concurrents et les prix ? Prenez Pro. Vous pouvez changer d'offre à tout moment."],
+    ["L'essai est-il vraiment gratuit ?", "Oui. Rien n'est prélevé pendant 14 jours. Si vous résiliez avant la fin, vous ne payez rien. La carte sert seulement à éviter une coupure à la fin de l'essai."],
+    ["Comment résilier ?", "En un clic, depuis votre espace client, sans nous écrire. Il n'y a aucun engagement."],
+    ["D'où viennent les marchés ?", "Du BOAMP, le Bulletin officiel des annonces des marchés publics, publié par l'État. Ce sont les avis officiels, et chaque alerte contient le lien vers l'avis complet."],
+    ["Vous répondez à ma place ?", "Non. Nous repérons les marchés qui vous correspondent ; vous décidez et vous répondez sur la plateforme de l'acheteur, dont le lien est dans chaque alerte."],
+    ["Mon métier est-il couvert ?", "Nous suivons 17 métiers : nettoyage et propreté, espaces verts et paysage, peinture et revêtements, électricité, plomberie, chauffage, ventilation, menuiserie et serrurerie, maçonnerie et gros œuvre, couverture, charpente, étanchéité, plâtrerie, plaquiste, isolation, carrelage et sols, voirie, vrd et travaux publics, restauration et traiteur, formation professionnelle, communication, web et graphisme, informatique et numérique, sécurité et gardiennage, transport et déménagement. Avec l'offre Pro, vous pouvez ajouter vos propres mots-clés."]
+  ];
+  var root = document.getElementById("ra"), btn = root.querySelector(".ra-btn"), panel = root.querySelector(".ra-panel"),
+      body = root.querySelector(".ra-body"), chips = root.querySelector(".ra-chips"), asked = {};
+  function msg(text, who) { var d = document.createElement("div"); d.className = "ra-msg " + who; d.textContent = text; body.appendChild(d); body.scrollTop = body.scrollHeight; }
+  function renderChips() {
+    chips.innerHTML = "";
+    Q.forEach(function (q, i) { if (asked[i]) return; var c = document.createElement("button"); c.type = "button"; c.textContent = q[0];
+      c.onclick = function () { asked[i] = 1; msg(q[0], "me"); setTimeout(function () { msg(q[1], "bot"); renderChips(); }, 250); }; chips.appendChild(c); });
+    var a = document.createElement("a"); a.href = "../../#tarifs"; a.className = "ra-cta"; a.textContent = "Essayer 14 jours gratuitement";
+    a.onclick = function () { toggle(false); }; chips.appendChild(a);
+    var m = document.createElement("a"); m.href = "mailto:contact@radar-marches.fr?subject=Question%20sur%20Radar%20March%C3%A9s"; m.className = "ra-mail"; m.textContent = "Autre question ? Écrivez-nous"; chips.appendChild(m);
+  }
+  function toggle(open) { panel.hidden = !open; btn.setAttribute("aria-expanded", open); root.classList.toggle("open", open);
+    if (open && !body.children.length) { msg("Bonjour ! Je réponds tout de suite aux questions les plus fréquentes. Choisissez la vôtre :", "bot"); renderChips(); } }
+  btn.onclick = function () { toggle(panel.hidden); };
+  root.querySelector(".ra-x").onclick = function () { toggle(false); };
+})();
+</script>
+<script>/* Parrainage : le code ?ami= suit le visiteur jusqu'au paiement Stripe (client_reference_id). */
+(function () {
+  var m = location.search.match(/[?&]ami=([A-Za-z0-9]{6})\b/), code = null;
+  try { if (m) localStorage.setItem("ami", m[1].toUpperCase()); code = localStorage.getItem("ami"); } catch (e) { code = m && m[1].toUpperCase(); }
+  if (!code) return;
+  document.addEventListener("click", function (ev) {
+    var a = ev.target.closest && ev.target.closest('a[href^="https://buy.stripe.com/"]');
+    if (!a) return;
+    var u = new URL(a.href); u.searchParams.set("client_reference_id", code); a.href = u.toString();
+  }, true);
+})();</script>
+<script data-goatcounter="https://radarmarches.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+<script>/* Envoi par e-mail : ouvre la messagerie de l'ordinateur ET propose Gmail / Outlook / copier, car un lien mailto ne fait rien sans logiciel de messagerie. */
+function envoyerMail(to, sujet, corps) {
+  var e = encodeURIComponent, old = document.getElementById("em-box");
+  if (old) old.remove();
+  var gm = "https://mail.google.com/mail/?view=cm&fs=1&to=" + e(to) + "&su=" + e(sujet) + "&body=" + e(corps);
+  var ol = "https://outlook.live.com/mail/0/deeplink/compose?to=" + e(to) + "&subject=" + e(sujet) + "&body=" + e(corps);
+  var box = document.createElement("div");
+  box.id = "em-box"; box.setAttribute("role", "dialog");
+  box.style.cssText = "position:fixed;inset:0;background:rgba(11,27,51,.55);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px";
+  box.innerHTML = '<div style="background:#fff;border-radius:14px;max-width:440px;width:100%;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,.25)">' +
+    '<p style="margin:0 0 6px;font-weight:700;font-size:18px">Envoyez ce message pour terminer</p>' +
+    '<p style="margin:0 0 14px;color:#4a5568">Votre e-mail est déjà rédigé. Choisissez votre messagerie, puis cliquez sur « Envoyer ».</p>' +
+    '<a class="btn btn-block" style="margin-bottom:8px" target="_blank" rel="noopener" href="' + gm + '">Ouvrir dans Gmail</a>' +
+    '<a class="btn btn-block btn-ghost-dark" style="margin-bottom:8px" target="_blank" rel="noopener" href="' + ol + '">Ouvrir dans Outlook / Hotmail</a>' +
+    '<a class="btn btn-block btn-ghost-dark" style="margin-bottom:8px" href="mailto:' + to + '?subject=' + e(sujet) + '&body=' + e(corps) + '">Autre messagerie (Apple Mail, Orange…)</a>' +
+    '<p style="margin:12px 0 4px;font-size:14px;color:#4a5568">Ou copiez le message et envoyez-le à <b>' + to + '</b> :</p>' +
+    '<button type="button" class="btn btn-block btn-ghost-dark" id="em-copy">Copier le message</button>' +
+    '<button type="button" id="em-x" style="margin-top:10px;background:none;border:0;color:#4a5568;text-decoration:underline;cursor:pointer;width:100%">Fermer</button></div>';
+  document.body.appendChild(box);
+  box.querySelector("#em-x").onclick = function () { box.remove(); };
+  box.onclick = function (ev) { if (ev.target === box) box.remove(); };
+  box.querySelector("#em-copy").onclick = function () {
+    var t = "À : " + to + "\nObjet : " + sujet + "\n\n" + corps, b = this;
+    function ok() { b.textContent = "Copié ✓ collez-le dans un nouvel e-mail"; }
+    if (navigator.clipboard) navigator.clipboard.writeText(t).then(ok, function () { prompt("Copiez ce message :", t); });
+    else prompt("Copiez ce message :", t);
+  };
+}
+</script>
+</body></html>
