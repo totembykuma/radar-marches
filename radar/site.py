@@ -11,7 +11,7 @@ from markupsafe import Markup
 
 from . import avis as avis_mod
 from . import barometre as baro_mod
-from . import linkedin
+from . import comptes, linkedin
 from .config import ROOT
 from .render import date_fr, date_limite_fr, render, render_string
 from .textutil import slugify
@@ -57,6 +57,19 @@ def _recents(lst, today, key, n=3):
     seuil = (today - timedelta(days=RECENTS_JOURS - 1)).isoformat()
     return [_flou(a, key, today) for a in lst if (a.get("date_parution") or "") >= seuil
             and (a.get("jours_restants") is None or a["jours_restants"] >= 0)][:n]
+
+
+def _apercu(by_metier, metiers, today):
+    """Outil de découverte de l'accueil : vrais nombres de marchés ouverts par métier et département (rien d'inventé).
+    {métier: [total, dont récents réservés aux abonnés, {dép: total}, {dép: récents}]}"""
+    seuil = (today - timedelta(days=RECENTS_JOURS - 1)).isoformat()
+    out = {}
+    for k in metiers:
+        lst = [a for a in by_metier.get(k, []) if a.get("jours_restants") is None or a["jours_restants"] >= 0]
+        rec = [a for a in lst if (a.get("date_parution") or "") >= seuil]
+        out[k] = [len(lst), len(rec), dict(Counter(d for a in lst for d in a["departements"] if d)),
+                  dict(Counter(d for a in rec for d in a["departements"] if d))]
+    return out
 
 
 def _nom_dep(d):
@@ -197,7 +210,9 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=Non
     film = _film(by_metier, histo)
     vitrine = _vitrine(by_metier, today)
     avis_clients = avis_mod.resume(avis_mod.charger())
-    write("index.html", render("index.html", root="", path="/", stats=stats, counts=counts,
+    apercu = _apercu(by_metier, metiers, today)
+    write("index.html", render("index.html", root="", path="/", stats=stats, counts=counts, apercu=apercu,
+                               noms_dep=NOMS_DEP, comptes_actifs=bool(comptes.config_publique()),
                                ex_key=ex_key, exemple=exemple, film=film, vitrine=vitrine, avis_clients=avis_clients,
                                title=f"{biz['nom']} · Appels d'offres publics par métier, triés" + (" par IA" if biz.get("ia_active") else ""),
                                description=biz["slogan"], **common))
@@ -284,8 +299,16 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=Non
     write("parrainage/index.html", render("parrainage.html", root="../", path="/parrainage/",
                                           title=f"Parrainage : 1 mois offert · {biz['nom']}",
                                           description="Parrainez un confrère : 1 mois offert pour chacun, automatiquement.", **common))
-    write("compte/index.html", render("compte.html", root="../", path="/compte/", noindex=True,
-                                      title=f"Mon compte · {biz['nom']}", description="", **common))
+    conf = comptes.config_publique()
+    if conf:   # comptes avec mot de passe (Supabase) : connexion, inscription, mot de passe oublié, retour des liens e-mail
+        cjs = compte_js(biz, metiers, conf)
+        for rel, vue, titre in (("compte/", "espace", "Mon compte"), ("compte/inscription/", "inscription", "Créer mon compte"),
+                                ("compte/oubli/", "oubli", "Mot de passe oublié"), ("compte/confirmation/", "confirmation", "Confirmation")):
+            write(f"{rel}index.html", render("compte.html", root="../" * rel.count("/"), path=f"/{rel}", noindex=True, vue=vue,
+                                             comptes_conf=conf, compte_js=cjs, title=f"{titre} · {biz['nom']}", description="", **common))
+    else:
+        write("compte/index.html", render("compte.html", root="../", path="/compte/", noindex=True,
+                                          title=f"Mon compte · {biz['nom']}", description="", **common))
     write("merci/index.html", render("merci.html", root="../", path="/merci/", noindex=True,
                                      title=f"Merci, votre veille est active · {biz['nom']}", description="", **common))
     write("rappel/index.html", render("rappel.html", root="../", path="/rappel/", noindex=True,
@@ -317,7 +340,7 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=Non
 
     base = biz["site_url"].rstrip("/")
     # Les pages légales (adresse de l'éditeur) restent accessibles mais hors Google.
-    pages = [p for p in pages if p not in ("mentions-legales.html", "cgv.html", "confidentialite.html", "rappel/index.html", "merci/index.html", "compte/index.html", "criteres/index.html", "avis/index.html", "dossier/envoyer/index.html")]
+    pages = [p for p in pages if p not in ("mentions-legales.html", "cgv.html", "confidentialite.html", "rappel/index.html", "merci/index.html", "compte/index.html", "compte/inscription/index.html", "compte/oubli/index.html", "compte/confirmation/index.html", "criteres/index.html", "avis/index.html", "dossier/envoyer/index.html")]
     urls = "".join(f"<url><loc>{base}/{p.removesuffix('index.html')}</loc><lastmod>{date.today()}</lastmod></url>" for p in pages)
     (out_dir / "sitemap.xml").write_text(
         f'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>', encoding="utf-8")
@@ -328,6 +351,22 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=Non
     if not cname.endswith("github.io"):
         (out_dir / "CNAME").write_text(cname, encoding="utf-8")
     return {"pages": len(pages), "par_metier": {k: len(v) for k, v in by_metier.items()}}
+
+
+def compte_js(biz, metiers, conf):
+    """Paramètres publics de l'espace client (aucune donnée personnelle, aucune clé secrète)."""
+    from .comptes import DCE_MAX_OCTETS
+    d = biz.get("dossier") or {}
+    offres = {k: {"nom": o["nom"], "prix": o["prix_mensuel"], "annuel": o.get("prix_annuel"), "lien": o["lien_paiement"],
+                  "lien_annuel": o.get("lien_annuel")}
+              for k, o in biz["offres"].items() if o.get("lien_paiement") and (k != "cle" or biz.get("cle_actif"))}
+    return {"url": conf["url"], "cle": conf["cle"], "site": biz["site_url"].rstrip("/"), "root": "/", "offres": offres,
+            "essai": biz.get("essai_gratuit_jours", 14), "portail": biz.get("portail_client") or "",
+            "metiers": [[k, m["libelle"]] for k, m in sorted(metiers.items(), key=lambda x: x[1]["libelle"])],
+            "metiers_nom": {k: m["libelle"] for k, m in metiers.items()}, "max_octets": DCE_MAX_OCTETS,
+            "dossier": {"prix": d.get("prix"), "prix_pro": d.get("prix_pro"), "prix_cle": d.get("prix_cle"), "lien": d.get("lien_paiement"),
+                        "lien_pro": d.get("lien_pro"), "lien_cle": d.get("lien_cle"), "delai": d.get("delai_min_jours", 5)}
+            if biz.get("dossier_actif") else None}
 
 
 def indexnow_cle(biz):

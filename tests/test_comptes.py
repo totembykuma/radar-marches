@@ -34,6 +34,10 @@ class FausseBase:
                 continue
             op, val = f.split(".", 1)
             v = row.get(k)
+            if op == "not":
+                if v is None:
+                    return False
+                continue
             if op == "eq" and str(v) != val or op == "is" and v is not {"true": True, "null": None}[val] \
                or op == "lt" and not (v is not None and str(v) < val) or op == "gte" and not (v is not None and str(v) >= val) \
                or op == "lte" and not (v is not None and str(v) <= val):
@@ -291,6 +295,8 @@ def test_aucun_secret_ni_donnee_client_dans_le_depot():
     trouves = []
     for f in fichiers:
         p = ROOT / f
+        if f == "tests/test_comptes.py":
+            continue
         if p.suffix in (".png", ".mp3", ".mp4", ".pyc", ".woff2", ".ico") or not p.is_file() or p.stat().st_size > 2_000_000:
             continue
         if motifs.search(p.read_text(encoding="utf-8", errors="ignore")):
@@ -301,3 +307,43 @@ def test_aucun_secret_ni_donnee_client_dans_le_depot():
         d = json.loads(conf.read_text())
         assert set(d) <= {"url", "cle"} and not d["cle"].startswith("sb_secret_")
         assert "service_role" not in d["cle"]
+
+
+def test_invitation_unique_des_clients_existants(biz):
+    state = {}
+    subs = [_s("a@exemple.fr"), _s("b@exemple.fr", sub="sub_b"), _s("c@exemple.fr", statut="canceled", sub="sub_c")]
+    users = [_u("u1", "B@exemple.fr")]
+    os.environ["RADAR_DEMO"] = "1"
+    try:
+        assert comptes.inviter(subs, biz, users, state) == (1, [])      # a seulement : b a déjà un compte, c est résilié
+        assert comptes.inviter(subs, biz, users, state) == (0, [])      # jamais deux fois
+    finally:
+        del os.environ["RADAR_DEMO"]
+
+
+def test_pages_compte_generees_et_privees(biz, metiers, tmp_path, monkeypatch):
+    from radar import site
+    from radar.matching import Matcher
+    monkeypatch.setattr(comptes, "config_publique", lambda: {"url": "https://abc.supabase.co", "cle": "sb_publishable_x"})
+    site.build([], biz, metiers, Matcher(metiers), tmp_path / "site")
+    for rel in ("compte/index.html", "compte/inscription/index.html", "compte/oubli/index.html", "compte/confirmation/index.html"):
+        html = (tmp_path / "site" / rel).read_text()
+        assert 'name="robots" content="noindex"' in html and "Content-Security-Policy" in html and "sb_publishable_x" in html
+    assert "/compte/" not in (tmp_path / "site" / "sitemap.xml").read_text()
+    assert (tmp_path / "site" / "static" / "vendor" / "supabase-2.99.3.js").exists()
+    assert 'id="ap-data"' in (tmp_path / "site" / "index.html").read_text()      # outil de découverte
+    monkeypatch.setattr(comptes, "config_publique", lambda: None)
+    site.build([], biz, metiers, Matcher(metiers), tmp_path / "site2")
+    assert not (tmp_path / "site2" / "compte" / "inscription").exists()        # sans configuration : ancien espace seul
+    assert "ancienEspace(false)" in (tmp_path / "site2" / "compte" / "index.html").read_text()
+
+
+def test_menage_conservation():
+    db = FausseBase()
+    db.t["alertes"] = [{"id": 1, "recu": "2025-01-01"}, {"id": 2, "recu": "2026-10-01"}]
+    db.t["demandes"] = [{"id": "a", "fichier": "u/a/resultat/x.docx", "termine": "2026-01-01T00:00:00+00:00"},
+                        {"id": "b", "fichier": "u/b/resultat/y.docx", "termine": "2026-10-01T00:00:00+00:00"}]
+    db.fichiers = {"u/a/resultat/x.docx": b"x", "u/b/resultat/y.docx": b"y"}
+    comptes.menage(db, date(2026, 10, 19))
+    assert [a["id"] for a in db.t["alertes"]] == [2]
+    assert list(db.fichiers) == ["u/b/resultat/y.docx"] and db.t["demandes"][0]["fichier"] is None

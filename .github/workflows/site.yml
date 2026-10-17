@@ -4,7 +4,7 @@ on:
   workflow_dispatch: {}
   push:
     branches: [main]
-    paths: ["templates/**", "static/**", "radar/site.py", "config/carte_france.json", "config/guides.yaml"]
+    paths: ["templates/**", "static/**", "radar/site.py", "config/carte_france.json", "config/guides.yaml", "config/comptes.json"]
 permissions:
   contents: write
 concurrency: { group: radar-daily, cancel-in-progress: false }

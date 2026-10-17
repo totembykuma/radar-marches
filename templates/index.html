@@ -97,6 +97,50 @@
   <div class="tiles">{% for k, m in metiers.items() %}{{ ui.tuile(k, m, counts[k], 'appels-offres/' ~ k ~ '/') }}{% endfor %}</div>
 </section>
 
+{% if apercu %}<section class="wrap block" id="apercu">
+  <p class="kicker">Essayez maintenant</p>
+  <h2>Combien de marchés pour vous aujourd'hui ?</h2>
+  <p class="sub">Choisissez votre métier et votre département : voici les appels d'offres réellement ouverts ce matin, d'après le BOAMP.</p>
+  <form class="card form apercu-outil" id="ap-form">
+    <p><label for="ap-metier">Métier</label><select id="ap-metier">{% for k, m in metiers.items() %}<option value="{{ k }}">{{ m.libelle }}</option>{% endfor %}</select></p>
+    <p><label for="ap-dep">Département</label><select id="ap-dep"><option value="">Toute la France</option>{% for d, n in noms_dep|dictsort %}<option value="{{ d }}">{{ d }} · {{ n }}</option>{% endfor %}</select></p>
+    <p><button class="btn" type="submit">Voir</button></p>
+  </form>
+  <div class="apercu-res" id="ap-res" aria-live="polite" hidden>
+    <p class="lead" id="ap-txt"></p>
+    <p id="ap-plus" class="muted"></p>
+    <div class="cta-row"><a class="btn btn-lg" id="ap-essai" href="#tarifs">Essayer gratuitement pendant {{ biz.essai_gratuit_jours }} jours</a> <a class="btn btn-ghost-dark" id="ap-voir" href="#">Voir les marchés publics</a></div>
+    <p class="fine">Avec l'abonnement : chaque matin ouvré, seulement les nouveaux avis de votre métier et de votre secteur par e-mail{% if biz.ia_active %}, résumés en une phrase{% endif %}, sans faux amis. Pro : plusieurs départements, mots-clés, et ce que l'acheteur a déjà payé.</p>
+  </div>
+</section>
+<script type="application/json" id="ap-data">{{ apercu|tojson }}</script>
+<script>
+(function () {
+  var D = JSON.parse(document.getElementById("ap-data").textContent), f = document.getElementById("ap-form");
+  var comptes = {{ 'true' if comptes_actifs else 'false' }};
+  f.addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var m = document.getElementById("ap-metier"), d = document.getElementById("ap-dep"), k = m.value, dep = d.value, x = D[k] || [0, 0, {}, {}];
+    var n = dep ? (x[2][dep] || 0) : x[0], r = dep ? (x[3][dep] || 0) : x[1];
+    var lib = m.options[m.selectedIndex].text.toLowerCase(), lieu = dep ? d.options[d.selectedIndex].text.split(" · ")[1] : "toute la France";
+    var txt = document.getElementById("ap-txt"), plus = document.getElementById("ap-plus"), voir = document.getElementById("ap-voir");
+    if (n) {
+      txt.textContent = n + " appel" + (n > 1 ? "s" : "") + " d'offres " + lib + " ouvert" + (n > 1 ? "s" : "") + " en ce moment (" + lieu + ")" +
+        (r ? ", dont " + r + " publié" + (r > 1 ? "s" : "") + " ces 3 derniers jours, réservé" + (r > 1 ? "s" : "") + " aux abonnés." : ".");
+      plus.textContent = "Chiffres du jour, recalculés chaque matin.";
+      voir.href = "appels-offres/" + k + "/" + (dep ? dep + ".html" : "");
+    } else {
+      txt.textContent = "Aucun appel d'offres " + lib + " ouvert en ce moment (" + lieu + ").";
+      plus.textContent = "Ça arrive : les marchés paraissent par vagues. Avec la veille, vous êtes prévenu le matin même où un nouveau paraît. En attendant, voyez toute la France ou un département voisin.";
+      voir.href = "appels-offres/" + k + "/";
+    }
+    voir.hidden = false;
+    document.getElementById("ap-essai").href = comptes ? "compte/inscription/?metier=" + encodeURIComponent(k) + (dep ? "&dep=" + encodeURIComponent(dep) : "") : "#tarifs";
+    document.getElementById("ap-res").hidden = false;
+  });
+})();
+</script>{% endif %}
+
 <section class="soft"><div class="wrap block">
   <p class="kicker">Comment ça marche</p>
   <h2>Trois étapes, puis plus rien à faire</h2>

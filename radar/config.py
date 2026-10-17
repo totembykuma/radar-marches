@@ -37,6 +37,8 @@ def business():
             cfg["offres"][key]["lien_paiement"] = env_link
     cfg["dossier_actif"] = dossier_actif(cfg)
     cfg["cle_actif"] = cle_actif(cfg)
+    # Comptes avec mot de passe (Supabase) : en service dès que comptes-setup a écrit config/comptes.json.
+    cfg["comptes_actifs"] = (ROOT / "config" / "comptes.json").exists()
     return cfg
 
 

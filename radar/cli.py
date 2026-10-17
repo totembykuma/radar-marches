@@ -65,7 +65,7 @@ def alert_owner(biz, subject, body_html):
         log.warning("Alerte non envoyée (pas d'e-mail propriétaire) : %s", subject)
 
 
-def comptes_espace(biz, metiers, subs, run):
+def comptes_espace(biz, metiers, subs, run, state=None):
     """Comptes avec mot de passe (Supabase) : recopie les abonnements Stripe et applique les critères modifiés
     dans l'espace client. Renvoie le client robot (ou None si les comptes ne sont pas configurés)."""
     try:
@@ -77,7 +77,12 @@ def comptes_espace(biz, metiers, subs, run):
         return None
     try:
         if os.getenv("STRIPE_SECRET_KEY", "").strip():   # sans clé Stripe, on ne touche à aucun droit
-            run["comptes"] = comptes.synchroniser(supa, subs, biz, metiers)
+            st = comptes.synchroniser(supa, subs, biz, metiers)
+            utilisateurs = st.pop("_utilisateurs")
+            run["comptes"] = st
+            if state is not None:   # clients d'avant les mots de passe : 1 invitation chacun
+                n, errs = comptes.inviter(subs, biz, utilisateurs, state)
+                run["invitations_compte"], run["erreurs"] = n, run["erreurs"] + errs
         n, errs = comptes.pousser_criteres(supa, subs, biz, metiers, criteres_txt, criteres._stripe_update)
         if n:
             run["criteres_espace"] = n
@@ -175,8 +180,8 @@ def run_bienvenue():
     envoyer_bienvenues(subs, biz, metiers, state, run)
     n, errs = compte.traiter(subs, biz, metiers, state)
     run["erreurs"] += errs
-    comptes_espace(biz, metiers, subs, run)
-    if run.get("bienvenues") or n or state.get("compte_vus"):
+    comptes_espace(biz, metiers, subs, run, state)
+    if run.get("bienvenues") or n or state.get("compte_vus") or run.get("invitations_compte"):
         _save_json(DATA / "state.json", state)
     return {"bienvenues": run.get("bienvenues", 0), "liens_espace_client": n, "comptes": run.get("comptes"),
             "criteres_espace": run.get("criteres_espace", 0), "erreurs": run["erreurs"]}
@@ -284,7 +289,7 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
         run["erreurs"].append(f"lecture des demandes de critères impossible : {safe(exc)}")
 
     # 2a. bis Critères modifiés dans l'espace client (mot de passe) : copiés dans Stripe avant la sélection du jour
-    supa = comptes_espace(biz, metiers, subs, run)
+    supa = comptes_espace(biz, metiers, subs, run, state)
 
     # 2a bis. Parrainage : 1 mois offert au filleul (dès l'inscription) et au parrain (quand le filleul devient payant)
     try:

@@ -234,7 +234,9 @@ def synchroniser(supa, subs, biz, metiers, maintenant=None):
     criteres = {c["user_id"]: c for c in supa.select("criteres", select="*")}
     stats = {"comptes": 0, "relies": 0, "modifies": 0, "criteres_importes": 0}
     a_ecrire, crit_ecrire = [], []
-    for u in supa.utilisateurs():
+    utilisateurs = supa.utilisateurs()
+    stats["_utilisateurs"] = utilisateurs
+    for u in utilisateurs:
         email = (u.get("email") or "").lower()
         if not email or not u.get("email_confirmed_at"):
             continue                                   # adresse non vérifiée : jamais reliée à un abonnement
@@ -279,6 +281,29 @@ def _norm_ts(v):
     if isinstance(v, str) and re.match(r"\d{4}-\d{2}-\d{2}T", v):
         return _ts(v).timestamp()
     return v
+
+
+def inviter(subs, biz, utilisateurs, state):
+    """Une seule fois par client existant sans compte : invitation à créer son mot de passe (même adresse)."""
+    import hashlib
+    deja = state.setdefault("invitation_compte", [])
+    avec_compte = {(u.get("email") or "").lower() for u in utilisateurs}
+    envoyes, erreurs = 0, []
+    for s in subs:
+        e = (s.get("email") or "").lower()
+        h = hashlib.sha256(f"invitation|{e}".encode()).hexdigest()[:16]
+        if not e or s.get("statut") not in STATUTS_ACTIFS or e in avec_compte or h in deja:
+            continue
+        try:
+            res = mailer.send(e, f"{biz['nom']} : créez votre mot de passe", render("email_compte.html", biz=biz, ok=True,
+                              invitation=True, email=e), biz["email_expediteur"], reply_to=biz["email_contact"])
+            if not res.get("simulated") or os.getenv("RADAR_DEMO") == "1":
+                deja.append(h)
+            envoyes += 1
+        except Exception as exc:
+            erreurs.append(f"invitation au compte non envoyée : {str(exc)[:120]}")
+    state["invitation_compte"] = deja[-2000:]
+    return envoyes, erreurs
 
 
 # ---------------------------------------------------------------- critères modifiés dans l'espace client → Stripe
@@ -370,9 +395,14 @@ def rappels_favoris(supa, biz, subs, aujourd_hui=None):
 
 
 def menage(supa, aujourd_hui=None):
-    """Durées de conservation : historique d'alertes ~13 mois."""
+    """Durées de conservation : historique d'alertes ~13 mois, rapports et dossiers générés 6 mois."""
     j = aujourd_hui or date.today()
     supa.delete("alertes", recu=f"lt.{(j - timedelta(days=GARDER_ALERTES_JOURS)).isoformat()}")
+    vieux = supa.select("demandes", select="id,fichier", fichier="not.is.null",
+                        termine=f"lt.{(j - timedelta(days=GARDER_RESULTATS_JOURS)).isoformat()}")
+    supa.effacer([d["fichier"] for d in vieux])
+    for d in vieux:
+        supa.update("demandes", {"fichier": None, "message": "Document effacé (conservation 6 mois)."}, id=f"eq.{d['id']}")
 
 
 # ---------------------------------------------------------------- demandes (rapports, dossiers inclus) depuis l'espace client

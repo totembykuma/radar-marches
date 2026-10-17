@@ -1,5 +1,11 @@
 {% extends "_email.html" %}
-{% block contenu %}{% if ok %}
+{% block contenu %}{% if invitation %}
+<h2 style="color:#0b1b33;font-size:21px;margin:0 0 14px">Nouveau : votre compte avec mot de passe</h2>
+<p>Bonjour,</p>
+<p>Votre espace client {{ biz.nom }} évolue. En créant votre mot de passe, vous retrouvez au même endroit vos alertes reçues, vos favoris (avec un rappel 3 jours avant la date limite) et vous modifiez vos critères en direct.</p>
+<p style="margin:18px 0"><a href="{{ biz.site_url }}/compte/inscription/#email={{ email|urlencode }}" style="display:inline-block;background:#ffb020;color:#1a1300;font-weight:bold;padding:12px 20px;border-radius:8px;text-decoration:none">Créer mon mot de passe</a></p>
+<p>Utilisez cette adresse e-mail ({{ email }}) : votre abonnement s'y relie automatiquement dès l'adresse confirmée. Votre lien personnel actuel continue de fonctionner.</p>
+{% elif ok %}
 <h2 style="color:#0b1b33;font-size:21px;margin:0 0 14px">Votre espace client {{ biz.nom }}</h2>
 <p>Bonjour,</p>
 <p>Votre espace client est accessible sans mot de passe, depuis ce lien personnel :</p>

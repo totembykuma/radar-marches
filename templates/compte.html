@@ -1,83 +1,150 @@
-{% extends "base.html" %}{% block main %}
-<section class="wrap rappel">
+{% extends "base.html" %}
+{% block head %}{% if comptes_conf %}
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://gc.zgo.at; connect-src 'self' {{ comptes_conf.url }} https://*.goatcounter.com; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; font-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="no-referrer">{% endif %}{% endblock %}
+{% block main %}
+{% if not comptes_conf %}
+{% include "_compte_lien.html" %}
+<script>ancienEspace(false);</script>
+{% else %}
+<section class="wrap rappel compte" id="compte" data-vue="{{ vue }}">
   <p class="kicker">Espace client</p>
-  <div id="c-vide">
+  <p id="v-chargement" class="muted" role="status">Chargement de votre espace…</p>
+  <noscript><p class="msg msg-err">Votre navigateur bloque JavaScript : il est nécessaire pour vous connecter.</p></noscript>
+
+  {# ---------- Connexion ---------- #}
+  <div id="v-connexion" hidden>
     <h1>Mon compte</h1>
-    <p class="lead">Pas de mot de passe à retenir : votre espace s'ouvre avec le lien personnel reçu par e-mail (bouton « Mon espace client » en bas de chaque alerte).</p>
-    <form class="card" id="c-form">
-      <h2>Lien perdu ?</h2>
-      <p><label>Votre adresse e-mail (celle utilisée pour payer)<br><input id="c-email" type="email" required style="width:100%"></label></p>
-      <button class="btn btn-lg" type="submit">Recevoir mon lien</button>
-      <p class="muted" id="c-info">Vous ouvrez votre messagerie (Gmail, Outlook…) avec un e-mail déjà prêt : envoyez-le tel quel. Votre lien vous est renvoyé en une dizaine de minutes.</p>
+    <form class="card form" id="f-connexion" novalidate>
+      <p><label for="c-email">Adresse e-mail</label><input id="c-email" type="email" autocomplete="email" required></p>
+      <p><label for="c-mdp">Mot de passe</label><input id="c-mdp" type="password" autocomplete="current-password" required></p>
+      <p class="msg" id="m-connexion" role="alert" hidden></p>
+      <button class="btn btn-lg btn-block" type="submit">Se connecter</button>
+      <p class="liens"><a href="{{ root }}compte/oubli/">Mot de passe oublié ?</a></p>
     </form>
-    <p>Pas encore client ? <a href="{{ root }}#tarifs">Essai gratuit de {{ biz.essai_gratuit_jours }} jours</a>.</p>
+    <div class="card"><h2>Nouveau client ?</h2>
+      <p>Créez votre compte, puis démarrez votre essai gratuit de {{ biz.essai_gratuit_jours }} jours (carte demandée, aucun débit pendant l'essai).</p>
+      <p><a class="btn" href="{{ root }}compte/inscription/">Créer mon compte</a></p>
+      <p class="muted">Déjà abonné sans mot de passe ? Créez votre compte avec l'adresse de votre abonnement : il s'y relie tout seul.</p></div>
   </div>
-  <div id="c-plein" hidden>
-    <h1>Bonjour</h1>
-    <p class="lead" id="c-qui"></p>
-    <div class="card"><h2>Mon abonnement</h2><p id="c-offre"></p>
-      <p><a class="btn" id="c-portail" href="{{ biz.portail_client }}">Factures, carte bancaire, changer d'offre ou résilier</a></p>
-      <p class="muted">Ouvre votre espace de facturation sécurisé Stripe : saisissez votre e-mail, vous recevez un lien de connexion.</p></div>
-    <div class="card"><h2>Mes critères d'alerte</h2><p id="c-crit"></p>
-      <p><a class="btn" href="{{ root }}criteres/">Modifier mes critères</a></p>
-      <p class="muted">Vos alertes arrivent chaque matin ouvré vers 6 h 30. Pas d'e-mail un jour donné = aucun nouvel avis pertinent.</p></div>
-    <div class="card"><h2>Mes appels d'offres</h2><p>Les marchés ouverts de votre métier, à consulter à tout moment :</p><ul id="c-liens"></ul></div>
-    <div class="card" id="c-cle" hidden><h2>Mon service Clé en main</h2>
-      <p><b>Rapport « comment gagner »</b> : critères de notation, pièces à fournir, pièges, prix de repère et plan d'action pour un marché. Reçu dans l'heure (jours ouvrés). <span id="c-rmax"></span></p>
-      <form id="c-rform"><p><label>Lien ou référence de l'appel d'offres (ex. 26-123456)<br><input id="c-ravis" required style="width:100%"></label></p>
-      <button class="btn" type="submit">Demander le rapport</button></form>
-      <p style="margin-top:18px"><b>Dossier prêt à signer</b> : <span id="c-dinclus"></span> Envoyez le dossier de consultation, vous recevez un Word complet à relire, chiffrer, signer et déposer.</p>
-      <p><a class="btn" href="{{ root }}dossier/envoyer/">Envoyer mon dossier de consultation</a> <a id="c-dplus" hidden></a></p></div>
-    <div class="card" id="c-parrain" hidden><h2>Parrainage : 1 mois offert</h2><p>Partagez votre lien à un confrère. Quand il devient client, vous recevez chacun 1 mois offert.</p><p><a id="c-plien"></a></p></div>
-    <p class="muted">Une question ? Répondez simplement à l'un de nos e-mails. <a href="#" id="c-sortir">Se déconnecter de cet appareil</a></p>
+  <div id="ancien" hidden>{% include "_compte_lien.html" %}</div>
+
+  {# ---------- Inscription ---------- #}
+  <div id="v-inscription" hidden>
+    <h1>Créer mon compte</h1>
+    <p class="lead" id="i-choix" hidden></p>
+    <form class="card form" id="f-inscription" novalidate>
+      <p><label for="i-email">Adresse e-mail</label><input id="i-email" type="email" autocomplete="email" required>
+        <small class="muted">Déjà abonné ? Utilisez l'adresse de votre abonnement.</small></p>
+      <p><label for="i-mdp">Mot de passe (10 caractères minimum)</label><input id="i-mdp" type="password" autocomplete="new-password" minlength="10" required></p>
+      <p><label for="i-mdp2">Confirmez le mot de passe</label><input id="i-mdp2" type="password" autocomplete="new-password" minlength="10" required></p>
+      <p class="check"><label><input id="i-cgv" type="checkbox" required> J'accepte les <a href="{{ root }}cgv.html" target="_blank">conditions de vente</a> et la <a href="{{ root }}confidentialite.html" target="_blank">politique de confidentialité</a>.</label></p>
+      <p class="msg" id="m-inscription" role="alert" hidden></p>
+      <button class="btn btn-lg btn-block" type="submit">Créer mon compte</button>
+      <p class="muted">Vous recevez un e-mail pour confirmer votre adresse. Ensuite : choix de l'offre et essai gratuit de {{ biz.essai_gratuit_jours }} jours.</p>
+    </form>
+    <p>Déjà un compte ? <a href="{{ root }}compte/?connexion">Se connecter</a></p>
+  </div>
+
+  {# ---------- Mot de passe oublié ---------- #}
+  <div id="v-oubli" hidden>
+    <h1>Mot de passe oublié</h1>
+    <form class="card form" id="f-oubli" novalidate>
+      <p><label for="o-email">Adresse e-mail du compte</label><input id="o-email" type="email" autocomplete="email" required></p>
+      <p class="msg" id="m-oubli" role="alert" hidden></p>
+      <button class="btn btn-lg btn-block" type="submit">Recevoir un lien</button>
+      <p class="muted">Le lien fonctionne une seule fois, pendant 1 heure.</p>
+    </form>
+    <p><a href="{{ root }}compte/?connexion">Retour à la connexion</a></p>
+  </div>
+
+  {# ---------- Arrivée depuis un e-mail (confirmation, nouveau mot de passe, changement d'adresse) ---------- #}
+  <div id="v-confirmation" hidden>
+    <h1 id="cf-titre">Vérification…</h1>
+    <p class="msg" id="m-confirmation" role="alert" hidden></p>
+    <form class="card form" id="f-nouveau" hidden novalidate>
+      <p><label for="n-mdp">Nouveau mot de passe (10 caractères minimum)</label><input id="n-mdp" type="password" autocomplete="new-password" minlength="10" required></p>
+      <p><label for="n-mdp2">Confirmez</label><input id="n-mdp2" type="password" autocomplete="new-password" minlength="10" required></p>
+      <p class="msg" id="m-nouveau" role="alert" hidden></p>
+      <button class="btn btn-lg btn-block" type="submit">Enregistrer</button>
+    </form>
+    <p id="cf-suite" hidden><a class="btn" href="{{ root }}compte/">Ouvrir mon espace</a> <a href="{{ root }}compte/oubli/">Recevoir un nouveau lien</a></p>
+  </div>
+
+  {# ---------- Espace client (identique pour les 3 offres ; les rubriques suivent les droits calculés par le serveur) ---------- #}
+  <div id="v-espace" hidden>
+    <div class="espace-tete"><div><h1>Bonjour</h1><p class="lead" id="e-qui"></p></div>
+      <button class="btn btn-sm btn-ghost-dark" id="e-sortir" type="button">Se déconnecter</button></div>
+    <nav class="espace-nav" aria-label="Rubriques"><a href="#abonnement">Abonnement</a><a href="#criteres">Critères</a><a href="#alertes">Alertes et favoris</a><a href="#demandes" id="nav-demandes" hidden>Demandes</a><a href="#parametres">Mon compte</a></nav>
+
+    <div class="card" id="abonnement"><h2>Mon abonnement</h2>
+      <p id="e-offre"></p>
+      <p class="msg msg-err" id="e-impaye" hidden>Le dernier paiement a échoué : mettez à jour votre carte pour garder vos alertes.</p>
+      <div id="e-sans" hidden>
+        <p id="e-sans-txt">Aucun abonnement n'est relié à cette adresse.</p>
+        <div class="offres-mini" id="e-offres"></div>
+        <p class="muted">Utilisez la même adresse e-mail sur la page de paiement. Après paiement, votre abonnement apparaît ici en quelques minutes (rechargez la page).</p>
+      </div>
+      <p id="e-portail-p" hidden><a class="btn" id="e-portail" href="{{ biz.portail_client }}">Factures, carte, changer d'offre ou résilier</a></p>
+      <p class="muted" id="e-portail-aide" hidden>Espace de facturation sécurisé Stripe : saisissez votre e-mail, vous recevez un code de connexion. Résiliation en un clic.</p>
+    </div>
+
+    <div class="card" id="criteres"><h2>Mes critères de veille</h2>
+      <form class="form" id="f-criteres" novalidate>
+        <p><label for="k-metier">Métier</label><select id="k-metier" required></select></p>
+        <p><label for="k-deps" id="k-deps-label">Département</label><input id="k-deps" inputmode="text" autocomplete="off" placeholder="ex. 33">
+          <small class="muted" id="k-deps-aide"></small></p>
+        <p id="k-mots-p" hidden><label for="k-mots">Mots-clés (séparés par des virgules, facultatif)</label><input id="k-mots" autocomplete="off" placeholder="ex. vitrerie, désinfection"></p>
+        <p class="msg" id="m-criteres" role="status" hidden></p>
+        <button class="btn" type="submit" id="k-ok">Enregistrer mes critères</button>
+      </form>
+      <p class="muted">Alertes chaque matin ouvré vers 6 h 30. Un changement est appliqué à la prochaine alerte (confirmation par e-mail).</p>
+    </div>
+
+    <div class="card" id="alertes"><h2>Mes alertes et favoris</h2>
+      <div class="onglets" role="tablist"><button type="button" role="tab" aria-selected="true" id="t-toutes">Alertes reçues</button><button type="button" role="tab" aria-selected="false" id="t-favoris">Favoris</button></div>
+      <ul class="liste-alertes" id="l-alertes"></ul>
+      <p class="muted" id="l-vide" hidden></p>
+      <p class="muted">Favori = rappel par e-mail 3 jours avant la date limite. Historique conservé 13 mois.</p>
+    </div>
+
+    <div class="card" id="demandes" hidden><h2>Mes demandes</h2>
+      <p id="d-quotas"></p>
+      <div id="d-cle" hidden>
+        <form class="form" id="f-rapport" novalidate>
+          <h3>Rapport « comment gagner »</h3>
+          <p class="muted">Critères, pièces, pièges, prix de repère publiés et plan d'action pour un marché. Prêt en général dans l'heure (jours ouvrés, 7 h - 21 h).</p>
+          <p><label for="r-ref">Référence ou lien de l'avis (ex. 26-123456)</label><input id="r-ref" required autocomplete="off"></p>
+          <p class="msg" id="m-rapport" role="status" hidden></p>
+          <button class="btn" type="submit">Demander le rapport</button>
+        </form>
+        <form class="form" id="f-dossier" novalidate>
+          <h3>Dossier de candidature (inclus)</h3>
+          <p class="muted">Word modifiable : mémoire technique, lettre de candidature, DUME, pièces à fournir. À relire, chiffrer, signer et déposer vous-même. Les passages à compléter sont signalés.</p>
+          <p><label for="dd-ref">Référence de l'avis</label><input id="dd-ref" required autocomplete="off"></p>
+          <p><label for="dd-infos">Votre entreprise (activité, effectif, références, certifications…)</label><textarea id="dd-infos" rows="4" maxlength="4000"></textarea></p>
+          <p><label for="dd-fichiers">Dossier de consultation (PDF, Word ou ZIP, 20 Mo max par fichier)</label><input id="dd-fichiers" type="file" multiple accept=".pdf,.doc,.docx,.odt,.zip,.txt"></p>
+          <p class="msg" id="m-dossier" role="status" hidden></p>
+          <button class="btn" type="submit">Envoyer pour préparation</button>
+        </form>
+      </div>
+      <div id="d-achat" hidden><h3>Dossier prêt à signer</h3><p id="d-achat-txt"></p><p><a class="btn" id="d-achat-lien" href="#">Commander un dossier</a></p></div>
+      <ul class="liste-demandes" id="l-demandes"></ul>
+    </div>
+
+    <div class="card" id="parametres"><h2>Mon compte</h2>
+      <form class="form" id="f-email" novalidate><p><label for="p-email">Changer d'adresse e-mail</label><input id="p-email" type="email" autocomplete="email" required></p>
+        <p class="msg" id="m-email" role="status" hidden></p><button class="btn btn-sm" type="submit">Changer d'adresse</button>
+        <p class="muted">Un lien de confirmation est envoyé à l'ancienne et à la nouvelle adresse. Pensez à changer aussi l'adresse de facturation dans Stripe.</p></form>
+      <form class="form" id="f-mdp" novalidate><p><label for="p-mdp">Nouveau mot de passe (10 caractères minimum)</label><input id="p-mdp" type="password" autocomplete="new-password" minlength="10" required></p>
+        <p class="msg" id="m-mdp" role="status" hidden></p><button class="btn btn-sm" type="submit">Changer de mot de passe</button></form>
+      <div id="p-parrain" hidden><h3>Parrainage : 1 mois offert</h3><p>Partagez ce lien à un confrère : quand il devient client, vous recevez chacun 1 mois offert.</p><p><a id="p-parrain-lien"></a></p></div>
+      <p class="muted">Support : répondez à n'importe quel e-mail ou écrivez à <a href="mailto:{{ biz.email_contact }}">{{ biz.email_contact }}</a>. Suppression du compte et de vos données : <a href="mailto:{{ biz.email_contact }}?subject=Suppression%20de%20mon%20compte">demandez-la par e-mail</a> (traitée sous 30 jours).</p>
+    </div>
   </div>
 </section>
-<script>
-(function () {
-  var cle = "radar-compte", code = location.hash.slice(1);
-  try { if (code) localStorage.setItem(cle, code); else code = localStorage.getItem(cle) || ""; } catch (e) {}
-  function txt(id, t) { document.getElementById(id).textContent = t; }
-  var d = null;
-  if (code) { try {
-    var b = code.replace(/-/g, "+").replace(/_/g, "/"); while (b.length % 4) b += "=";
-    d = JSON.parse(decodeURIComponent(escape(atob(b))));
-  } catch (e) { d = null; } }
-  if (!d || !d.e) {
-    document.getElementById("c-form").addEventListener("submit", function (ev) {
-      ev.preventDefault();
-      var em = document.getElementById("c-email").value.trim();
-      envoyerMail("{{ biz.compte_adresse }}", "Mon espace client", "Bonjour,\n\nMerci de m'envoyer le lien de mon espace client.\n\nAdresse du compte : " + em + "\n");
-    });
-    return;
-  }
-  history.replaceState(null, "", location.pathname);
-  document.getElementById("c-vide").hidden = true; document.getElementById("c-plein").hidden = false;
-  var statuts = {trialing: "essai gratuit en cours", active: "actif", past_due: "paiement en attente : mettez à jour votre carte"};
-  txt("c-qui", "Compte : " + d.e);
-  txt("c-offre", "Offre " + d.o + " · " + (statuts[d.s] || d.s) + (d.fe ? " jusqu'au " + d.fe + " (aucun débit avant cette date)" : "") + (d.db ? " · client depuis le " + d.db : ""));
-  txt("c-crit", (d.m.map(function (x) { return x[1]; }).join(", ") || "—") + " · " + (d.d.length ? "départements " + d.d.join(", ") : "toute la France") + (d.k.length ? " · mots-clés : " + d.k.join(", ") : ""));
-  var p = document.getElementById("c-portail"); p.href = p.href + (p.href.indexOf("?") < 0 ? "?" : "&") + "prefilled_email=" + encodeURIComponent(d.e);
-  var ul = document.getElementById("c-liens");
-  function lien(href, t) { var li = document.createElement("li"), a = document.createElement("a"); a.href = href; a.textContent = t; li.appendChild(a); ul.appendChild(li); }
-  d.m.forEach(function (x) { lien("{{ root }}appels-offres/" + x[0] + "/", x[1] + " : tous les marchés ouverts"); });
-  d.d.forEach(function (dep) { lien("{{ root }}appels-offres/departements/" + dep + ".html", "Tous les marchés du département " + dep); });
-  if (d.cle) {
-    document.getElementById("c-cle").hidden = false;
-    txt("c-rmax", "Jusqu'à " + d.cle.rm + " rapports par mois.");
-    txt("c-dinclus", d.cle.n + " dossiers inclus chaque mois" + (d.s === "trialing" ? " à partir de votre premier paiement." : "."));
-    if (d.cle.u) { var x = document.getElementById("c-dplus"); x.hidden = false; x.href = d.cle.u + "?prefilled_email=" + encodeURIComponent(d.e); x.textContent = "Un dossier de plus : " + d.cle.x + " €"; }
-    document.getElementById("c-rform").addEventListener("submit", function (ev) {
-      ev.preventDefault();
-      var ref = document.getElementById("c-ravis").value.trim();
-      envoyerMail(d.cle.r, "Rapport " + ref, 
-        "Bonjour,\n\nMerci de m'envoyer le rapport « comment gagner » pour l'appel d'offres : " + ref +
-        "\n\n(Facultatif : joignez le dossier de consultation pour un rapport encore plus précis.)\n");
-    });
-  }
-  if (d.p) { document.getElementById("c-parrain").hidden = false; var pl = document.getElementById("c-plien"); pl.href = d.p; pl.textContent = d.p; }
-  document.getElementById("c-sortir").addEventListener("click", function (ev) {
-    ev.preventDefault(); try { localStorage.removeItem(cle); } catch (e) {} location.reload();
-  });
-})();
-</script>
+<script type="application/json" id="compte-conf">{{ compte_js|tojson }}</script>
+<script src="{{ root }}static/vendor/supabase-2.99.3.js"></script>
+<script src="{{ root }}static/compte.js{% if css_v %}?v={{ css_v }}{% endif %}"></script>
+{% endif %}
 {% endblock %}
