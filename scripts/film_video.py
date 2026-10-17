@@ -1,7 +1,8 @@
-"""Enregistre le film de l'accueil en MP4 1920x1080, 30 images/s, avec sa musique (aperçu / réseaux sociaux).
+"""Enregistre le film de l'accueil en MP4 1920x1080, 30 images/s, avec sa voix off et son fond sonore (aperçu / réseaux sociaux).
 Horloge virtuelle : chaque image est calculée puis capturée, donc aucune saccade quelle que soit la machine.
 Usage : python scripts/film_video.py out/site out/film.mp4  (nécessite playwright + chromium + ffmpeg)"""
 import asyncio
+import json
 import subprocess
 import sys
 import tempfile
@@ -11,7 +12,8 @@ from playwright.async_api import async_playwright
 
 SITE, SORTIE = Path(sys.argv[1]), Path(sys.argv[2])
 EXE = sys.argv[3] if len(sys.argv) > 3 else None
-DUREE = 60
+TEMPS = Path(__file__).resolve().parent.parent / "config" / "film_temps.json"
+DUREE = round(json.loads(TEMPS.read_text())["total_ms"] / 1000 + 1) if TEMPS.exists() else 60
 FPS = 30
 HORLOGE = """(()=>{let vt=0,id=1;const q=[],raf=[],t0=Date.now(),seen=new Map();
 Date.now=()=>t0+vt;performance.now=()=>vt;
