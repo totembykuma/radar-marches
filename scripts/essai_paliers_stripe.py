@@ -72,9 +72,19 @@ def payees(sid):
 
 
 def run_traiter(biz, clock, attendu_erreurs=0):
-    """Même enchaînement que bienvenue.yml : essai unique (anti_abus), puis durée d'essai et paliers."""
-    a = anti_abus.appliquer(biz)
-    r = paliers.traiter(biz, maintenant=_call("GET", f"test_helpers/test_clocks/{clock['id']}")["frozen_time"])
+    """Même enchaînement que bienvenue.yml : essai unique (anti_abus), puis durée d'essai et paliers.
+    Stripe ne liste les abonnements d'une horloge de test que si on la nomme : on l'ajoute à la lecture."""
+    def avec_horloge(path, params):
+        return dict(params or {}, test_clock=clock["id"]) if path == "subscriptions" else params
+
+    lire = anti_abus._stripe_list
+    anti_abus._stripe_list = lambda path, params, key, http: lire(path, avec_horloge(path, params), key, http)
+    try:
+        a = anti_abus.appliquer(biz)
+    finally:
+        anti_abus._stripe_list = lire
+    subs = paliers.lister(lambda m, path, data=None, params=None: _call(m, path, data, avec_horloge(path, params)))
+    r = paliers.traiter(biz, subs=subs, maintenant=_call("GET", f"test_helpers/test_clocks/{clock['id']}")["frozen_time"])
     r["essais_refuses"] = a["essais_refuses"]
     r["erreurs"] += a["erreurs"]
     if len(r["erreurs"]) != attendu_erreurs:
