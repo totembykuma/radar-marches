@@ -175,7 +175,7 @@ def _rembourser(ancien, key, maintenant, session=None):
     return montant
 
 
-def remplacer_doublons(maintenant=None, session=None):
+def remplacer_doublons(maintenant=None, session=None, test_clock=None):
     """À lancer souvent (bienvenue.yml). Renvoie {'remplaces': [...], 'erreurs': [...]} (adresses masquées)."""
     key = _cle()
     res = {"remplaces": [], "erreurs": []}
@@ -184,8 +184,9 @@ def remplacer_doublons(maintenant=None, session=None):
     maintenant = maintenant or int(datetime.now(timezone.utc).timestamp())
     produits = _produits_radar(key, session)
     en_cours = []
+    params = {"expand[]": "data.customer", **({"test_clock": test_clock} if test_clock else {})}   # horloge : tests seulement
     for statut in ACTIFS:
-        for s in _lister("subscriptions", {"status": statut, "expand[]": "data.customer"}, key, session):
+        for s in _lister("subscriptions", {**params, "status": statut}, key, session):
             items = (s.get("items") or {}).get("data") or []
             if not items or (items[0].get("price") or {}).get("product") not in produits:
                 continue

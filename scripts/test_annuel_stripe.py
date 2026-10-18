@@ -86,17 +86,21 @@ def main():
         inv = call("GET", f"invoices/{a['latest_invoice']}")
         check("annuel Clé en main payé en une fois", a["status"] == "active" and inv["amount_paid"] == int(biz["offres"]["cle"]["prix_annuel"] * 100),
               str(inv["amount_paid"]))
-        r = annuel.remplacer_doublons(maintenant=t0 + 10 * 86400)
+        r = annuel.remplacer_doublons(maintenant=t0 + 10 * 86400, test_clock=clock)
         mine = [x for x in r["remplaces"] if x["ancien"] == m["id"]]
         check("ancien mensuel arrêté automatiquement", mine and call("GET", f"subscriptions/{m['id']}")["status"] == "canceled", json.dumps(r)[:200])
         check("annuel conservé", call("GET", f"subscriptions/{a['id']}")["status"] == "active")
         rembourse = mine[0]["rembourse"] if mine else 0
         check("part non utilisée du mois remboursée (≈ 2/3 de 49 €)", 30 <= rembourse <= 34, str(rembourse))
-        r2 = annuel.remplacer_doublons(maintenant=t0 + 10 * 86400)
+        r2 = annuel.remplacer_doublons(maintenant=t0 + 10 * 86400, test_clock=clock)
         check("2e passage : rien de plus (pas de double remboursement)", not [x for x in r2["remplaces"] if x["ancien"] == m["id"]])
 
         # 3. Renouvellement au bout de 12 mois, même prix, une seule facture ; puis carte refusée l'année suivante
-        fin = annuel.fin_periode(call("GET", f"subscriptions/{a['id']}"))
+        #    (horloge à part : avec un mensuel sur l'horloge, Stripe n'avance que de 2 mois à la fois)
+        call("DELETE", f"test_helpers/test_clocks/{clock}")
+        clock = call("POST", "test_helpers/test_clocks", data={"frozen_time": t0, "name": "radar-annuel-2"})["id"]
+        a = abonner(client(clock, email), prices["cle"]["an"])
+        fin = annuel.fin_periode(a)
         avancer(clock, fin + 3600)
         s = call("GET", f"subscriptions/{a['id']}")
         invs = call("GET", "invoices", params={"subscription": a["id"], "limit": 10})["data"]
