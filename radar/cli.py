@@ -19,7 +19,7 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 from . import avis, criteres, gratuit, ai, dossier, paliers, parrainage, boamp, finance, historique, barometre, laureats, mailer, prospects, site, subscribers
-from . import anti_abus, compte, comptes, rapport
+from . import annuel, anti_abus, compte, comptes, rapport
 from .config import ROOT, business, cle_actif, dossier_actif, metiers as load_metiers
 from .matching import Matcher
 from .render import date_fr, date_limite_fr, render
@@ -198,6 +198,48 @@ def paliers_et_essais(biz, run):
         run["erreurs"].append(f"paliers de prix / essai non vérifiés : {safe(exc)}")
 
 
+def abonnements_annuels(biz, state, run):
+    """Anti double prélèvement (2 abonnements pour une adresse → l'ancien arrêté, part non utilisée remboursée)
+    et date de renouvellement du jour sur les pages de paiement annuelles."""
+    try:
+        res = annuel.remplacer_doublons()
+        run["erreurs"] += res["erreurs"]
+        if res["remplaces"]:
+            run["remplaces"] = res["remplaces"]
+            lignes = "".join(f"<li>{_mask(r['email'] or '?')} : abonnement {r['ancien_periode']} arrêté, remplacé par "
+                             f"l'abonnement {r['nouveau_periode']} ; remboursé {r['rembourse']:.2f} €</li>" for r in res["remplaces"])
+            alert_owner(biz, "Abonnement remplacé (pas de double prélèvement)", f"<ul>{lignes}</ul>")
+    except Exception as exc:
+        run["erreurs"].append(f"contrôle des doubles abonnements : {safe(exc)}")
+    try:
+        if state.get("texte_annuel_jour") != datetime.now(timezone.utc).date().isoformat():
+            run["textes_annuels"] = annuel.maj_textes(biz, state)
+    except Exception as exc:
+        run["erreurs"].append(f"texte des liens annuels : {safe(exc)}")
+
+
+def prevenir_annuels(subs, biz, metiers, state, run):
+    """Rappel 30 jours avant le renouvellement annuel, et e-mail si le paiement du renouvellement est refusé."""
+    deja = state.setdefault("annuel_prevenus", [])
+    for s, genre, cle in annuel.a_prevenir(subs, set(deja), datetime.now(timezone.utc).timestamp()):
+        offre = biz["offres"][s["plan"]]
+        date_fr = datetime.fromtimestamp(s["renouvellement"], timezone.utc).strftime("%d/%m/%Y")
+        sujet = (f"Votre abonnement annuel {biz['nom']} sera renouvelé le {date_fr}" if genre == "rappel"
+                 else f"{biz['nom']} : le paiement de votre renouvellement n'est pas passé")
+        html = render("email_renouvellement.html", biz=biz, offre=offre, date_fr=date_fr, genre=genre,
+                      montant=annuel.euros(offre["prix_annuel"]), criteres=criteres_txt(s, metiers),
+                      lien_compte=compte.lien(biz, s, metiers))
+        try:
+            res = mailer.send(s["email"], sujet, html, biz["email_expediteur"],
+                              reply_to=biz.get("email_proprietaire") or biz["email_contact"])
+            if not res.get("simulated") or os.getenv("RADAR_DEMO") == "1":
+                deja.append(cle)
+            run["rappels_annuels"] = run.get("rappels_annuels", 0) + 1
+        except Exception as exc:
+            run["erreurs"].append(f"e-mail de renouvellement non envoyé : {safe(exc)}")
+    state["annuel_prevenus"] = deja[-500:]
+
+
 def run_bienvenue():
     """Passage rapide (toutes les 10 min) : bienvenue aux nouveaux abonnés sans attendre le lendemain matin."""
     biz, metiers = business(), load_metiers()
@@ -207,14 +249,16 @@ def run_bienvenue():
     run = {"erreurs": []}
     essais_uniques(biz, run)
     paliers_et_essais(biz, run)
+    abonnements_annuels(biz, state, run)
     subs = subscribers.load_all(biz, metiers)
     envoyer_bienvenues(subs, biz, metiers, state, run)
     n, errs = compte.traiter(subs, biz, metiers, state)
     run["erreurs"] += errs
     comptes_espace(biz, metiers, subs, run, state)
-    if run.get("bienvenues") or n or state.get("compte_vus") or run.get("invitations_compte"):
+    if run.get("bienvenues") or n or state.get("compte_vus") or run.get("invitations_compte") or run.get("textes_annuels") is not None:
         _save_json(DATA / "state.json", state)
     return {"bienvenues": run.get("bienvenues", 0), "liens_espace_client": n, "comptes": run.get("comptes"),
+            "abonnements_remplaces": len(run.get("remplaces") or []),
             "criteres_espace": run.get("criteres_espace", 0), "paliers": run.get("paliers", 0),
             "essais_refuses": run.get("essais_refuses", 0), "erreurs": run["erreurs"]}
 
@@ -372,6 +416,7 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
         except Exception as exc:
             run["erreurs"].append(f"rappel de fin d'essai non envoyé : {safe(exc)}")
     state["rappel_essai"] = rappels[-500:]
+    prevenir_annuels(subs, biz, metiers, state, run)
 
     # 2d. Avis clients : demande à 1 mois d'abonnement, publication des avis reçus via le formulaire du site
     try:

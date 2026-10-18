@@ -1,0 +1,38 @@
+name: Tester les abonnements annuels (mode test Stripe)
+on:
+  workflow_dispatch: {}
+  pull_request:
+    paths: ["radar/annuel.py", "radar/stripe_setup.py", "scripts/test_annuel_stripe.py", ".github/workflows/test-annuel.yml"]
+permissions: { contents: read }
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - name: Scénarios réels en mode test (rien n'est commité, aucun argent réel)
+        env: { STRIPE_SECRET_KEY: "${{ secrets.STRIPE_TEST_SECRET_KEY }}" }
+        run: |
+          if [ -z "$STRIPE_SECRET_KEY" ]; then echo "Secret STRIPE_TEST_SECRET_KEY absent : ajoute la clé de test Stripe (sk_test_…)"; exit 1; fi
+          python scripts/test_annuel_stripe.py
+      - name: Capture de la page de paiement annuelle Pro (mode test)
+        if: always()
+        run: |
+          pip install -q playwright && python -m playwright install --with-deps chromium >/dev/null
+          python - <<'PY'
+          import yaml
+          from playwright.sync_api import sync_playwright
+          lien = yaml.safe_load(open("config/business.yaml"))["offres"]["pro"]["lien_annuel"]
+          with sync_playwright() as p:
+              b = p.chromium.launch(); pg = b.new_page(viewport={"width": 1280, "height": 1100}, locale="fr-FR")
+              pg.goto(lien, wait_until="networkidle"); pg.wait_for_timeout(3000)
+              pg.screenshot(path="paiement-annuel-pro.png", full_page=True)
+              txt = pg.inner_text("body")
+              print("Page de paiement : 399 €" if "399" in txt else "399 € non trouvé", "| renouvellement :", "Renouvellement automatique" in txt)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: paiement-annuel, path: paiement-annuel-pro.png, if-no-files-found: ignore }

@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 
 import requests
 
+from . import annuel
 from .config import ROOT, business, metiers as load_metiers
 
 API = "https://api.stripe.com/v1"
@@ -68,7 +69,7 @@ def _texte_paiement(biz, offre):
             f"tout de suite). Ensuite : {texte_grille(offre)}. Sans engagement, résiliable en un clic.")
 
 
-def _link_for(key, price, biz, metiers, mode, offre):
+def _link_for(key, price, biz, metiers, mode, offre, annuelle=False):
     link = None
     for pl in _call("GET", "payment_links", params={"active": "true", "limit": 100})["data"]:
         if (pl.get("metadata") or {}).get("radar_offre") == key and (pl.get("metadata") or {}).get("radar_price") == price["id"]:
@@ -94,6 +95,19 @@ def _link_for(key, price, biz, metiers, mode, offre):
         if maj:
             link = _call("POST", f"payment_links/{link['id']}", data=maj)
             print(f"[{mode}] {offre['nom']} : essai {biz['essai_gratuit_jours']} jours et grille de prix sur la page de paiement")
+        if annuelle and (link.get("metadata") or {}).get("radar_periode") != "an":
+            link = _call("POST", f"payment_links/{link['id']}", data={"metadata[radar_periode]": "an",
+                                                                      "custom_text[submit][message]": annuel.texte_paiement(offre)})
+    if not link and annuelle:
+        # Annuel : payé tout de suite pour 12 mois (pas d'essai), montant, engagement et date de renouvellement affichés.
+        data = {"line_items[0][price]": price["id"], "line_items[0][quantity]": 1,
+                "allow_promotion_codes": "false", "billing_address_collection": "auto",
+                "tax_id_collection[enabled]": "true",
+                "custom_text[submit][message]": annuel.texte_paiement(offre),
+                **_apres_paiement(biz),
+                "metadata[radar_offre]": key, "metadata[radar_price]": price["id"], "metadata[radar_periode]": "an",
+                **_link_fields(key, metiers)}
+        link = _call("POST", "payment_links", data=data)
     if not link:
         data = {"line_items[0][price]": price["id"], "line_items[0][quantity]": 1,
                 "subscription_data[trial_period_days]": biz["essai_gratuit_jours"],
@@ -105,6 +119,17 @@ def _link_for(key, price, biz, metiers, mode, offre):
             data["custom_text[submit][message]"] = _texte_paiement(biz, offre)
         link = _call("POST", "payment_links", data=data)
     return link
+
+
+def _retirer_anciens_annuels(key, product, price, mode, offre):
+    """Désactive les liens annuels d'un ancien prix (les abonnés déjà inscrits gardent leur abonnement)."""
+    annuels = {pr["id"] for pr in _call("GET", "prices", params={"product": product["id"], "limit": 100})["data"]
+               if (pr.get("recurring") or {}).get("interval") == "year"}
+    for pl in _call("GET", "payment_links", params={"active": "true", "limit": 100})["data"]:
+        md = pl.get("metadata") or {}
+        if md.get("radar_offre") == key and md.get("radar_price") in annuels and md.get("radar_price") != price["id"]:
+            _call("POST", f"payment_links/{pl['id']}", data={"active": "false"})
+            print(f"[{mode}] {offre['nom']} : ancien lien annuel désactivé ({pl['url']})")
 
 
 def _dossier(biz):
@@ -160,7 +185,8 @@ def run():
         print(f"[{mode}] {offre['nom']} : {link['url']} (prix {', '.join(results[key]['paliers'])})")
         if offre.get("prix_annuel"):
             price = _price_for(product, centimes(offre["prix_annuel"]), "year")
-            link = _link_for(key, price, biz, metiers, mode, offre)
+            link = _link_for(key, price, biz, metiers, mode, offre, annuelle=True)
+            _retirer_anciens_annuels(key, product, price, mode, offre)
             results[key]["lien_annuel"] = link["url"]
             results[key]["prices"] = results[key]["paliers"] + [price["id"]]
 

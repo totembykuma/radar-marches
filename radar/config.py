@@ -39,7 +39,8 @@ def business():
     cfg["cle_actif"] = cle_actif(cfg)
     # Comptes avec mot de passe (Supabase) : en service dès que comptes-setup a écrit config/comptes.json.
     cfg["comptes_actifs"] = (ROOT / "config" / "comptes.json").exists()
-    return cfg
+    from .annuel import enrichir     # économie annuelle calculée sur la grille mensuelle (affichage seulement)
+    return enrichir(cfg)
 
 
 def dossier_actif(cfg):

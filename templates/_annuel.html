@@ -1,0 +1,7 @@
+{# Offre annuelle : prix payé en une fois, économie sur 12 mensualités, engagement et date de renouvellement (calculée dans la page). #}
+{% macro bloc_annuel(o) -%}
+<p class="amount" data-an hidden>{{ o.prix_annuel }} €<span>/an</span></p>
+<p class="eco" data-an hidden>{% if o.economie_annuelle > 0 %}<b>Vous économisez {{ euro(o.economie_annuelle) }} €</b> par rapport à 12 mois d'abonnement mensuel ({{ euro(o.cout_12_mois) }} €).{% else %}Payé en une fois pour 12 mois.{% endif %}</p>
+<p class="an-detail" data-an hidden>Prélevé aujourd'hui : <b>{{ o.prix_annuel }} € TTC</b>, en une seule fois. Engagement 12 mois à prix fixe. Renouvellement le <b class="renouv">dans 12 mois</b>, au même prix, sauf résiliation avant.</p>
+{%- endmacro %}
+{% macro euro(v) %}{{ ('%.0f'|format(v)) if v == v|int else ('%.2f'|format(v))|replace('.', ',') }}{% endmacro %}
