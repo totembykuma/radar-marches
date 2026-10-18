@@ -27,7 +27,7 @@ jobs:
           lien = yaml.safe_load(open("config/business.yaml"))["offres"]["pro"]["lien_annuel"]
           with sync_playwright() as p:
               b = p.chromium.launch(); pg = b.new_page(viewport={"width": 1280, "height": 1100}, locale="fr-FR")
-              pg.goto(lien, wait_until="networkidle"); pg.wait_for_timeout(3000)
+              pg.goto(lien, wait_until="load", timeout=60000); pg.wait_for_timeout(6000)
               pg.screenshot(path="paiement-annuel-pro.png", full_page=True)
               txt = pg.inner_text("body")
               print("Page de paiement : 399 €" if "399" in txt else "399 € non trouvé", "| renouvellement :", "Renouvellement automatique" in txt)
