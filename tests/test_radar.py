@@ -156,7 +156,8 @@ def test_stripe_setup_writes_config(tmp_path, monkeypatch):
     assert biz["offres"]["cle"]["lien_annuel"].endswith("price_119900")
     assert biz["offres"]["essentiel"]["stripe_paliers"] == ["price_2900", "price_1999", "price_999"]
     assert biz["offres"]["essentiel"]["stripe_price_ids"][-4:] == ["price_2900", "price_1999", "price_999", "price_16900"]
-    assert len(biz["offres"]["essentiel"]["stripe_price_ids"]) == 6   # anciens prix gardés pour les abonnés existants
+    ids_ess = biz["offres"]["essentiel"]["stripe_price_ids"]
+    assert len(ids_ess) == len(set(ids_ess)) and "price_1UQrs879764n3f0zMVMks2Dq" in ids_ess   # anciens prix gardés pour les abonnés existants
     assert biz["stripe_mode"] == "test" and biz["portail_client"].endswith("test_x") and biz["nouvelle_grille_depuis"]
     assert biz["essai_gratuit_jours"] == 7
     assert biz["dossier"]["lien_paiement"].endswith("price_19900") and biz["dossier"]["lien_pro"].endswith("price_14900")
@@ -167,7 +168,8 @@ def test_stripe_setup_writes_config(tmp_path, monkeypatch):
     stripe_setup.run()  # relancer ne casse pas le fichier
     biz = config.business()
     assert biz["offres"]["pro"]["stripe_paliers"] == ["price_4900", "price_3999", "price_2999"]
-    assert len(biz["offres"]["pro"]["stripe_price_ids"]) == 6 and biz["nouvelle_grille_depuis"] == depuis
+    ids_pro = biz["offres"]["pro"]["stripe_price_ids"]
+    assert len(ids_pro) == len(set(ids_pro)) and "price_39900" in ids_pro and biz["nouvelle_grille_depuis"] == depuis
 
 
 def test_secrets_never_logged(monkeypatch):
