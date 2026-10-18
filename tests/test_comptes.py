@@ -371,3 +371,14 @@ def test_acces_offert_au_proprietaire(biz, metiers, monkeypatch):
     frais = subscribers.from_proprietaire(biz)
     comptes.synchroniser(db, frais, biz, metiers, MAINTENANT + timedelta(minutes=11))
     assert db.t["criteres"][0]["metier"] == "peinture"
+
+
+def test_affichage_abonnement_seulement_si_base_a_jour(biz, metiers):
+    db = FausseBase([_u("u1", "a@exemple.fr")])
+    s = {**_s("a@exemple.fr"), "prix_mois": 4900, "periode": "mois", "renouvellement": 1793000000, "resilie": False}
+    comptes.synchroniser(db, [s], biz, metiers, MAINTENANT)
+    assert "renouvellement" not in db.t["comptes"][0]          # ancienne base : colonnes absentes, rien d'écrit
+    db.t["comptes"][0]["renouvellement"] = None                 # schema.sql appliqué : la colonne existe
+    comptes.synchroniser(db, [s], biz, metiers, MAINTENANT)
+    c = db.t["comptes"][0]
+    assert c["prix_cents"] == 4900 and c["periode"] == "mois" and c["renouvellement"].startswith("2026-10-26") and c["resilie"] is False

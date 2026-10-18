@@ -353,10 +353,11 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=Non
     conf = comptes.config_publique()
     if conf:   # comptes avec mot de passe (Supabase) : connexion, inscription, mot de passe oublié, retour des liens e-mail
         cjs = compte_js(biz, metiers, conf)
+        compte_v = hashlib.md5(b"".join((ROOT / "static" / f).read_bytes() for f in ("compte.js", "compte.css"))).hexdigest()[:8]
         for rel, vue, titre in (("compte/", "espace", "Mon compte"), ("compte/inscription/", "inscription", "Créer mon compte"),
                                 ("compte/oubli/", "oubli", "Mot de passe oublié"), ("compte/confirmation/", "confirmation", "Confirmation")):
             write(f"{rel}index.html", render("compte.html", root="../" * rel.count("/"), path=f"/{rel}", noindex=True, vue=vue,
-                                             comptes_conf=conf, compte_js=cjs, title=f"{titre} · {biz['nom']}", description="", **common))
+                                             comptes_conf=conf, compte_js=cjs, compte_v=compte_v, title=f"{titre} · {biz['nom']}", description="", **common))
     else:
         write("compte/index.html", render("compte.html", root="../", path="/compte/", noindex=True,
                                           title=f"Mon compte · {biz['nom']}", description="", **common))

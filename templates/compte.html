@@ -1,151 +1,397 @@
 {% extends "base.html" %}
 {% block head %}{% if comptes_conf %}
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://gc.zgo.at; connect-src 'self' {{ comptes_conf.url }} https://*.goatcounter.com; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; font-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'">
-<meta name="referrer" content="no-referrer">{% endif %}{% endblock %}
+<meta name="referrer" content="no-referrer">
+<link rel="stylesheet" href="{{ root }}static/compte.css{% if compte_v %}?v={{ compte_v }}{% endif %}">{% endif %}{% endblock %}
+{% block body_attr %} class="page-compte"{% endblock %}
 {% block main %}
 {% if not comptes_conf %}
 {% include "_compte_lien.html" %}
 <script>ancienEspace(false);</script>
 {% else %}
-<section class="wrap rappel compte" id="compte" data-vue="{{ vue }}">
-  <p class="kicker">Espace client</p>
-  <p id="v-chargement" class="muted" role="status">Chargement de votre espace…</p>
+{# Icônes (trait 2 px, style unique) #}
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-apercu" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/></symbol>
+  <symbol id="i-marches" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></symbol>
+  <symbol id="i-echeances" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></symbol>
+  <symbol id="i-favoris" viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></symbol>
+  <symbol id="i-veille" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5M11 8v6M8 11h6"/></symbol>
+  <symbol id="i-alertes" viewBox="0 0 24 24"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></symbol>
+  <symbol id="i-demandes" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M9 14h6M9 17h4"/></symbol>
+  <symbol id="i-abonnement" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></symbol>
+  <symbol id="i-profil" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+  <symbol id="i-parrainage" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18M12 8S10.5 3 8 3a2.5 2.5 0 0 0 0 5M12 8s1.5-5 4-5a2.5 2.5 0 0 1 0 5"/></symbol>
+  <symbol id="i-aide" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5h.01"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+  <symbol id="i-sortir" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+  <symbol id="i-site" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-lien" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
+  <symbol id="i-copier" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></symbol>
+  <symbol id="i-ok" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-carte" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></symbol>
+</svg>
+
+<section class="compte" id="compte" data-vue="{{ vue }}">
+  <div id="v-chargement" class="etat-plein" role="status"><span class="roue" aria-hidden="true"></span><p id="v-chargement-txt">Chargement de votre espace…</p>
+    <button class="btn btn-sm" id="v-reessayer" type="button" hidden>Réessayer</button></div>
   <noscript><p class="msg msg-err">Votre navigateur bloque JavaScript : il est nécessaire pour vous connecter.</p></noscript>
 
   {# ---------- Connexion ---------- #}
-  <div id="v-connexion" hidden>
-    <h1>Mon compte</h1>
-    <form class="card form" id="f-connexion" novalidate>
-      <p><label for="c-email">Adresse e-mail</label><input id="c-email" type="email" autocomplete="email" required></p>
-      <p><label for="c-mdp">Mot de passe</label><input id="c-mdp" type="password" autocomplete="current-password" required></p>
-      <p class="msg" id="m-connexion" role="alert" hidden></p>
-      <button class="btn btn-lg btn-block" type="submit">Se connecter</button>
-      <p class="liens"><a href="{{ root }}compte/oubli/">Mot de passe oublié ?</a></p>
-    </form>
-    <div class="card"><h2>Nouveau client ?</h2>
-      <p>Créez votre compte, puis démarrez votre essai gratuit de {{ biz.essai_gratuit_jours }} jours (carte demandée, aucun débit pendant l'essai).</p>
-      <p><a class="btn" href="{{ root }}compte/inscription/">Créer mon compte</a></p>
-      <p class="muted">Déjà abonné sans mot de passe ? Créez votre compte avec l'adresse de votre abonnement : il s'y relie tout seul.</p></div>
+  <div id="v-connexion" class="auth" hidden>
+    <div class="auth-cote">
+      <p class="kicker">Espace client</p>
+      <h1>Vos marchés publics, au même endroit.</h1>
+      <ul class="auth-plus"><li>Les appels d'offres reçus, triés et classés</li><li>Les dates limites à ne pas manquer</li><li>Vos favoris avec rappel automatique</li><li>Votre veille modifiable en direct</li></ul>
+    </div>
+    <div class="auth-forme">
+      <h2>Connexion</h2>
+      <form class="form" id="f-connexion" novalidate>
+        <p><label for="c-email">Adresse e-mail</label><input id="c-email" type="email" autocomplete="email" required></p>
+        <p><label for="c-mdp">Mot de passe</label><input id="c-mdp" type="password" autocomplete="current-password" required></p>
+        <p class="msg" id="m-connexion" role="alert" hidden></p>
+        <button class="btn btn-lg btn-block" type="submit">Se connecter</button>
+        <p class="liens"><a href="{{ root }}compte/oubli/">Mot de passe oublié ?</a></p>
+      </form>
+      <div class="auth-sep"><h3>Nouveau client ?</h3>
+        <p>Créez votre compte, puis démarrez votre essai gratuit de {{ biz.essai_gratuit_jours }} jours (carte demandée, aucun débit pendant l'essai).</p>
+        <p><a class="btn btn-sombre btn-block" href="{{ root }}compte/inscription/">Créer mon compte</a></p>
+        <p class="muted petit">Déjà abonné sans mot de passe ? Créez votre compte avec l'adresse de votre abonnement : il s'y relie tout seul.</p></div>
+    </div>
   </div>
   <div id="ancien" hidden>{% include "_compte_lien.html" %}</div>
 
   {# ---------- Inscription ---------- #}
-  <div id="v-inscription" hidden>
-    <h1>Créer mon compte</h1>
-    <p class="lead" id="i-choix" hidden></p>
-    <form class="card form" id="f-inscription" novalidate>
-      <p><label for="i-email">Adresse e-mail</label><input id="i-email" type="email" autocomplete="email" required>
-        <small class="muted">Déjà abonné ? Utilisez l'adresse de votre abonnement.</small></p>
-      <p><label for="i-mdp">Mot de passe (10 caractères minimum)</label><input id="i-mdp" type="password" autocomplete="new-password" minlength="10" required></p>
-      <p><label for="i-mdp2">Confirmez le mot de passe</label><input id="i-mdp2" type="password" autocomplete="new-password" minlength="10" required></p>
-      <p class="check"><label><input id="i-cgv" type="checkbox" required> J'accepte les <a href="{{ root }}cgv.html" target="_blank">conditions de vente</a> et la <a href="{{ root }}confidentialite.html" target="_blank">politique de confidentialité</a>.</label></p>
-      <p class="piege" aria-hidden="true"><label for="i-site">Site web (laisser vide)</label><input id="i-site" type="text" tabindex="-1" autocomplete="off"></p>
-      <p class="msg" id="m-inscription" role="alert" hidden></p>
-      <button class="btn btn-lg btn-block" type="submit">Créer mon compte</button>
-      <p class="muted">Vous recevez un e-mail pour confirmer votre adresse. Ensuite : choix de l'offre et essai gratuit de {{ biz.essai_gratuit_jours }} jours.</p>
-    </form>
-    <p>Déjà un compte ? <a href="{{ root }}compte/?connexion">Se connecter</a></p>
+  <div id="v-inscription" class="auth" hidden>
+    <div class="auth-cote">
+      <p class="kicker">Créer mon compte</p>
+      <h1>Votre veille commence ici.</h1>
+      <ol class="auth-etapes"><li><b>Votre compte</b><span>Adresse e-mail et mot de passe</span></li><li><b>Votre offre</b><span>Essai gratuit de {{ biz.essai_gratuit_jours }} jours</span></li><li><b>Vos alertes</b><span>Chaque matin ouvré vers 6 h 30</span></li></ol>
+    </div>
+    <div class="auth-forme">
+      <h2>Créer mon compte</h2>
+      <p class="lead" id="i-choix" hidden></p>
+      <form class="form" id="f-inscription" novalidate>
+        <p><label for="i-email">Adresse e-mail</label><input id="i-email" type="email" autocomplete="email" required>
+          <small class="muted">Déjà abonné ? Utilisez l'adresse de votre abonnement.</small></p>
+        <p><label for="i-mdp">Mot de passe (10 caractères minimum)</label><input id="i-mdp" type="password" autocomplete="new-password" minlength="10" required></p>
+        <p><label for="i-mdp2">Confirmez le mot de passe</label><input id="i-mdp2" type="password" autocomplete="new-password" minlength="10" required></p>
+        <p class="check"><label><input id="i-cgv" type="checkbox" required> J'accepte les <a href="{{ root }}cgv.html" target="_blank">conditions de vente</a> et la <a href="{{ root }}confidentialite.html" target="_blank">politique de confidentialité</a>.</label></p>
+        <p class="piege" aria-hidden="true"><label for="i-site">Site web (laisser vide)</label><input id="i-site" type="text" tabindex="-1" autocomplete="off"></p>
+        <p class="msg" id="m-inscription" role="alert" hidden></p>
+        <button class="btn btn-lg btn-block" type="submit">Créer mon compte</button>
+        <p class="muted petit">Vous recevez un e-mail pour confirmer votre adresse. Ensuite : choix de l'offre et essai gratuit de {{ biz.essai_gratuit_jours }} jours.</p>
+      </form>
+      <p class="liens">Déjà un compte ? <a href="{{ root }}compte/?connexion">Se connecter</a></p>
+    </div>
   </div>
 
   {# ---------- Mot de passe oublié ---------- #}
-  <div id="v-oubli" hidden>
-    <h1>Mot de passe oublié</h1>
-    <form class="card form" id="f-oubli" novalidate>
-      <p><label for="o-email">Adresse e-mail du compte</label><input id="o-email" type="email" autocomplete="email" required></p>
-      <p class="msg" id="m-oubli" role="alert" hidden></p>
-      <button class="btn btn-lg btn-block" type="submit">Recevoir un lien</button>
-      <p class="muted">Le lien fonctionne une seule fois, pendant 1 heure.</p>
-    </form>
-    <p><a href="{{ root }}compte/?connexion">Retour à la connexion</a></p>
+  <div id="v-oubli" class="auth auth-seul" hidden>
+    <div class="auth-forme">
+      <h2>Mot de passe oublié</h2>
+      <form class="form" id="f-oubli" novalidate>
+        <p><label for="o-email">Adresse e-mail du compte</label><input id="o-email" type="email" autocomplete="email" required></p>
+        <p class="msg" id="m-oubli" role="alert" hidden></p>
+        <button class="btn btn-lg btn-block" type="submit">Recevoir un lien</button>
+        <p class="muted petit">Le lien fonctionne une seule fois, pendant 1 heure.</p>
+      </form>
+      <p class="liens"><a href="{{ root }}compte/?connexion">Retour à la connexion</a></p>
+    </div>
   </div>
 
   {# ---------- Arrivée depuis un e-mail (confirmation, nouveau mot de passe, changement d'adresse) ---------- #}
-  <div id="v-confirmation" hidden>
-    <h1 id="cf-titre">Vérification…</h1>
-    <p class="msg" id="m-confirmation" role="alert" hidden></p>
-    <form class="card form" id="f-nouveau" hidden novalidate>
-      <p><label for="n-mdp">Nouveau mot de passe (10 caractères minimum)</label><input id="n-mdp" type="password" autocomplete="new-password" minlength="10" required></p>
-      <p><label for="n-mdp2">Confirmez</label><input id="n-mdp2" type="password" autocomplete="new-password" minlength="10" required></p>
-      <p class="msg" id="m-nouveau" role="alert" hidden></p>
-      <button class="btn btn-lg btn-block" type="submit">Enregistrer</button>
-    </form>
-    <p id="cf-suite" hidden><a class="btn" href="{{ root }}compte/">Ouvrir mon espace</a> <a href="{{ root }}compte/oubli/">Recevoir un nouveau lien</a></p>
+  <div id="v-confirmation" class="auth auth-seul" hidden>
+    <div class="auth-forme">
+      <h2 id="cf-titre">Vérification…</h2>
+      <p class="msg" id="m-confirmation" role="alert" hidden></p>
+      <form class="form" id="f-nouveau" hidden novalidate>
+        <p><label for="n-mdp">Nouveau mot de passe (10 caractères minimum)</label><input id="n-mdp" type="password" autocomplete="new-password" minlength="10" required></p>
+        <p><label for="n-mdp2">Confirmez</label><input id="n-mdp2" type="password" autocomplete="new-password" minlength="10" required></p>
+        <p class="msg" id="m-nouveau" role="alert" hidden></p>
+        <button class="btn btn-lg btn-block" type="submit">Enregistrer</button>
+      </form>
+      <p id="cf-suite" class="liens" hidden><a class="btn" href="{{ root }}compte/">Ouvrir mon espace</a> <a href="{{ root }}compte/oubli/">Recevoir un nouveau lien</a></p>
+    </div>
   </div>
 
-  {# ---------- Espace client (identique pour les 3 offres ; les rubriques suivent les droits calculés par le serveur) ---------- #}
-  <div id="v-espace" hidden>
-    <div class="espace-tete"><div><h1>Bonjour</h1><p class="lead" id="e-qui"></p></div>
-      <button class="btn btn-sm btn-ghost-dark" id="e-sortir" type="button">Se déconnecter</button></div>
-    <nav class="espace-nav" aria-label="Rubriques"><a href="#abonnement">Abonnement</a><a href="#criteres">Critères</a><a href="#alertes">Alertes et favoris</a><a href="#demandes" id="nav-demandes" hidden>Demandes</a><a href="#parametres">Mon compte</a></nav>
-
-    <div class="card" id="abonnement"><h2>Mon abonnement</h2>
-      <p id="e-offre"></p>
-      <p class="msg msg-err" id="e-impaye" hidden>Le dernier paiement a échoué : mettez à jour votre carte pour garder vos alertes.</p>
-      <div id="e-sans" hidden>
-        <p id="e-sans-txt">Aucun abonnement n'est relié à cette adresse.</p>
-        <div class="offres-mini" id="e-offres"></div>
-        <p class="muted">Utilisez la même adresse e-mail sur la page de paiement. Après paiement, votre abonnement apparaît ici en quelques minutes (rechargez la page).</p>
+  {# ---------- Espace client : tableau de bord commun aux 3 offres ; chaque rubrique suit les droits calculés par la base ---------- #}
+  <div id="v-espace" class="app" hidden>
+    <aside class="app-side" id="app-side" aria-label="Menu de l'espace client">
+      <div class="side-tete">
+        <a class="logo" href="{{ root }}"><span class="logo-mark"><svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#13294b"/><circle cx="16" cy="16" r="10" fill="none" stroke="#ffb020" stroke-opacity=".35" stroke-width="1.6"/><circle cx="16" cy="16" r="6" fill="none" stroke="#ffb020" stroke-opacity=".7" stroke-width="1.6"/><path d="M16 16L24 9" stroke="#ffb020" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="16" r="2.4" fill="#ffb020"/></svg></span>{{ biz.nom }}</a>
       </div>
-      <p id="e-portail-p" hidden><a class="btn" id="e-portail" href="{{ biz.portail_client }}">Factures, carte, changer d'offre ou résilier</a></p>
-      <p class="muted" id="e-portail-aide" hidden>Espace de facturation sécurisé Stripe : saisissez votre e-mail, vous recevez un code de connexion. Résiliation en un clic.</p>
-    </div>
+      <div class="side-user"><span class="avatar" id="u-init" aria-hidden="true"></span><div><b id="u-email"></b><span class="pastille" id="u-offre"></span></div></div>
+      <nav class="side-nav" id="side-nav">
+        <p class="side-grp">Tableau de bord</p>
+        <a href="#apercu"><svg class="ic"><use href="#i-apercu"/></svg>Vue d'ensemble</a>
+        <a href="#marches"><svg class="ic"><use href="#i-marches"/></svg>Nouveaux marchés<span class="cpt" id="n-marches" hidden></span></a>
+        <a href="#echeances"><svg class="ic"><use href="#i-echeances"/></svg>Échéances proches<span class="cpt cpt-urg" id="n-echeances" hidden></span></a>
+        <a href="#favoris"><svg class="ic"><use href="#i-favoris"/></svg>Mes favoris<span class="cpt cpt-gris" id="n-favoris" hidden></span></a>
+        <p class="side-grp">Ma veille</p>
+        <a href="#veille"><svg class="ic"><use href="#i-veille"/></svg>Critères suivis</a>
+        <a href="#alertes"><svg class="ic"><use href="#i-alertes"/></svg>Mes alertes</a>
+        <a href="#demandes" id="nav-demandes" hidden><svg class="ic"><use href="#i-demandes"/></svg>Rapports et dossiers</a>
+        <p class="side-grp">Mon compte</p>
+        <a href="#abonnement"><svg class="ic"><use href="#i-abonnement"/></svg>Mon abonnement</a>
+        <a href="#profil"><svg class="ic"><use href="#i-profil"/></svg>Profil et paramètres</a>
+        <a href="#parrainage"><svg class="ic"><use href="#i-parrainage"/></svg>Parrainage</a>
+        <a href="#aide"><svg class="ic"><use href="#i-aide"/></svg>Assistance</a>
+      </nav>
+      <div class="side-pied"><a href="{{ root }}"><svg class="ic"><use href="#i-site"/></svg>Retour au site</a>
+        <button type="button" id="e-sortir"><svg class="ic"><use href="#i-sortir"/></svg>Se déconnecter</button></div>
+    </aside>
+    <div class="app-voile" id="app-voile" hidden></div>
 
-    <div class="card" id="criteres"><h2>Mes critères de veille</h2>
-      <form class="form" id="f-criteres" novalidate>
-        <p><label for="k-metier">Métier</label><select id="k-metier" required></select></p>
-        <p><label for="k-deps" id="k-deps-label">Département</label><input id="k-deps" inputmode="text" autocomplete="off" placeholder="ex. 33">
-          <small class="muted" id="k-deps-aide"></small></p>
-        <p id="k-mots-p" hidden><label for="k-mots">Mots-clés (séparés par des virgules, facultatif)</label><input id="k-mots" autocomplete="off" placeholder="ex. vitrerie, désinfection"></p>
-        <p class="msg" id="m-criteres" role="status" hidden></p>
-        <button class="btn" type="submit" id="k-ok">Enregistrer mes critères</button>
-      </form>
-      <p class="muted">Alertes chaque matin ouvré vers 6 h 30. Un changement est appliqué à la prochaine alerte (confirmation par e-mail).</p>
-    </div>
+    <div class="app-main">
+      <header class="app-top">
+        <button type="button" class="menu-btn" id="menu-btn" aria-label="Ouvrir le menu" aria-controls="app-side" aria-expanded="false"><svg class="ic"><use href="#i-menu"/></svg></button>
+        <h1 id="page-titre" tabindex="-1">Vue d'ensemble</h1>
+        <div class="top-actions"><a class="btn btn-sm btn-sombre hide-mob" href="#veille" id="top-veille">Modifier ma veille</a></div>
+      </header>
 
-    <div class="card" id="alertes"><h2>Mes alertes et favoris</h2>
-      <div class="onglets" role="tablist"><button type="button" role="tab" aria-selected="true" id="t-toutes">Alertes reçues</button><button type="button" role="tab" aria-selected="false" id="t-favoris">Favoris</button></div>
-      <ul class="liste-alertes" id="l-alertes"></ul>
-      <p class="muted" id="l-vide" hidden></p>
-      <p class="muted">Favori = rappel par e-mail 3 jours avant la date limite. Historique conservé 13 mois.</p>
-    </div>
+      <div class="app-contenu">
+        <div class="bandeau bandeau-err" id="e-impaye" role="alert" hidden><b>Le dernier paiement a échoué.</b> Mettez à jour votre carte pour garder vos alertes. <a class="btn btn-sm" id="e-impaye-lien" href="{{ biz.portail_client }}">Mettre à jour ma carte</a></div>
+        <div class="bandeau" id="e-resilie" hidden></div>
 
-    <div class="card" id="demandes" hidden><h2>Mes demandes</h2>
-      <p id="d-quotas"></p>
-      <div id="d-cle" hidden>
-        <form class="form" id="f-rapport" novalidate>
-          <h3>Rapport « comment gagner »</h3>
-          <p class="muted">Critères, pièces, pièges, prix de repère publiés et plan d'action pour un marché. Prêt en général dans l'heure (jours ouvrés, 7 h - 21 h).</p>
-          <p><label for="r-ref">Référence ou lien de l'avis (ex. 26-123456)</label><input id="r-ref" required autocomplete="off"></p>
-          <p class="msg" id="m-rapport" role="status" hidden></p>
-          <button class="btn" type="submit">Demander le rapport</button>
-        </form>
-        <form class="form" id="f-dossier" novalidate>
-          <h3>Dossier de candidature (inclus)</h3>
-          <p class="muted">Word modifiable : mémoire technique, lettre de candidature, DUME, pièces à fournir. À relire, chiffrer, signer et déposer vous-même. Les passages à compléter sont signalés.</p>
-          <p><label for="dd-ref">Référence de l'avis</label><input id="dd-ref" required autocomplete="off"></p>
-          <p><label for="dd-infos">Votre entreprise (activité, effectif, références, certifications…)</label><textarea id="dd-infos" rows="4" maxlength="4000"></textarea></p>
-          <p><label for="dd-fichiers">Dossier de consultation (PDF, Word ou ZIP, 20 Mo max par fichier)</label><input id="dd-fichiers" type="file" multiple accept=".pdf,.doc,.docx,.odt,.zip,.txt"></p>
-          <p class="msg" id="m-dossier" role="status" hidden></p>
-          <button class="btn" type="submit">Envoyer pour préparation</button>
-        </form>
+        {# ===== Vue d'ensemble ===== #}
+        <section class="page" id="p-apercu" data-titre="Vue d'ensemble">
+          <div class="accueil">
+            <div class="accueil-txt">
+              <p class="accueil-bonjour" id="a-bonjour">Bonjour</p>
+              <p class="accueil-resume" id="a-resume"></p>
+              <div class="puces" id="a-veille"></div>
+            </div>
+            <div class="accueil-etat">
+              <span class="pastille pastille-grande" id="a-statut"></span>
+              <p id="a-prochain"></p>
+            </div>
+          </div>
+
+          <div class="kpis" id="a-kpis" hidden>
+            <a class="kpi" href="#alertes"><span class="kpi-lib">Reçus sur 30 jours</span><b id="k-30">0</b><span class="kpi-pied" id="k-30-pied"></span></a>
+            <a class="kpi kpi-bleu" href="#marches"><span class="kpi-lib">Encore ouverts</span><b id="k-ouverts">0</b><span class="kpi-pied">date limite non passée</span></a>
+            <a class="kpi kpi-rouge" href="#echeances"><span class="kpi-lib">À rendre sous 7 jours</span><b id="k-7">0</b><span class="kpi-pied" id="k-7-pied"></span></a>
+            <a class="kpi kpi-ambre" href="#favoris"><span class="kpi-lib">Favoris suivis</span><b id="k-fav">0</b><span class="kpi-pied">rappel 3 jours avant</span></a>
+          </div>
+
+          <div class="carte carte-vide" id="a-vide" hidden>
+            <div class="vide-ic"><svg class="ic"><use href="#i-alertes"/></svg></div>
+            <h2>Vos premiers marchés arrivent bientôt</h2>
+            <p id="a-vide-txt">Chaque matin ouvré vers 6 h 30, les nouveaux appels d'offres de votre veille arrivent par e-mail et s'affichent ici.</p>
+            <p><a class="btn btn-sm btn-sombre" href="#veille">Vérifier ma veille</a></p>
+          </div>
+
+          <div class="carte carte-offres" id="a-sans" hidden>
+            <h2 id="a-sans-titre">Démarrez votre veille</h2>
+            <p id="e-sans-txt"></p>
+            <div class="offres-mini" id="e-offres"></div>
+            <p class="muted petit">Utilisez la même adresse e-mail sur la page de paiement. Votre abonnement apparaît ici en quelques minutes (rechargez la page).</p>
+          </div>
+
+          <div class="grille-2" id="a-listes" hidden>
+            <div class="carte">
+              <div class="carte-tete"><h2>Nouveaux marchés</h2><a href="#marches">Tout voir</a></div>
+              <ul class="marches marches-court" id="a-nouveaux"></ul>
+            </div>
+            <div class="carte">
+              <div class="carte-tete"><h2>Échéances proches</h2><a href="#echeances">Tout voir</a></div>
+              <ul class="marches marches-court" id="a-echeances"></ul>
+              <p class="vide-ligne" id="a-echeances-vide" hidden>Aucune date limite dans les 14 prochains jours.</p>
+            </div>
+          </div>
+
+          <div class="raccourcis" id="a-raccourcis">
+            <a href="#veille"><svg class="ic"><use href="#i-veille"/></svg><b>Ma veille</b><span>Métier, zones, mots-clés</span></a>
+            <a href="#favoris"><svg class="ic"><use href="#i-favoris"/></svg><b>Mes favoris</b><span>Marchés sauvegardés</span></a>
+            <a href="#demandes" id="r-demandes" hidden><svg class="ic"><use href="#i-demandes"/></svg><b>Rapports et dossiers</b><span id="r-demandes-txt">Vos demandes</span></a>
+            <a href="#abonnement"><svg class="ic"><use href="#i-abonnement"/></svg><b>Factures</b><span>Abonnement et paiement</span></a>
+            <a href="#parrainage" id="r-parrain" hidden><svg class="ic"><use href="#i-parrainage"/></svg><b>Parrainer</b><span>1 mois offert chacun</span></a>
+          </div>
+        </section>
+
+        {# ===== Nouveaux marchés ===== #}
+        <section class="page" id="p-marches" data-titre="Nouveaux marchés" hidden>
+          <p class="page-intro">Les appels d'offres reçus ces 14 derniers jours, du plus récent au plus ancien.</p>
+          <div class="filtres" role="group" aria-label="Filtrer"><button type="button" class="filtre" data-f="tous" aria-pressed="true">Tous</button><button type="button" class="filtre" data-f="ouverts" aria-pressed="false">Encore ouverts</button></div>
+          <div id="l-marches"></div>
+          <div class="carte carte-vide" id="l-marches-vide" hidden><div class="vide-ic"><svg class="ic"><use href="#i-marches"/></svg></div>
+            <h2>Aucun marché reçu ces 14 derniers jours</h2><p>Pas d'e-mail un jour donné signifie qu'aucun nouvel avis ne correspondait à votre veille. Élargissez-la si besoin.</p>
+            <p><a class="btn btn-sm btn-sombre" href="#veille">Ajuster ma veille</a> <a class="btn btn-sm btn-clair" href="#alertes">Voir tout l'historique</a></p></div>
+        </section>
+
+        {# ===== Échéances ===== #}
+        <section class="page" id="p-echeances" data-titre="Échéances proches" hidden>
+          <p class="page-intro">Les marchés encore ouverts, classés par date limite de remise des offres.</p>
+          <div id="l-echeances"></div>
+          <div class="carte carte-vide" id="l-echeances-vide" hidden><div class="vide-ic"><svg class="ic"><use href="#i-echeances"/></svg></div>
+            <h2>Aucune date limite à venir</h2><p>Les marchés reçus avec une date limite future apparaîtront ici, les plus urgents en premier.</p></div>
+        </section>
+
+        {# ===== Favoris ===== #}
+        <section class="page" id="p-favoris" data-titre="Mes favoris" hidden>
+          <p class="page-intro">Cliquez sur l'étoile d'un marché pour le garder ici. Vous recevez un rappel par e-mail 3 jours avant sa date limite.</p>
+          <div id="l-favoris"></div>
+          <div class="carte carte-vide" id="l-favoris-vide" hidden><div class="vide-ic"><svg class="ic"><use href="#i-favoris"/></svg></div>
+            <h2>Aucun favori pour l'instant</h2><p>Ajoutez une étoile aux marchés qui vous intéressent : ils restent ici et vous êtes prévenu avant la date limite.</p>
+            <p><a class="btn btn-sm btn-sombre" href="#marches">Parcourir les nouveaux marchés</a></p></div>
+        </section>
+
+        {# ===== Ma veille ===== #}
+        <section class="page" id="p-veille" data-titre="Ma veille" hidden>
+          <div class="grille-2 grille-veille">
+            <div class="carte" id="criteres">
+              <h2>Critères suivis</h2>
+              <form class="form" id="f-criteres" novalidate>
+                <p><label for="k-metier">Métier</label><select id="k-metier" required></select></p>
+                <p><label for="k-deps" id="k-deps-label">Département</label><input id="k-deps" inputmode="text" autocomplete="off" placeholder="ex. 33">
+                  <small class="muted" id="k-deps-aide"></small></p>
+                <p id="k-mots-p" hidden><label for="k-mots">Mots-clés (séparés par des virgules, facultatif)</label><input id="k-mots" autocomplete="off" placeholder="ex. vitrerie, désinfection"></p>
+                <p class="msg" id="m-criteres" role="status" hidden></p>
+                <button class="btn" type="submit" id="k-ok">Enregistrer mes critères</button>
+              </form>
+            </div>
+            <div class="carte carte-douce">
+              <h2>Votre veille aujourd'hui</h2>
+              <dl class="details" id="v-resume"></dl>
+              <h3>Comment ça marche</h3>
+              <ul class="coches"><li>Envoi chaque matin ouvré vers 6 h 30, uniquement s'il y a du nouveau.</li><li>Un changement est appliqué à la prochaine alerte, avec confirmation par e-mail.</li><li id="v-limite"></li></ul>
+            </div>
+          </div>
+        </section>
+
+        {# ===== Mes alertes (historique complet) ===== #}
+        <section class="page" id="p-alertes" data-titre="Mes alertes" hidden>
+          <div class="barre-outils">
+            <label class="recherche"><span class="sr">Rechercher</span><input id="h-q" type="search" placeholder="Rechercher un objet, un acheteur, une ville…" autocomplete="off"></label>
+            <div class="filtres" role="group" aria-label="Filtrer"><button type="button" class="filtre" data-h="toutes" aria-pressed="true">Toutes</button><button type="button" class="filtre" data-h="ouvertes" aria-pressed="false">Ouvertes</button><button type="button" class="filtre" data-h="favoris" aria-pressed="false">Favoris</button><button type="button" class="filtre" data-h="closes" aria-pressed="false">Closes</button></div>
+          </div>
+          <p class="muted petit" id="h-compte" role="status"></p>
+          <ul class="marches" id="l-alertes"></ul>
+          <p class="centre"><button type="button" class="btn btn-sm btn-clair" id="h-plus" hidden>Afficher plus</button></p>
+          <div class="carte carte-vide" id="l-vide" hidden><div class="vide-ic"><svg class="ic"><use href="#i-alertes"/></svg></div><h2 id="l-vide-titre"></h2><p id="l-vide-txt"></p></div>
+          <p class="muted petit">Historique conservé 13 mois. Les marchés sont ceux envoyés par e-mail à votre adresse.</p>
+        </section>
+
+        {# ===== Rapports et dossiers ===== #}
+        <section class="page" id="p-demandes" data-titre="Rapports et dossiers" hidden>
+          <div class="quotas" id="d-quotas" hidden></div>
+          <div class="grille-2" id="d-cle" hidden>
+            <form class="carte form" id="f-rapport" novalidate>
+              <h2>Rapport « comment gagner »</h2>
+              <p class="muted">Critères, pièces, pièges, prix de repère publiés et plan d'action pour un marché. Prêt en général dans l'heure (jours ouvrés, 7 h - 21 h).</p>
+              <p><label for="r-ref">Référence ou lien de l'avis (ex. 26-123456)</label><input id="r-ref" required autocomplete="off"></p>
+              <p class="msg" id="m-rapport" role="status" hidden></p>
+              <button class="btn" type="submit">Demander le rapport</button>
+            </form>
+            <form class="carte form" id="f-dossier" novalidate>
+              <h2>Dossier de candidature (inclus)</h2>
+              <p class="muted">Word modifiable : mémoire technique, lettre de candidature, DUME, pièces à fournir. À relire, chiffrer, signer et déposer vous-même. Les passages à compléter sont signalés.</p>
+              <p><label for="dd-ref">Référence de l'avis</label><input id="dd-ref" required autocomplete="off"></p>
+              <p><label for="dd-infos">Votre entreprise (activité, effectif, références, certifications…)</label><textarea id="dd-infos" rows="4" maxlength="4000"></textarea></p>
+              <p><label for="dd-fichiers">Dossier de consultation (PDF, Word ou ZIP, 20 Mo max par fichier)</label><input id="dd-fichiers" type="file" multiple accept=".pdf,.doc,.docx,.odt,.zip,.txt"></p>
+              <p class="msg" id="m-dossier" role="status" hidden></p>
+              <button class="btn" type="submit">Envoyer pour préparation</button>
+            </form>
+          </div>
+          <div class="carte carte-achat" id="d-achat" hidden><div><h2>Dossier prêt à signer</h2><p id="d-achat-txt"></p></div><p><a class="btn" id="d-achat-lien" href="#">Commander un dossier</a></p></div>
+          <div class="carte">
+            <div class="carte-tete"><h2>Mes demandes</h2></div>
+            <ul class="demandes" id="l-demandes"></ul>
+            <p class="vide-ligne" id="l-demandes-vide" hidden>Aucune demande pour l'instant. Vos rapports et dossiers apparaîtront ici, prêts à télécharger.</p>
+          </div>
+        </section>
+
+        {# ===== Mon abonnement ===== #}
+        <section class="page" id="p-abonnement" data-titre="Mon abonnement" hidden>
+          <div class="carte carte-abo" id="abonnement">
+            <div class="abo-tete"><div><p class="abo-lib">Offre</p><h2 id="e-offre"></h2></div><span class="pastille pastille-grande" id="e-statut"></span></div>
+            <dl class="abo-grille" id="e-details"></dl>
+            <p class="muted petit" id="e-sans-abo" hidden>Aucun abonnement n'est relié à cette adresse. Choisissez une offre ci-dessous.</p>
+          </div>
+          <div class="actions-abo" id="e-portail-p" hidden>
+            <a class="action" href="{{ biz.portail_client }}" data-portail><svg class="ic"><use href="#i-demandes"/></svg><b>Factures et reçus</b><span>Télécharger vos factures</span></a>
+            <a class="action" href="{{ biz.portail_client }}" data-portail><svg class="ic"><use href="#i-abonnement"/></svg><b>Moyen de paiement</b><span>Changer de carte bancaire</span></a>
+            <a class="action" href="{{ biz.portail_client }}" data-portail><svg class="ic"><use href="#i-apercu"/></svg><b>Changer d'offre</b><span>Essentiel, Pro{% if biz.cle_actif %}, Clé en main{% endif %}</span></a>
+            <a class="action" href="{{ biz.portail_client }}" data-portail><svg class="ic"><use href="#i-echeances"/></svg><b id="e-renouv-titre">Renouvellement</b><span id="e-renouv-txt">Résilier ou reprendre</span></a>
+          </div>
+          <p class="muted petit" id="e-portail-aide" hidden>Ces liens ouvrent votre espace de facturation sécurisé Stripe : saisissez votre e-mail, vous recevez un code de connexion. Résiliation en un clic, sans frais.</p>
+          <div class="carte" id="e-sans" hidden><h2>Les offres</h2><div class="offres-mini" id="e-offres2"></div></div>
+        </section>
+
+        {# ===== Profil et paramètres ===== #}
+        <section class="page" id="p-profil" data-titre="Profil et paramètres" hidden>
+          <div class="grille-2">
+            <div class="carte" id="parametres">
+              <h2>Identifiants</h2>
+              <dl class="details"><dt>Adresse de connexion</dt><dd id="p-email-actuel"></dd><dt>Alertes envoyées à</dt><dd id="p-email-alertes"></dd></dl>
+              <form class="form" id="f-email" novalidate><p><label for="p-email">Nouvelle adresse e-mail</label><input id="p-email" type="email" autocomplete="email" required></p>
+                <p class="msg" id="m-email" role="status" hidden></p><button class="btn btn-sm btn-sombre" type="submit">Changer d'adresse</button>
+                <p class="muted petit">Un lien de confirmation est envoyé à l'ancienne et à la nouvelle adresse. Pensez à changer aussi l'adresse de facturation dans l'espace de facturation.</p></form>
+              <form class="form" id="f-mdp" novalidate><p><label for="p-mdp">Nouveau mot de passe (10 caractères minimum)</label><input id="p-mdp" type="password" autocomplete="new-password" minlength="10" required></p>
+                <p class="msg" id="m-mdp" role="status" hidden></p><button class="btn btn-sm btn-sombre" type="submit">Changer de mot de passe</button></form>
+            </div>
+            <div>
+              <div class="carte">
+                <h2>Préférences d'envoi</h2>
+                <ul class="coches"><li>Alerte chaque matin ouvré vers 6 h 30, seulement s'il y a de nouveaux marchés.</li><li>Rappel 3 jours avant la date limite de chaque favori.</li><li>Vos critères se règlent dans <a href="#veille">Ma veille</a>.</li></ul>
+              </div>
+              <div class="carte">
+                <h2>Session et données</h2>
+                <p><button class="btn btn-sm btn-clair" type="button" id="p-sortir">Se déconnecter de cet appareil</button></p>
+                <p class="muted petit">Suppression du compte et de vos données : <a href="mailto:{{ biz.email_contact }}?subject=Suppression%20de%20mon%20compte">demandez-la par e-mail</a> (traitée sous 30 jours). Pensez à résilier d'abord votre abonnement.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {# ===== Parrainage ===== #}
+        <section class="page" id="p-parrainage" data-titre="Parrainage" hidden>
+          <div class="carte carte-parrain" id="p-parrain" hidden>
+            <p class="kicker">1 mois offert pour chacun</p>
+            <h2>Parrainez un confrère</h2>
+            <p>Partagez votre lien : quand il devient client, vous recevez chacun 1 mois offert, automatiquement.</p>
+            <div class="copie"><input id="p-parrain-lien" readonly aria-label="Votre lien de parrainage"><button class="btn" type="button" id="p-copier"><svg class="ic"><use href="#i-copier"/></svg>Copier</button></div>
+            <p><a class="btn btn-sm btn-clair" id="p-partager" href="#"><svg class="ic"><use href="#i-mail"/></svg>Envoyer par e-mail</a></p>
+          </div>
+          <div class="carte carte-vide" id="p-parrain-sans"><div class="vide-ic"><svg class="ic"><use href="#i-parrainage"/></svg></div>
+            <h2>Parrainage disponible avec un abonnement</h2><p>Votre lien personnel apparaît ici dès que votre abonnement ou votre essai est actif.</p>
+            <p><a class="btn btn-sm btn-clair" href="{{ root }}parrainage/">Comment ça marche</a></p></div>
+        </section>
+
+        {# ===== Assistance ===== #}
+        <section class="page" id="p-aide" data-titre="Assistance" hidden>
+          <div class="grille-2">
+            <div class="carte">
+              <h2>Nous écrire</h2>
+              <p>Répondez simplement à l'un de nos e-mails, ou écrivez-nous à l’adresse ci-dessous.</p>
+              <p><a class="btn btn-sombre" href="mailto:{{ biz.email_contact }}"><svg class="ic"><use href="#i-mail"/></svg>{{ biz.email_contact }}</a></p>
+              <p><button class="btn btn-sm btn-clair" type="button" id="a-assistant">Réponse immédiate : assistant</button></p>
+            </div>
+            <div class="carte">
+              <h2>Questions fréquentes</h2>
+              <details class="faq"><summary>Je n'ai pas reçu d'alerte ce matin</summary><p>Aucun e-mail un jour donné signifie qu'aucun nouvel avis ne correspondait à votre veille. Vérifiez aussi vos courriers indésirables, puis élargissez vos critères dans <a href="#veille">Ma veille</a> si besoin.</p></details>
+              <details class="faq"><summary>Comment modifier mon métier ou mes départements ?</summary><p>Dans <a href="#veille">Ma veille</a> : le changement s'applique à la prochaine alerte, avec confirmation par e-mail.</p></details>
+              <details class="faq"><summary>Comment obtenir une facture ou résilier ?</summary><p>Dans <a href="#abonnement">Mon abonnement</a> : l'espace de facturation sécurisé donne vos factures, la carte, le changement d'offre et la résiliation en un clic.</p></details>
+              <details class="faq"><summary>Comment répondre à un appel d'offres ?</summary><p>Nos <a href="{{ root }}guides/">guides pas à pas</a> expliquent les pièces, le mémoire technique et le dépôt.</p></details>
+            </div>
+          </div>
+        </section>
       </div>
-      <div id="d-achat" hidden><h3>Dossier prêt à signer</h3><p id="d-achat-txt"></p><p><a class="btn" id="d-achat-lien" href="#">Commander un dossier</a></p></div>
-      <ul class="liste-demandes" id="l-demandes"></ul>
     </div>
 
-    <div class="card" id="parametres"><h2>Mon compte</h2>
-      <form class="form" id="f-email" novalidate><p><label for="p-email">Changer d'adresse e-mail</label><input id="p-email" type="email" autocomplete="email" required></p>
-        <p class="msg" id="m-email" role="status" hidden></p><button class="btn btn-sm" type="submit">Changer d'adresse</button>
-        <p class="muted">Un lien de confirmation est envoyé à l'ancienne et à la nouvelle adresse. Pensez à changer aussi l'adresse de facturation dans Stripe.</p></form>
-      <form class="form" id="f-mdp" novalidate><p><label for="p-mdp">Nouveau mot de passe (10 caractères minimum)</label><input id="p-mdp" type="password" autocomplete="new-password" minlength="10" required></p>
-        <p class="msg" id="m-mdp" role="status" hidden></p><button class="btn btn-sm" type="submit">Changer de mot de passe</button></form>
-      <div id="p-parrain" hidden><h3>Parrainage : 1 mois offert</h3><p>Partagez ce lien à un confrère : quand il devient client, vous recevez chacun 1 mois offert.</p><p><a id="p-parrain-lien"></a></p></div>
-      <p class="muted">Support : répondez à n'importe quel e-mail ou écrivez à <a href="mailto:{{ biz.email_contact }}">{{ biz.email_contact }}</a>. Suppression du compte et de vos données : <a href="mailto:{{ biz.email_contact }}?subject=Suppression%20de%20mon%20compte">demandez-la par e-mail</a> (traitée sous 30 jours).</p>
-    </div>
+    <nav class="app-tabs" aria-label="Raccourcis">
+      <a href="#apercu"><svg class="ic"><use href="#i-apercu"/></svg>Accueil</a>
+      <a href="#marches"><svg class="ic"><use href="#i-marches"/></svg>Marchés<span class="pt" id="t-marches" hidden></span></a>
+      <a href="#echeances"><svg class="ic"><use href="#i-echeances"/></svg>Échéances<span class="pt pt-urg" id="t-echeances" hidden></span></a>
+      <a href="#favoris"><svg class="ic"><use href="#i-favoris"/></svg>Favoris</a>
+      <button type="button" id="tab-menu" aria-controls="app-side"><svg class="ic"><use href="#i-menu"/></svg>Menu</button>
+    </nav>
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
   </div>
 </section>
 <script type="application/json" id="compte-conf">{{ compte_js|tojson }}</script>
 <script src="{{ root }}static/vendor/supabase-2.99.3.js"></script>
-<script src="{{ root }}static/compte.js{% if css_v %}?v={{ css_v }}{% endif %}"></script>
+<script src="{{ root }}static/compte.js{% if compte_v %}?v={{ compte_v }}{% endif %}"></script>
 {% endif %}
 {% endblock %}

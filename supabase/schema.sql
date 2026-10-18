@@ -44,6 +44,12 @@ create table if not exists public.comptes (
   maj timestamptz not null default now()
 );
 alter table public.comptes add column if not exists parrainage text;
+-- Affichage « Mon abonnement » (copie en lecture seule de Stripe, recopiée par la synchronisation ; aucune règle n'en dépend)
+alter table public.comptes add column if not exists prix_cents int;             -- montant de la période en cours (centimes)
+alter table public.comptes add column if not exists periode text;               -- mois | an
+alter table public.comptes add column if not exists renouvellement timestamptz; -- prochaine échéance Stripe
+alter table public.comptes add column if not exists resilie boolean;            -- résiliation programmée en fin de période
+alter table public.comptes add column if not exists debut timestamptz;          -- début de l'abonnement
 create index if not exists comptes_email on public.comptes (lower(email));
 
 create table if not exists public.criteres (
@@ -169,6 +175,8 @@ begin
     'email', c.email, 'offre', c.offre, 'offre_nom', (select nom from public.offres where cle = c.offre),
     'statut', coalesce(c.statut, 'aucun'), 'fin_essai', c.fin_essai, 'parrainage', c.parrainage,
     'gere_par_stripe', c.stripe_subscription is not null or c.source = 'interne', 'maj', c.maj, 'droits', d,
+    'abonnement', jsonb_build_object('prix_cents', c.prix_cents, 'periode', c.periode, 'renouvellement', c.renouvellement,
+       'resilie', coalesce(c.resilie, false), 'debut', c.debut),
     'criteres', case when cr.user_id is null then null else jsonb_build_object(
        'metier', cr.metier, 'departements', cr.departements, 'mots_cles', cr.mots_cles, 'maj', cr.maj,
        'applique', cr.pousse_stripe is not null and cr.pousse_stripe >= cr.maj, 'erreur', cr.erreur) end,

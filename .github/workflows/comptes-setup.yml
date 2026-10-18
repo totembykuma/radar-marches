@@ -3,6 +3,9 @@ name: Comptes clients (mise en service)
 # Rejouable sans risque : met à jour la base, l'authentification, le stockage privé et le webhook Stripe.
 on:
   workflow_dispatch: {}
+  push:   # base mise à jour toute seule quand supabase/schema.sql change sur main
+    branches: [main]
+    paths: [supabase/schema.sql]
 permissions: { contents: write, actions: write }
 concurrency: { group: radar-daily, cancel-in-progress: false }
 jobs:
