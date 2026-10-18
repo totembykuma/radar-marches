@@ -1,0 +1,8 @@
+{% extends "_email.html" %}
+{% block contenu %}
+<h2 style="color:#0b1b33;font-size:21px;margin:0 0 14px">Votre abonnement démarre aujourd'hui</h2>
+<p>Bonjour,</p>
+<p>Merci d'avoir choisi {{ biz.nom }}. {% if raison == 'carte' %}Cette carte bancaire{% else %}Cette adresse e-mail{% endif %} a déjà bénéficié d'un essai gratuit : comme le prévoient nos <a href="{{ biz.site_url }}/cgv.html">conditions de vente</a>, l'essai n'est accordé qu'une fois. Votre abonnement démarre donc dès aujourd'hui, au tarif de l'offre choisie, et vos alertes arrivent dès demain matin (jours ouvrés).</p>
+<p>Vous restez libre d'arrêter à tout moment depuis votre espace client. S'il s'agit d'une erreur, répondez simplement à cet e-mail.</p>
+<p>Bonne chasse aux marchés,</p>
+{% endblock %}

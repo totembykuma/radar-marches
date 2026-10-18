@@ -565,3 +565,6 @@ footer .logo{color:#fff}footer p{margin:12px 0 0;max-width:420px;line-height:1.5
 @media (max-width:900px){.notif2,.notif3{display:none}.notif1{top:auto;bottom:4%;left:50%;transform:translateX(-50%)!important;animation:none;opacity:1}
  .e3-ill{max-height:120px}.e3-c{padding:22px}
  #apercu select{width:100%;min-width:0}#apercu .apercu-outil p{width:100%}}
+
+/* Champ piège anti-robots (inscription) : invisible pour les personnes */
+.piege{position:absolute!important;left:-9999px;width:1px;height:1px;overflow:hidden}

@@ -99,6 +99,13 @@ await page.click("#f-inscription button[type=submit]");
 verifier((await page.textContent("#m-inscription")).includes("pas identiques"), "mots de passe différents");
 // inscription réussie, confirmation faite ailleurs (téléphone) : la page s'ouvre toute seule au retour sur l'onglet
 await page.fill("#i-mdp2", "abcdefghij"); await page.check("#i-cgv");
+// anti-robots : champ piège rempli = refus, sans appel à Supabase
+await page.evaluate(() => { document.querySelector("#i-site").value = "http://spam"; });
+await page.click("#f-inscription button[type=submit]");
+verifier((await page.textContent("#m-inscription")).includes("patienter"), "champ piège rempli : inscription refusée");
+await page.evaluate(() => { document.querySelector("#i-site").value = ""; });
+verifier(await page.evaluate(() => document.querySelector("#i-site").getBoundingClientRect().right < 0), "champ piège hors écran");
+await page.waitForTimeout(3100);
 await page.click("#f-inscription button[type=submit]");
 await page.waitForFunction(() => document.querySelector("#m-inscription").textContent.includes("toute seule"));
 await page.evaluate(() => window.dispatchEvent(new Event("focus")));

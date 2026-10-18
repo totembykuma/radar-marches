@@ -19,7 +19,7 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 from . import avis, criteres, gratuit, ai, dossier, parrainage, boamp, finance, historique, barometre, laureats, mailer, prospects, site, subscribers
-from . import compte, comptes, rapport
+from . import anti_abus, compte, comptes, rapport
 from .config import ROOT, business, cle_actif, dossier_actif, metiers as load_metiers
 from .matching import Matcher
 from .render import date_fr, date_limite_fr, render
@@ -63,6 +63,21 @@ def alert_owner(biz, subject, body_html):
             log.error("Alerte propriétaire non envoyée : %s", safe(exc))
     else:
         log.warning("Alerte non envoyée (pas d'e-mail propriétaire) : %s", subject)
+
+
+def essais_uniques(biz, run):
+    """Un seul essai par carte ou adresse : arrête chez Stripe les essais en double (avant la bienvenue)."""
+    try:
+        res = anti_abus.appliquer(biz, mailer=mailer)
+    except Exception as exc:  # Stripe indisponible : on réessaie au passage suivant, sans bloquer la bienvenue
+        run["erreurs"].append(f"contrôle des essais impossible : {safe(exc)}")
+        return
+    run["essais_refuses"] = run.get("essais_refuses", 0) + res["essais_refuses"]
+    run["erreurs"] += res["erreurs"]
+    if res["essais_refuses"]:
+        alert_owner(biz, f"{res['essais_refuses']} essai(s) en double arrêté(s)",
+                    f"<p>{res['essais_refuses']} nouvel(s) abonnement(s) utilisai(en)t une carte ou une adresse ayant déjà eu un essai : "
+                    "l'essai a été arrêté, le client paie dès aujourd'hui et a reçu un e-mail d'explication. Rien à faire.</p>")
 
 
 def comptes_espace(biz, metiers, subs, run, state=None):
@@ -176,6 +191,7 @@ def run_bienvenue():
     biz["ia_active"] = bool(os.getenv("ANTHROPIC_API_KEY", "").strip()) and bool(state.get("premier_client_payant"))
     biz["dossier_actif"], biz["cle_actif"] = dossier_actif(biz), cle_actif(biz)
     run = {"erreurs": []}
+    essais_uniques(biz, run)
     subs = subscribers.load_all(biz, metiers)
     envoyer_bienvenues(subs, biz, metiers, state, run)
     n, errs = compte.traiter(subs, biz, metiers, state)
@@ -184,7 +200,7 @@ def run_bienvenue():
     if run.get("bienvenues") or n or state.get("compte_vus") or run.get("invitations_compte"):
         _save_json(DATA / "state.json", state)
     return {"bienvenues": run.get("bienvenues", 0), "liens_espace_client": n, "comptes": run.get("comptes"),
-            "criteres_espace": run.get("criteres_espace", 0), "erreurs": run["erreurs"]}
+            "criteres_espace": run.get("criteres_espace", 0), "essais_refuses": run.get("essais_refuses", 0), "erreurs": run["erreurs"]}
 
 
 def _historique_collecte(n=10):
@@ -276,6 +292,7 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
 
     # 2. Abonnés
     if subs is None:
+        essais_uniques(biz, run)
         subs = subscribers.load_all(biz, metiers)
     run["abonnes"] = sum(1 for s in subs if s.get("source") != "interne")
 
@@ -589,6 +606,7 @@ def run_abonnes():
         u, _, d = e.partition("@")
         return f"{u[:2]}***@{d}"
     return {"mode_stripe": biz.get("stripe_mode"), "nombre": len(subs),
+            "controle_essais": anti_abus.appliquer(biz, simuler=True),   # lecture seule : rien n'est modifié
             "abonnes": [{"email": mask(s["email"]), "plan": s["plan"], "statut": s["statut"], "source": s.get("source"), "metiers": s["metiers"],
                          "departements": s["departements"], "mots_cles": s["mots_cles"]} for s in subs]}
 

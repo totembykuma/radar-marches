@@ -39,6 +39,7 @@
       <p><label for="i-mdp">Mot de passe (10 caractères minimum)</label><input id="i-mdp" type="password" autocomplete="new-password" minlength="10" required></p>
       <p><label for="i-mdp2">Confirmez le mot de passe</label><input id="i-mdp2" type="password" autocomplete="new-password" minlength="10" required></p>
       <p class="check"><label><input id="i-cgv" type="checkbox" required> J'accepte les <a href="{{ root }}cgv.html" target="_blank">conditions de vente</a> et la <a href="{{ root }}confidentialite.html" target="_blank">politique de confidentialité</a>.</label></p>
+      <p class="piege" aria-hidden="true"><label for="i-site">Site web (laisser vide)</label><input id="i-site" type="text" tabindex="-1" autocomplete="off"></p>
       <p class="msg" id="m-inscription" role="alert" hidden></p>
       <button class="btn btn-lg btn-block" type="submit">Créer mon compte</button>
       <p class="muted">Vous recevez un e-mail pour confirmer votre adresse. Ensuite : choix de l'offre et essai gratuit de {{ biz.essai_gratuit_jours }} jours.</p>
