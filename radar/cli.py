@@ -18,7 +18,7 @@ from markupsafe import Markup
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
-from . import avis, criteres, gratuit, ai, dossier, parrainage, boamp, finance, historique, barometre, laureats, mailer, prospects, site, subscribers
+from . import avis, criteres, gratuit, ai, dossier, paliers, parrainage, boamp, finance, historique, barometre, laureats, mailer, prospects, site, subscribers
 from . import anti_abus, compte, comptes, rapport
 from .config import ROOT, business, cle_actif, dossier_actif, metiers as load_metiers
 from .matching import Matcher
@@ -184,6 +184,20 @@ def envoyer_bienvenues(subs, biz, metiers, state, run):
             run["erreurs"].append(f"bienvenue non envoyée : {safe(exc)}")
 
 
+def paliers_et_essais(biz, run):
+    """Essai de 7 jours au plus et prix selon l'ancienneté, appliqués dans Stripe avant la lecture des abonnés."""
+    if not (os.getenv("STRIPE_SECRET_KEY") or "").strip():
+        return
+    try:
+        r = paliers.traiter(biz)
+        for k in ("essais_raccourcis", "paliers"):
+            if r[k]:
+                run[k] = run.get(k, 0) + r[k]
+        run["erreurs"] += r["erreurs"]
+    except Exception as exc:
+        run["erreurs"].append(f"paliers de prix / essai non vérifiés : {safe(exc)}")
+
+
 def run_bienvenue():
     """Passage rapide (toutes les 10 min) : bienvenue aux nouveaux abonnés sans attendre le lendemain matin."""
     biz, metiers = business(), load_metiers()
@@ -192,6 +206,7 @@ def run_bienvenue():
     biz["dossier_actif"], biz["cle_actif"] = dossier_actif(biz), cle_actif(biz)
     run = {"erreurs": []}
     essais_uniques(biz, run)
+    paliers_et_essais(biz, run)
     subs = subscribers.load_all(biz, metiers)
     envoyer_bienvenues(subs, biz, metiers, state, run)
     n, errs = compte.traiter(subs, biz, metiers, state)
@@ -200,7 +215,8 @@ def run_bienvenue():
     if run.get("bienvenues") or n or state.get("compte_vus") or run.get("invitations_compte"):
         _save_json(DATA / "state.json", state)
     return {"bienvenues": run.get("bienvenues", 0), "liens_espace_client": n, "comptes": run.get("comptes"),
-            "criteres_espace": run.get("criteres_espace", 0), "essais_refuses": run.get("essais_refuses", 0), "erreurs": run["erreurs"]}
+            "criteres_espace": run.get("criteres_espace", 0), "paliers": run.get("paliers", 0),
+            "essais_refuses": run.get("essais_refuses", 0), "erreurs": run["erreurs"]}
 
 
 def _historique_collecte(n=10):
@@ -293,6 +309,7 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
     # 2. Abonnés
     if subs is None:
         essais_uniques(biz, run)
+        paliers_et_essais(biz, run)
         subs = subscribers.load_all(biz, metiers)
     run["abonnes"] = sum(1 for s in subs if s.get("source") != "interne")
 
@@ -344,6 +361,7 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
             continue
         offre = biz["offres"][s["plan"]]
         html = render("email_fin_essai.html", biz=biz, offre=offre, fin_fr=fin_fr, criteres=criteres_txt(s, metiers),
+                      tarif=paliers.tarif_abonne(biz, s),
                       lien_compte=compte.lien(biz, s, metiers))
         try:
             res = mailer.send(s["email"], f"Votre essai {biz['nom']} se termine le {fin_fr}", html,

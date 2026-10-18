@@ -10,6 +10,8 @@ acces_proprietaire:                           # accès offert au propriétaire (
   metiers: ["nettoyage"]
   departements: [75]
 
+# Prix dégressifs : prix_mensuel les 2 premiers mois payés, puis chaque palier à partir de son mois.
+# Résilier puis se réabonner = retour au prix de départ. Les offres annuelles (prix fixe) ne suivent pas les paliers.
 offres:
   essentiel:
     nom: "Essentiel"
@@ -19,6 +21,8 @@ offres:
     departements_max: 1
     lien_paiement: "https://buy.stripe.com/eVqdR2eUg7HrdHj9H23F602"   # Stripe Payment Link (rempli après création)
     lien_annuel: "https://buy.stripe.com/8x23cocM82n7cDfdXi3F604"
+    paliers: [{des_mois: 3, prix: 19.99}, {des_mois: 6, prix: 9.99}]   # prix selon l'ancienneté (radar/paliers.py)
+    stripe_paliers: []   # rempli par stripe.yml : prix Stripe de chaque palier, dans l'ordre
     stripe_price_ids: ["price_1UQrs879764n3f0zMVMks2Dq", "price_1UQtSV79764n3f0zjjYuho8o"]
   pro:
     nom: "Pro"
@@ -28,6 +32,8 @@ offres:
     departements_max: 101
     lien_paiement: "https://buy.stripe.com/00w8wI4fC1j36eRbPa3F603"
     lien_annuel: "https://buy.stripe.com/28E9AM6nK8Lvbzb06s3F605"
+    paliers: [{des_mois: 3, prix: 39.99}, {des_mois: 6, prix: 29.99}]   # prix selon l'ancienneté (radar/paliers.py)
+    stripe_paliers: []   # rempli par stripe.yml : prix Stripe de chaque palier, dans l'ordre
     stripe_price_ids: ["price_1UQrs879764n3f0zbVlgAi7W", "price_1UQtSW79764n3f0zcOnqqpEh"]
   # Offre « Clé en main » : tout Pro + rapports « comment gagner » + dossiers prêts à signer inclus (radar/rapport.py, radar/dossier.py).
   # Visible sur le site seulement quand l'IA est active (comme l'option dossier).
@@ -41,6 +47,8 @@ offres:
     rapports_max: 20    # rapports « comment gagner » par mois
     lien_paiement: "https://buy.stripe.com/aFa00c4fCf9TeLncTe3F608"   # rempli par le workflow stripe.yml
     lien_annuel: "https://buy.stripe.com/14A9AMeUg0eZ46Jg5q3F609"
+    paliers: [{des_mois: 3, prix: 119.99}, {des_mois: 6, prix: 99.99}]   # prix selon l'ancienneté (radar/paliers.py)
+    stripe_paliers: []   # rempli par stripe.yml : prix Stripe de chaque palier, dans l'ordre
     stripe_price_ids: ["price_1URDTv79764n3f0zoMkKYfW3", "price_1URDTw79764n3f0zfqAbnyOv"]
 # Promo mensuelle : chaque mois, du lundi au vendredi de la « semaine » choisie (3 = semaine du 3e lundi),
 # les N premiers abonnés Pro (mensuel) de chaque jour paient « prix » € pendant « mois » mois.
@@ -51,7 +59,7 @@ promo:
   semaine: 3
   places_par_jour: 5
   prix: 29
-  mois: 3
+  mois: 2             # = les 2 premiers mois au prix de départ, puis la grille normale
 # Option « Dossier prêt à signer » (radar/dossier.py) : visible sur le site et dans les alertes seulement quand l'IA est active.
 dossier:
   nom: "Dossier prêt à signer"
@@ -76,7 +84,8 @@ portail_client: "https://billing.stripe.com/p/login/dRm8wIfYk1j39r3aL63F600"
 statistiques_goatcounter: "radarmarches"
 google_verification: "SZybI2SsjlqSJ8IoP4km9vdFVcCDOwgf5n3LTYSsxe4"
 stripe_mode: "réel"
-essai_gratuit_jours: 14
+essai_gratuit_jours: 7   # un seul essai par client (même e-mail ou même carte), radar/paliers.py
+nouvelle_grille_anciens: true   # choix du 2026-10-18 : appliquer aussi les paliers aux abonnements créés avant nouvelle_grille_depuis
 
 # Fiscalité micro-entreprise (taux 2026, BNC non réglementé, à vérifier sur urssaf.fr)
 fiscalite:

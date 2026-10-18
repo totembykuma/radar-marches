@@ -23,7 +23,7 @@ def en_promo(jour: date, semaine: int = 3):
 
 def _coupon(biz, p):
     offre = biz["offres"][p["offre"]]
-    remise = int((offre["prix_mensuel"] - p["prix"]) * 100)
+    remise = int(round((offre["prix_mensuel"] - p["prix"]) * 100))
     cid = f"radar-promo-{p['offre']}-{p['prix']}-{p['mois']}m"
     try:
         _call("GET", f"coupons/{cid}")

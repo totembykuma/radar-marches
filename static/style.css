@@ -200,6 +200,7 @@ footer .logo{color:#fff}footer p{margin:12px 0 0;max-width:420px;line-height:1.5
 .periode button{border:0;background:none;font:inherit;font-weight:600;font-size:15px;padding:9px 18px;border-radius:999px;cursor:pointer;color:var(--muted)}
 .periode button.on{background:#0b1b33;color:#fff}
 .periode em{font-style:normal;font-size:12px;font-weight:700;background:#ffb020;color:#0b1b33;border-radius:999px;padding:2px 8px;margin-left:6px}
+.price .baisse{margin:-6px 0 12px;font-size:14px;line-height:1.4;color:var(--muted)}.price .baisse b{color:#0f8a5f}.nuit .price .baisse{color:#aab6ca}.nuit .price.featured .baisse{color:var(--muted)}.nuit .price .baisse b{color:var(--menthe)}.nuit .price.featured .baisse b{color:#0f8a5f}
 .price .eco{margin:-6px 0 12px;font-size:14px;font-weight:600;color:#0f8a5f}
 .chip-pme{background:#e7f6ec;color:#11703a;font-weight:700}
 .rappel{max-width:640px;padding:48px 20px 64px}.rappel h1{font-size:28px;margin:0 0 8px}.rappel .card{background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:18px 0}.rappel .opts{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}.rappel .opts a{flex:1 1 180px}

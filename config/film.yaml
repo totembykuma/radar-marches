@@ -57,6 +57,6 @@ scenes:
   - id: fin
     titre: "À vous"
     voix:
-      - "Essayez gratuitement pendant quatorze jours, sans engagement."
+      - "Essayez gratuitement pendant sept jours, sans engagement."
       - "Votre prochain marché sera peut-être publié demain matin."
-    cap: "14 jours d'essai gratuit, sans engagement, résiliable en un clic."
+    cap: "7 jours d'essai gratuit, sans engagement, résiliable en un clic."

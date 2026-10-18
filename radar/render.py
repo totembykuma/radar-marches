@@ -66,3 +66,17 @@ def date_courte(s):
 
 env.filters["euros"] = euros
 env.filters["date_courte"] = date_courte
+
+
+def _grille(offre):
+    from .paliers import texte_grille
+    return texte_grille(offre)
+
+
+def _prix_fr(prix):
+    from .paliers import prix_fr
+    return prix_fr(prix)
+
+
+env.filters["grille"] = _grille     # « 29 € les 2 premiers mois, 19,99 € du 3e au 5e mois, puis 9,99 € à partir du 6e mois »
+env.filters["prix_fr"] = _prix_fr   # 19.99 → « 19,99 € »

@@ -408,11 +408,12 @@ def compte_js(biz, metiers, conf):
     """Paramètres publics de l'espace client (aucune donnée personnelle, aucune clé secrète)."""
     from .comptes import DCE_MAX_OCTETS
     d = biz.get("dossier") or {}
+    from .paliers import texte_grille
     offres = {k: {"nom": o["nom"], "prix": o["prix_mensuel"], "annuel": o.get("prix_annuel"), "lien": o["lien_paiement"],
-                  "lien_annuel": o.get("lien_annuel")}
+                  "lien_annuel": o.get("lien_annuel"), "grille": texte_grille(o)}
               for k, o in biz["offres"].items() if o.get("lien_paiement") and (k != "cle" or biz.get("cle_actif"))}
     return {"url": conf["url"], "cle": conf["cle"], "site": biz["site_url"].rstrip("/"), "root": "/", "offres": offres,
-            "essai": biz.get("essai_gratuit_jours", 14), "portail": biz.get("portail_client") or "",
+            "essai": biz.get("essai_gratuit_jours", 7), "portail": biz.get("portail_client") or "",
             "metiers": [[k, m["libelle"]] for k, m in sorted(metiers.items(), key=lambda x: x[1]["libelle"])],
             "metiers_nom": {k: m["libelle"] for k, m in metiers.items()}, "max_octets": DCE_MAX_OCTETS,
             "dossier": {"prix": d.get("prix"), "prix_pro": d.get("prix_pro"), "prix_cle": d.get("prix_cle"), "lien": d.get("lien_paiement"),

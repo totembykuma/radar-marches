@@ -1,0 +1,9 @@
+{% extends "_email.html" %}
+{% block contenu %}
+<h2 style="color:#0b1b33;font-size:21px;margin:0 0 14px">Votre abonnement baisse à {{ prix }} par mois</h2>
+<p>Bonjour,</p>
+<p>Merci de votre fidélité. Comme prévu dans votre offre <b>{{ offre.nom }}</b>, votre prix baisse avec l'ancienneté : à partir de votre prochaine facture, le <b>{{ date_fr }}</b>, vous payez <b>{{ prix }} par mois</b>. Vous n'avez rien à faire.</p>
+<p style="background:#f4f5f7;padding:12px 14px;border-radius:8px;border-left:3px solid #ffb020">Votre grille : {{ grille }}.</p>
+<p>Si vous arrêtez puis reprenez un abonnement plus tard, le tarif repart au prix de départ.</p>
+<p>Bonne chasse aux marchés,</p>
+{% endblock %}
