@@ -123,6 +123,7 @@ def test_navigateur_ne_peut_pas_changer_ses_droits(pg):
 def test_espace_et_criteres_selon_offre(pg):
     e = json.loads(pg.q("select public.mon_espace()", uid=U["ess"]))
     assert e["offre"] == "essentiel" and e["droits"]["departements_max"] == 1 and e["droits"]["rapports_mois"] == 0
+    assert e["abonnement"] == {"prix_cents": None, "periode": None, "renouvellement": None, "resilie": False, "debut": None}
     with pytest.raises(RuntimeError, match="1 département"):
         pg.q("select public.modifier_criteres('nettoyage', '{33,47}', '{}')", uid=U["ess"])
     with pytest.raises(RuntimeError, match="mots-clés sont inclus"):

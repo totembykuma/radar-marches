@@ -236,6 +236,9 @@ def synchroniser(supa, subs, biz, metiers, maintenant=None):
     a_ecrire, crit_ecrire = [], []
     utilisateurs = supa.utilisateurs()
     stats["_utilisateurs"] = utilisateurs
+    # Colonnes d'affichage « Mon abonnement » : écrites seulement quand la base les a (schema.sql appliqué),
+    # pour qu'une base pas encore mise à jour ne fasse jamais échouer la synchronisation.
+    affichage = any("renouvellement" in c for c in comptes.values())
     for u in utilisateurs:
         email = (u.get("email") or "").lower()
         if not email or not u.get("email_confirmed_at"):
@@ -247,10 +250,15 @@ def synchroniser(supa, subs, biz, metiers, maintenant=None):
             row = {"offre": s["plan"], "statut": s["statut"], "stripe_customer": s.get("customer"),
                    "stripe_subscription": s.get("stripe_subscription"), "fin_essai": _iso(s.get("fin_essai")),
                    "source": s.get("source")}
+            if affichage:
+                row.update(prix_cents=s.get("prix_mois"), periode=s.get("periode"), renouvellement=_iso(s.get("renouvellement")),
+                           resilie=bool(s.get("resilie")), debut=_iso(s.get("debut")))
         else:
             row = {"offre": avant.get("offre"), "statut": "inactif" if avant.get("offre") else "aucun",
                    "stripe_customer": avant.get("stripe_customer"), "stripe_subscription": None, "fin_essai": None,
                    "source": avant.get("source")}
+            if affichage:
+                row.update(prix_cents=None, periode=None, renouvellement=None, resilie=False, debut=None)
         row.update(user_id=u["id"], email=email,
                    parrainage=parrainage.lien(biz, s) if s and s.get("statut") in ("active", "trialing") else None)
         if any(_norm_ts(row[k]) != _norm_ts(avant.get(k)) for k in row):
