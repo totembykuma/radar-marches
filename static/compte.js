@@ -45,6 +45,7 @@
     });
   });
 
+  var OUVERTURE = Date.now();
   $("f-inscription").addEventListener("submit", function (ev) {
     ev.preventDefault();
     var f = this, email = $("i-email").value.trim(), mdp = $("i-mdp").value;
@@ -52,6 +53,8 @@
     if (mdp.length < 10) return msg("m-inscription", "Le mot de passe doit faire au moins 10 caractères.");
     if (mdp !== $("i-mdp2").value) return msg("m-inscription", "Les deux mots de passe ne sont pas identiques.");
     if (!$("i-cgv").checked) return msg("m-inscription", "Merci d'accepter les conditions de vente et la politique de confidentialité.");
+    // Anti-robots sans service payant : champ piège invisible rempli, ou formulaire envoyé moins de 3 s après l'ouverture.
+    if ($("i-site").value || Date.now() - OUVERTURE < 3000) return msg("m-inscription", "Merci de patienter quelques secondes puis de réessayer.");
     attente(f, true);
     sb.auth.signUp({ email: email, password: mdp, options: { emailRedirectTo: C.site + "/compte/confirmation/", data: souhaits() } })
       .then(function (r) {
