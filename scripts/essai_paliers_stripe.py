@@ -12,7 +12,8 @@ import time
 
 KEY = (os.getenv("STRIPE_TEST_SECRET_KEY") or "").strip()
 if not KEY.startswith(("sk_test_", "rk_test_")):
-    sys.exit("STRIPE_TEST_SECRET_KEY absent ou pas en mode test : rien n'est lancé.")
+    print("::warning::Secret STRIPE_TEST_SECRET_KEY absent ou pas en mode test : essai Stripe NON lancé.")
+    sys.exit(0)
 os.environ["STRIPE_SECRET_KEY"] = KEY
 os.environ["RADAR_DRY_RUN"] = "1"           # aucun e-mail réel
 os.environ.pop("RESEND_API_KEY", None)
