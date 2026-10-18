@@ -141,7 +141,8 @@ def test_stripe_setup_writes_config(tmp_path, monkeypatch):
         if path == "payment_links":
             assert data["custom_fields[0][dropdown][options][1][value]"] == "espacesverts"
             assert data["subscription_data[trial_period_days]"] == 7
-            assert "une seule fois par client" in data["custom_text[submit][message]"]
+            mensuel = data["line_items[0][price]"] in ("price_2900", "price_4900", "price_14900")
+            assert ("une seule fois par client" in data.get("custom_text[submit][message]", "")) == mensuel
             return {"url": f"https://buy.stripe.com/test_{data['metadata[radar_offre]']}_{data['line_items[0][price]']}"}
         if path == "billing_portal/configurations":
             return {"login_page": {"url": "https://billing.stripe.com/p/login/test_x"}}
@@ -149,10 +150,10 @@ def test_stripe_setup_writes_config(tmp_path, monkeypatch):
     stripe_setup.run()
     biz = config.business()
     assert biz["offres"]["pro"]["lien_paiement"] == "https://buy.stripe.com/test_pro_price_4900"
-    assert "lien_annuel" not in biz["offres"]["pro"] and not any(d and d.get("recurring[interval]") == "year" for _, _, d in calls)
+    assert biz["offres"]["pro"]["lien_annuel"] == "https://buy.stripe.com/test_pro_price_49000"   # annuel gardé, prix fixe
     assert biz["offres"]["essentiel"]["stripe_paliers"] == ["price_2900", "price_1999", "price_999"]
-    assert biz["offres"]["essentiel"]["stripe_price_ids"][-3:] == ["price_2900", "price_1999", "price_999"]
-    assert len(biz["offres"]["essentiel"]["stripe_price_ids"]) == 5   # anciens prix gardés pour les abonnés existants
+    assert biz["offres"]["essentiel"]["stripe_price_ids"][:2] == ["price_1UQrs879764n3f0zMVMks2Dq", "price_1UQtSV79764n3f0zjjYuho8o"]   # anciens gardés
+    assert "price_29000" in biz["offres"]["essentiel"]["stripe_price_ids"]
     assert biz["stripe_mode"] == "test" and biz["portail_client"].endswith("test_x") and biz["nouvelle_grille_depuis"]
     assert biz["essai_gratuit_jours"] == 7
     assert biz["dossier"]["lien_paiement"].endswith("price_19900") and biz["dossier"]["lien_pro"].endswith("price_14900")
@@ -163,7 +164,7 @@ def test_stripe_setup_writes_config(tmp_path, monkeypatch):
     stripe_setup.run()  # relancer ne casse pas le fichier
     biz = config.business()
     assert biz["offres"]["pro"]["stripe_paliers"] == ["price_4900", "price_3999", "price_2999"]
-    assert len(biz["offres"]["pro"]["stripe_price_ids"]) == 5 and biz["nouvelle_grille_depuis"] == depuis
+    assert len(biz["offres"]["pro"]["stripe_price_ids"]) == 6 and biz["nouvelle_grille_depuis"] == depuis
 
 
 def test_secrets_never_logged(monkeypatch):

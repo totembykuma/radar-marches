@@ -11,23 +11,27 @@ acces_proprietaire:                           # accès offert au propriétaire (
   departements: [75]
 
 # Prix dégressifs : prix_mensuel les 2 premiers mois payés, puis chaque palier à partir de son mois.
-# Résilier puis se réabonner = retour au prix de départ. Les offres annuelles ne sont plus vendues (liens désactivés).
+# Résilier puis se réabonner = retour au prix de départ. Les offres annuelles (prix fixe) ne suivent pas les paliers.
 offres:
   essentiel:
     nom: "Essentiel"
     prix_mensuel: 29
+    prix_annuel: 290   # 2 mois offerts
     metiers_max: 1
     departements_max: 1
     lien_paiement: "https://buy.stripe.com/eVqdR2eUg7HrdHj9H23F602"   # Stripe Payment Link (rempli après création)
+    lien_annuel: "https://buy.stripe.com/8x23cocM82n7cDfdXi3F604"
     paliers: [{des_mois: 3, prix: 19.99}, {des_mois: 6, prix: 9.99}]   # prix selon l'ancienneté (radar/paliers.py)
     stripe_paliers: []   # rempli par stripe.yml : prix Stripe de chaque palier, dans l'ordre
     stripe_price_ids: ["price_1UQrs879764n3f0zMVMks2Dq", "price_1UQtSV79764n3f0zjjYuho8o"]
   pro:
     nom: "Pro"
     prix_mensuel: 49
+    prix_annuel: 490   # 2 mois offerts
     metiers_max: 1
     departements_max: 101
     lien_paiement: "https://buy.stripe.com/00w8wI4fC1j36eRbPa3F603"
+    lien_annuel: "https://buy.stripe.com/28E9AM6nK8Lvbzb06s3F605"
     paliers: [{des_mois: 3, prix: 39.99}, {des_mois: 6, prix: 29.99}]   # prix selon l'ancienneté (radar/paliers.py)
     stripe_paliers: []   # rempli par stripe.yml : prix Stripe de chaque palier, dans l'ordre
     stripe_price_ids: ["price_1UQrs879764n3f0zbVlgAi7W", "price_1UQtSW79764n3f0zcOnqqpEh"]
@@ -36,11 +40,13 @@ offres:
   cle:
     nom: "Clé en main"
     prix_mensuel: 149
+    prix_annuel: 1490   # 2 mois offerts
     metiers_max: 1
     departements_max: 101
     dossiers_inclus: 2  # par mois, à partir du 1er paiement ; le suivant au prix dossier.prix_cle
     rapports_max: 20    # rapports « comment gagner » par mois
     lien_paiement: "https://buy.stripe.com/aFa00c4fCf9TeLncTe3F608"   # rempli par le workflow stripe.yml
+    lien_annuel: "https://buy.stripe.com/14A9AMeUg0eZ46Jg5q3F609"
     paliers: [{des_mois: 3, prix: 119.99}, {des_mois: 6, prix: 99.99}]   # prix selon l'ancienneté (radar/paliers.py)
     stripe_paliers: []   # rempli par stripe.yml : prix Stripe de chaque palier, dans l'ordre
     stripe_price_ids: ["price_1URDTv79764n3f0zoMkKYfW3", "price_1URDTw79764n3f0zfqAbnyOv"]

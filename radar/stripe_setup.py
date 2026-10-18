@@ -97,11 +97,12 @@ def _link_for(key, price, biz, metiers, mode, offre):
     if not link:
         data = {"line_items[0][price]": price["id"], "line_items[0][quantity]": 1,
                 "subscription_data[trial_period_days]": biz["essai_gratuit_jours"],
-                "custom_text[submit][message]": _texte_paiement(biz, offre),
                 "allow_promotion_codes": "true", "billing_address_collection": "auto",
                 "tax_id_collection[enabled]": "true",
                 **_apres_paiement(biz),
                 "metadata[radar_offre]": key, "metadata[radar_price]": price["id"], **_link_fields(key, metiers)}
+        if (price.get("recurring") or {}).get("interval") == "month":   # grille dégressive : formules mensuelles seulement
+            data["custom_text[submit][message]"] = _texte_paiement(biz, offre)
         link = _call("POST", "payment_links", data=data)
     return link
 
@@ -150,7 +151,7 @@ def run():
         elif product.get("description") != desc:
             product = _call("POST", f"products/{product['id']}", data={"description": desc})
         results[key] = {}
-        # Prix mensuel de départ puis un prix par palier d'ancienneté (radar/paliers.py) ; l'annuel n'est plus vendu.
+        # Prix mensuel de départ puis un prix par palier d'ancienneté (radar/paliers.py) ; l'annuel reste à prix fixe.
         from .paliers import centimes, grille
         prix_mois = [_price_for(product, centimes(prix), "month") for _, prix in grille(offre)]
         results[key]["paliers"] = results[key]["prices"] = [pr["id"] for pr in prix_mois]
@@ -162,12 +163,6 @@ def run():
             link = _link_for(key, price, biz, metiers, mode, offre)
             results[key]["lien_annuel"] = link["url"]
             results[key]["prices"] = results[key]["paliers"] + [price["id"]]
-        else:  # liens annuels encore actifs : désactivés (réactivables dans Stripe)
-            for pl in _call("GET", "payment_links", params={"active": "true", "limit": 100})["data"]:
-                m = pl.get("metadata") or {}
-                if m.get("radar_offre") == key and m.get("radar_price") not in results[key]["paliers"]:
-                    _call("POST", f"payment_links/{pl['id']}", data={"active": "false"})
-                    print(f"[{mode}] {offre['nom']} : ancien lien {pl['id']} désactivé")
 
     dossier = _dossier(biz) if biz.get("dossier") else None
 
