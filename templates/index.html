@@ -172,29 +172,30 @@
   <p class="kicker">Tarifs</p>
   <h2>Un marché gagné paie des années d'abonnement.</h2>
   <p class="sub">{{ biz.essai_gratuit_jours }} jours offerts. Sans engagement. <b>Votre prix baisse avec l'ancienneté</b>, automatiquement.</p>
-  {% macro baisse(o) %}{% if o.paliers %}<p class="baisse">les 2 premiers mois, puis {% for p in o.paliers %}<b>{{ p.prix|prix_fr }}</b> dès le {{ p.des_mois }}e mois{{ " et " if not loop.last }}{% endfor %}</p>{% endif %}{% endmacro %}
+  {% macro baisse(o) %}{% if o.paliers %}<p class="baisse" data-mois>les 2 premiers mois, puis {% for p in o.paliers %}<b>{{ p.prix|prix_fr }}</b> dès le {{ p.des_mois }}e mois{{ " et " if not loop.last }}{% endfor %}</p>{% endif %}{% endmacro %}
+  {% from "_annuel.html" import bloc_annuel %}
   {% set annuel = biz.offres.essentiel.lien_annuel and biz.offres.pro.lien_annuel and biz.stripe_mode == 'réel' %}
-  {% if annuel %}<div class="periode" role="group" aria-label="Période de paiement"><button type="button" data-p="mois" class="on" aria-pressed="true">Mensuel</button><button type="button" data-p="an" aria-pressed="false">Annuel <em>2 mois offerts</em></button></div>{% endif %}
+  {% if annuel %}<div class="periode" role="group" aria-label="Période de paiement"><button type="button" data-p="mois" class="on" aria-pressed="true">Mensuel</button><button type="button" data-p="an" aria-pressed="false">Annuel <em>payé en une fois</em></button></div>{% endif %}
   <div class="prices{% if biz.cle_actif %} prices-3{% endif %}">
   {% set o = biz.offres.essentiel %}
     <div class="price">
       <h3>{{ o.nom }}</h3>
       <p class="for">Pour l'artisan qui travaille près de chez lui</p>
-      <p class="amount" data-mois>{{ o.prix_mensuel }} €<span>/mois</span></p>{{ baisse(o) }}{% if annuel %}<p class="amount" data-an hidden>{{ o.prix_annuel }} €<span>/an</span></p><p class="eco" data-an hidden>Soit {{ '%.2f'|format(o.prix_annuel / 12)|replace('.', ',') }} €/mois : vous économisez {{ o.prix_mensuel * 12 - o.prix_annuel }} €</p>{% endif %}
+      <p class="amount" data-mois>{{ o.prix_mensuel }} €<span>/mois</span></p>{{ baisse(o) }}{% if annuel %}{{ bloc_annuel(o) }}{% endif %}
       <ul class="checks">
         <li>1 métier</li>
         <li><b>1 département</b></li>
         <li>Alerte chaque jour ouvré{% if biz.ia_active %} avec résumé IA{% endif %}</li>
         <li>Filtre anti faux-positifs par métier</li>
       </ul>
-      {% if o.lien_paiement and biz.stripe_mode == 'réel' %}<a class="btn btn-lg btn-block btn-ghost-dark" href="{{ o.lien_paiement }}" data-mois-href="{{ o.lien_paiement }}" data-an-href="{{ o.lien_annuel }}">Essayer gratuitement</a>{% else %}<a class="btn btn-lg btn-block disabled" href="mailto:{{ biz.email_contact }}">Bientôt disponible</a>{% endif %}
+      {% if o.lien_paiement and biz.stripe_mode == 'réel' %}<a class="btn btn-lg btn-block btn-ghost-dark" href="{{ o.lien_paiement }}" data-mois-href="{{ o.lien_paiement }}" data-an-href="{{ o.lien_annuel }}" data-an-txt="Payer {{ o.prix_annuel }} € pour 12 mois">Essayer gratuitement</a>{% else %}<a class="btn btn-lg btn-block disabled" href="mailto:{{ biz.email_contact }}">Bientôt disponible</a>{% endif %}
     </div>
   {% set o = biz.offres.pro %}
     <div class="price featured">
       <span class="ribbon">Recommandé</span>
       <h3>{{ o.nom }}</h3>
       <p class="for">Pour décrocher plus de marchés et surveiller la concurrence</p>
-      <p class="amount" data-mois>{% if promo %}<s class="promo-old" hidden>{{ o.prix_mensuel }} €</s> <b class="promo-new" hidden>{{ promo.prix }} €</b><b class="promo-std">{{ o.prix_mensuel }} €</b>{% else %}{{ o.prix_mensuel }} €{% endif %}<span>/mois</span></p>{{ baisse(o) }}{% if promo %}<p class="promo-note" hidden>Semaine promo : <b>{{ promo.prix }} €/mois pendant {{ promo.mois }} mois</b>, puis {% for p in o.paliers %}{{ p.prix|prix_fr }} dès le {{ p.des_mois }}e mois{{ " et " if not loop.last }}{% endfor %}. Code <b class="promo-code"></b> déjà appliqué. {{ promo.places_par_jour }} places par jour : si elles sont prises, l'offre revient demain.</p>{% endif %}{% if annuel %}<p class="amount" data-an hidden>{{ o.prix_annuel }} €<span>/an</span></p><p class="eco" data-an hidden>Soit {{ '%.2f'|format(o.prix_annuel / 12)|replace('.', ',') }} €/mois : vous économisez {{ o.prix_mensuel * 12 - o.prix_annuel }} €</p>{% endif %}
+      <p class="amount" data-mois>{% if promo %}<s class="promo-old" hidden>{{ o.prix_mensuel }} €</s> <b class="promo-new" hidden>{{ promo.prix }} €</b><b class="promo-std">{{ o.prix_mensuel }} €</b>{% else %}{{ o.prix_mensuel }} €{% endif %}<span>/mois</span></p>{{ baisse(o) }}{% if promo %}<p class="promo-note" hidden>Semaine promo : <b>{{ promo.prix }} €/mois pendant {{ promo.mois }} mois</b>, puis {% for p in o.paliers %}{{ p.prix|prix_fr }} dès le {{ p.des_mois }}e mois{{ " et " if not loop.last }}{% endfor %}. Code <b class="promo-code"></b> déjà appliqué. {{ promo.places_par_jour }} places par jour : si elles sont prises, l'offre revient demain.</p>{% endif %}{% if annuel %}{{ bloc_annuel(o) }}{% endif %}
       <ul class="checks">
         <li>Toute l'offre Essentiel, plus :</li>
         <li><b>Autant de départements que vous voulez</b>, ou toute la France</li>
@@ -202,21 +203,21 @@
         <li><b>La fiche « avant de répondre »</b> sur chaque marché : ce que cet acheteur a payé les fois précédentes, combien d'entreprises ont répondu, et qui a gagné</li>
         <li><b>Le bilan du lundi</b> : qui a gagné les marchés de votre métier dans votre secteur, et à quel prix quand il est publié</li>
       </ul>
-      {% if o.lien_paiement and biz.stripe_mode == 'réel' %}<a class="btn btn-lg btn-block" href="{{ o.lien_paiement }}" data-mois-href="{{ o.lien_paiement }}" data-an-href="{{ o.lien_annuel }}">Essayer gratuitement</a>{% else %}<a class="btn btn-lg btn-block disabled" href="mailto:{{ biz.email_contact }}">Bientôt disponible</a>{% endif %}
+      {% if o.lien_paiement and biz.stripe_mode == 'réel' %}<a class="btn btn-lg btn-block" href="{{ o.lien_paiement }}" data-mois-href="{{ o.lien_paiement }}" data-an-href="{{ o.lien_annuel }}" data-an-txt="Payer {{ o.prix_annuel }} € pour 12 mois">Essayer gratuitement</a>{% else %}<a class="btn btn-lg btn-block disabled" href="mailto:{{ biz.email_contact }}">Bientôt disponible</a>{% endif %}
     </div>
   {% if biz.cle_actif %}{% set o = biz.offres.cle %}
     <div class="price cle">
       <span class="ribbon">On fait tout</span>
       <h3>{{ o.nom }}</h3>
       <p class="for">Pour répondre à plus de marchés sans y passer vos soirées</p>
-      <p class="amount" data-mois>{{ o.prix_mensuel }} €<span>/mois</span></p>{{ baisse(o) }}{% if annuel and o.lien_annuel %}<p class="amount" data-an hidden>{{ o.prix_annuel }} €<span>/an</span></p><p class="eco" data-an hidden>Soit {{ '%.2f'|format(o.prix_annuel / 12)|replace('.', ',') }} €/mois : vous économisez {{ o.prix_mensuel * 12 - o.prix_annuel }} €</p>{% endif %}
+      <p class="amount" data-mois>{{ o.prix_mensuel }} €<span>/mois</span></p>{{ baisse(o) }}{% if annuel and o.lien_annuel %}{{ bloc_annuel(o) }}{% endif %}
       <ul class="checks">
         <li>Toute l'offre Pro, plus :</li>
         <li><b>Le rapport « comment gagner »</b> sur chaque marché qui vous intéresse : ce que l'acheteur va noter, les pièces à fournir, les pièges, un <b>prix de repère</b> tiré des marchés déjà attribués, et votre plan d'action</li>
         <li><b>{{ o.dossiers_inclus }} dossiers de réponse prêts à signer par mois</b> : mémoire technique, lettre de candidature, DUME, liste des pièces. Vous relisez, mettez vos prix, signez, envoyez</li>
         <li>Un dossier de plus : {{ biz.dossier.prix_cle }} € au lieu de {{ biz.dossier.prix }} €</li>
       </ul>
-      {% if biz.stripe_mode == 'réel' %}<a class="btn btn-lg btn-block btn-ghost-dark" href="{{ o.lien_paiement }}" data-mois-href="{{ o.lien_paiement }}" data-an-href="{{ o.lien_annuel or o.lien_paiement }}">Essayer gratuitement</a>{% else %}<a class="btn btn-lg btn-block disabled" href="mailto:{{ biz.email_contact }}">Bientôt disponible</a>{% endif %}
+      {% if biz.stripe_mode == 'réel' %}<a class="btn btn-lg btn-block btn-ghost-dark" href="{{ o.lien_paiement }}" data-mois-href="{{ o.lien_paiement }}" data-an-href="{{ o.lien_annuel or o.lien_paiement }}"{% if o.lien_annuel %} data-an-txt="Payer {{ o.prix_annuel }} € pour 12 mois"{% endif %}>Essayer gratuitement</a>{% else %}<a class="btn btn-lg btn-block disabled" href="mailto:{{ biz.email_contact }}">Bientôt disponible</a>{% endif %}
     </div>
   {% endif %}
   </div>
@@ -248,10 +249,18 @@
       bs.forEach(function (x) { x.classList.toggle("on", x === b); x.setAttribute("aria-pressed", x === b); });
       t.querySelectorAll("[data-an]").forEach(function (e) { e.hidden = !an; });
       t.querySelectorAll("[data-mois]").forEach(function (e) { e.hidden = an; });
-      t.querySelectorAll("[data-an-href]").forEach(function (a) { a.href = an ? a.dataset.anHref : a.dataset.moisHref; });
+      t.querySelectorAll("[data-an-href]").forEach(function (a) {
+        a.href = an ? a.dataset.anHref : a.dataset.moisHref;
+        if (a.dataset.anTxt) { if (!a.dataset.moisTxt) a.dataset.moisTxt = a.textContent; a.textContent = an ? a.dataset.anTxt : a.dataset.moisTxt; }
+      });
     }; });
+    var d = new Date(), r = new Date(d.getFullYear() + 1, d.getMonth(), d.getDate());
+    if (r.getMonth() !== d.getMonth()) r.setDate(0);   // 29 février → 28 février
+    var txt = r.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+    t.querySelectorAll(".renouv").forEach(function (e) { e.textContent = txt; });
   })();
   </script>{% endif %}
+  {% if annuel %}<p class="fine" data-an hidden><b>Formule annuelle :</b> payée en une fois pour 12 mois, sans essai gratuit, prix fixe toute l'année. Rappel par e-mail 30 jours avant le renouvellement. Vous passez du mensuel à l'annuel ? Votre abonnement mensuel s'arrête tout seul et la part non utilisée vous est remboursée : jamais deux prélèvements.</p>{% endif %}
   <p class="fine">{{ biz.fiscalite.tva }}. Paiement sécurisé par Stripe. Résiliation à tout moment depuis {% if biz.portail_client %}<a href="{{ biz.portail_client }}">votre espace client</a>{% else %}votre espace client{% endif %}.</p>
 </div></section>
 

@@ -140,9 +140,11 @@ def test_stripe_setup_writes_config(tmp_path, monkeypatch):
             return {"id": f"plink_{data['line_items[0][price]']}", "url": f"https://buy.stripe.com/test_dossier_{data['line_items[0][price]']}"}
         if path == "payment_links":
             assert data["custom_fields[0][dropdown][options][1][value]"] == "espacesverts"
-            assert data["subscription_data[trial_period_days]"] == 7
-            mensuel = data["line_items[0][price]"] in ("price_2900", "price_4900", "price_14900")
-            assert ("une seule fois par client" in data.get("custom_text[submit][message]", "")) == mensuel
+            if data.get("metadata[radar_periode]") == "an":   # annuel : payé tout de suite, montant et renouvellement affichés
+                assert "subscription_data[trial_period_days]" not in data and "12 mois" in data["custom_text[submit][message]"]
+            else:
+                assert data["subscription_data[trial_period_days]"] == 7
+                assert "une seule fois par client" in data["custom_text[submit][message]"]
             return {"url": f"https://buy.stripe.com/test_{data['metadata[radar_offre]']}_{data['line_items[0][price]']}"}
         if path == "billing_portal/configurations":
             return {"login_page": {"url": "https://billing.stripe.com/p/login/test_x"}}
@@ -150,10 +152,12 @@ def test_stripe_setup_writes_config(tmp_path, monkeypatch):
     stripe_setup.run()
     biz = config.business()
     assert biz["offres"]["pro"]["lien_paiement"] == "https://buy.stripe.com/test_pro_price_4900"
-    assert biz["offres"]["pro"]["lien_annuel"] == "https://buy.stripe.com/test_pro_price_49000"   # annuel gardé, prix fixe
+    assert biz["offres"]["pro"]["lien_annuel"] == "https://buy.stripe.com/test_pro_price_39900"
+    assert biz["offres"]["cle"]["lien_annuel"].endswith("price_119900")
     assert biz["offres"]["essentiel"]["stripe_paliers"] == ["price_2900", "price_1999", "price_999"]
-    assert biz["offres"]["essentiel"]["stripe_price_ids"][:2] == ["price_1UQrs879764n3f0zMVMks2Dq", "price_1UQtSV79764n3f0zjjYuho8o"]   # anciens gardés
-    assert "price_29000" in biz["offres"]["essentiel"]["stripe_price_ids"]
+    assert biz["offres"]["essentiel"]["stripe_price_ids"][-4:] == ["price_2900", "price_1999", "price_999", "price_16900"]
+    ids_ess = biz["offres"]["essentiel"]["stripe_price_ids"]
+    assert len(ids_ess) == len(set(ids_ess)) and "price_1UQrs879764n3f0zMVMks2Dq" in ids_ess   # anciens prix gardés pour les abonnés existants
     assert biz["stripe_mode"] == "test" and biz["portail_client"].endswith("test_x") and biz["nouvelle_grille_depuis"]
     assert biz["essai_gratuit_jours"] == 7
     assert biz["dossier"]["lien_paiement"].endswith("price_19900") and biz["dossier"]["lien_pro"].endswith("price_14900")
@@ -164,7 +168,8 @@ def test_stripe_setup_writes_config(tmp_path, monkeypatch):
     stripe_setup.run()  # relancer ne casse pas le fichier
     biz = config.business()
     assert biz["offres"]["pro"]["stripe_paliers"] == ["price_4900", "price_3999", "price_2999"]
-    assert len(biz["offres"]["pro"]["stripe_price_ids"]) == 6 and biz["nouvelle_grille_depuis"] == depuis
+    ids_pro = biz["offres"]["pro"]["stripe_price_ids"]
+    assert len(ids_pro) == len(set(ids_pro)) and "price_39900" in ids_pro and biz["nouvelle_grille_depuis"] == depuis
 
 
 def test_secrets_never_logged(monkeypatch):
@@ -1189,3 +1194,74 @@ def test_essai_trop_long_et_exceptions(monkeypatch, tmp_path):
     # Les mentions affichées suivent la même grille
     assert paliers.tarif_abonne(biz, {"plan": "pro", "debut": T0}) == paliers.texte_grille(biz["offres"]["pro"])
     assert paliers.tarif_abonne({**biz, "nouvelle_grille_anciens": False}, {"plan": "pro", "debut": T0 - 86400 * 4, "prix_mois": 4900}) == "49 € par mois"
+
+
+def test_annuel_economie_sur_grille_degressive():
+    from radar import annuel
+    o = {"nom": "Essentiel", "prix_mensuel": 29, "prix_annuel": 169,
+         "paliers": [{"des_mois": 3, "prix": 19.99}, {"des_mois": 6, "prix": 9.99}]}
+    assert annuel.mensualites(o)[:6] == [29, 29, 19.99, 19.99, 19.99, 9.99]
+    assert annuel.cout_douze_mois(o) == 187.9 and annuel.economie(o) == 18.9
+    assert annuel.euros(18.9) == "18,90" and annuel.euros(1199) == "1199"
+    from datetime import date
+    assert annuel.date_renouvellement(date(2028, 2, 29)) == date(2029, 2, 28)
+    assert "19/10/2027" in annuel.texte_paiement({"nom": "Pro", "prix_annuel": 399}, date(2026, 10, 19))
+
+
+def test_annuel_remplace_ancien_abonnement_sans_double_prelevement():
+    from radar import annuel
+    now = 1_800_000_000
+    mois = {"id": "sub_m", "status": "active", "created": now - 10 * 86400, "latest_invoice": "in_m",
+            "current_period_start": now - 10 * 86400, "current_period_end": now + 20 * 86400,
+            "customer": {"email": "A@x.fr"}, "items": {"data": [{"price": {"product": "prod_pro", "recurring": {"interval": "month"}}}]}}
+    an = {"id": "sub_a", "status": "active", "created": now - 60, "customer": {"email": "a@x.fr"},
+          "items": {"data": [{"price": {"product": "prod_pro", "recurring": {"interval": "year"}}}]}}
+    autre = {"id": "sub_b", "status": "trialing", "created": now, "customer": {"email": "b@x.fr"},
+             "items": {"data": [{"price": {"product": "prod_pro", "recurring": {"interval": "month"}}}]}}
+    appels = []
+
+    class R:
+        def __init__(self, body): self.status_code, self._b, self.text = 200, body, ""
+        def json(self): return self._b
+
+    class S:
+        def request(self, method, url, data=None, params=None, **kw):
+            path = url.split("/v1/")[1]
+            appels.append((method, path, data, kw["headers"].get("Idempotency-Key")))
+            if path == "products":
+                return R({"data": [{"id": "prod_pro", "metadata": {"radar_offre": "pro"}}]})
+            if path == "subscriptions":
+                return R({"data": {"active": [mois, an], "trialing": [autre]}.get(params["status"], [])})
+            if path == "invoices/in_m":
+                return R({"status": "paid", "amount_paid": 4900, "charge": "ch_1"})
+            if path == "refunds" and method == "GET":
+                return R({"data": []})
+            if path == "charges/ch_1":
+                return R({"amount": 4900, "amount_refunded": 0})
+            return R({"id": "ok"})
+    import os
+    os.environ["STRIPE_SECRET_KEY"] = "sk_test_x"
+    try:
+        res = annuel.remplacer_doublons(maintenant=now, session=S())
+    finally:
+        del os.environ["STRIPE_SECRET_KEY"]
+    assert res["erreurs"] == [] and len(res["remplaces"]) == 1
+    r = res["remplaces"][0]
+    assert r["ancien"] == "sub_m" and r["nouveau"] == "sub_a" and r["rembourse"] == 32.66   # 20 jours sur 30
+    rembourse = [a for a in appels if a[:2] == ("POST", "refunds")]
+    assert rembourse[0][2]["amount"] == 3266 and rembourse[0][3] == "radar-doublon-sub_m"
+    assert ("DELETE", "subscriptions/sub_m") in [a[:2] for a in appels]
+    assert not any(a[1] in ("subscriptions/sub_a", "subscriptions/sub_b") for a in appels)   # le nouveau et l'autre client intacts
+    assert annuel.part_non_utilisee(4900, 0, 100, 150) == 0 and annuel.part_non_utilisee(0, 0, 100, 50) == 0
+
+
+def test_annuel_rappel_30_jours_et_echec_paiement():
+    from radar import annuel
+    now = 1_800_000_000
+    base = {"email": "a@x.fr", "source": "stripe", "periode": "an", "statut": "active", "renouvellement": now + 29 * 86400}
+    subs = [base, {**base, "email": "b@x.fr", "renouvellement": now + 60 * 86400},
+            {**base, "email": "c@x.fr", "periode": "mois"}, {**base, "email": "d@x.fr", "statut": "past_due"},
+            {**base, "email": "e@x.fr", "resilie": True}]
+    out = annuel.a_prevenir(subs, set(), now)
+    assert [(s["email"], g) for s, g, _ in out] == [("a@x.fr", "rappel"), ("d@x.fr", "echec")]
+    assert annuel.a_prevenir(subs, {c for _, _, c in out}, now) == []
