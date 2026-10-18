@@ -19,7 +19,6 @@ jobs:
           if [ -z "$STRIPE_SECRET_KEY" ]; then echo "Secret STRIPE_TEST_SECRET_KEY absent : ajoute la clé de test Stripe (sk_test_…)"; exit 1; fi
           python scripts/test_annuel_stripe.py
       - name: Capture de la page de paiement annuelle Pro (mode test)
-        if: always()
         run: |
           pip install -q playwright && python -m playwright install --with-deps chromium >/dev/null
           python - <<'PY'
