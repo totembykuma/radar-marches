@@ -1,0 +1,17 @@
+name: Essai des paliers de prix (Stripe mode test)
+on:
+  workflow_dispatch: {}
+  pull_request:
+    paths: ["radar/paliers.py", "radar/stripe_setup.py", "scripts/essai_paliers_stripe.py", ".github/workflows/essai-paliers.yml"]
+permissions: { contents: read }
+jobs:
+  essai:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - env: { STRIPE_TEST_SECRET_KEY: "${{ secrets.STRIPE_TEST_SECRET_KEY }}" }
+        run: python -m scripts.essai_paliers_stripe

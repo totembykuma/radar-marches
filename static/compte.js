@@ -180,7 +180,7 @@
       var box = $("e-offres"); box.textContent = "";
       Object.keys(C.offres).forEach(function (k) {
         var o = C.offres[k], div = el("div", null, "offre-mini" + (meta.souhait_offre === k ? " choisie" : ""));
-        div.appendChild(el("b", o.nom)); div.appendChild(el("span", o.prix + " €/mois ou " + o.annuel + " €/an"));
+        div.appendChild(el("b", o.nom)); div.appendChild(el("span", o.grille || (o.prix + " €/mois" + (o.annuel ? " ou " + o.annuel + " €/an" : ""))));
         var a = el("a", "Essayer " + C.essai + " jours", "btn btn-sm"); a.href = lienPaiement(o.lien, user.email); div.appendChild(a);
         if (o.lien_annuel) { var b = el("a", "Annuel", "btn btn-sm btn-ghost-dark"); b.href = lienPaiement(o.lien_annuel, user.email); div.appendChild(b); }
         box.appendChild(div);

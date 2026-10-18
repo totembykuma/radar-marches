@@ -14,6 +14,7 @@ import logging
 import re
 
 from . import mailer
+from .paliers import prix_fr
 from .render import render
 from .stripe_setup import _call
 
@@ -36,7 +37,8 @@ def _ref(s):
 
 def crediter(s, biz, motif):
     """Offre 1 mois de l'offre de l'abonné s. Lève RuntimeError si Stripe refuse."""
-    montant = int(biz["offres"][s["plan"]]["prix_mensuel"] * 100)
+    # 1 mois au prix que paie l'abonné (palier d'ancienneté en cours), sinon au prix de départ de son offre
+    montant = int(s.get("prix_mois") or round(biz["offres"][s["plan"]]["prix_mensuel"] * 100))
     if s.get("customer"):
         try:
             _call("POST", f"customers/{s['customer']}/balance_transactions", data={
@@ -44,7 +46,7 @@ def crediter(s, biz, motif):
             return "solde"
         except RuntimeError as exc:
             log.warning("Crédit de solde refusé, bon de réduction à la place : %s", str(exc)[:120])
-    cid = f"radar-parrainage-{s['plan']}"
+    cid = f"radar-parrainage-{s['plan']}" + ("" if montant == round(biz["offres"][s["plan"]]["prix_mensuel"] * 100) else f"-{montant}")
     try:
         _call("GET", f"coupons/{cid}")
     except RuntimeError:
@@ -84,7 +86,8 @@ def traiter(subs, biz, state):
                 crediter(p, biz, "parrain")
                 faits.append(k)
                 n += 1
-                html = render("email_parrainage.html", biz=biz, offre=biz["offres"][p["plan"]], lien=lien(biz, p))
+                html = render("email_parrainage.html", biz=biz, offre=biz["offres"][p["plan"]], lien=lien(biz, p),
+                              montant=prix_fr((p.get("prix_mois") or round(biz["offres"][p["plan"]]["prix_mensuel"] * 100)) / 100))
                 mailer.send(p["email"], f"Un mois offert sur {biz['nom']} grâce à votre filleul", html,
                             biz["email_expediteur"], reply_to=biz["email_contact"])
             except Exception as exc:

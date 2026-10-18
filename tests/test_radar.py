@@ -140,7 +140,8 @@ def test_stripe_setup_writes_config(tmp_path, monkeypatch):
             return {"id": f"plink_{data['line_items[0][price]']}", "url": f"https://buy.stripe.com/test_dossier_{data['line_items[0][price]']}"}
         if path == "payment_links":
             assert data["custom_fields[0][dropdown][options][1][value]"] == "espacesverts"
-            assert data["subscription_data[trial_period_days]"] == 14
+            assert data["subscription_data[trial_period_days]"] == 7
+            assert "une seule fois par client" in data["custom_text[submit][message]"]
             return {"url": f"https://buy.stripe.com/test_{data['metadata[radar_offre]']}_{data['line_items[0][price]']}"}
         if path == "billing_portal/configurations":
             return {"login_page": {"url": "https://billing.stripe.com/p/login/test_x"}}
@@ -148,15 +149,21 @@ def test_stripe_setup_writes_config(tmp_path, monkeypatch):
     stripe_setup.run()
     biz = config.business()
     assert biz["offres"]["pro"]["lien_paiement"] == "https://buy.stripe.com/test_pro_price_4900"
-    assert biz["offres"]["pro"]["lien_annuel"] == "https://buy.stripe.com/test_pro_price_49000"
-    assert biz["offres"]["essentiel"]["stripe_price_ids"] == ["price_2900", "price_29000"]
-    assert biz["stripe_mode"] == "test" and biz["portail_client"].endswith("test_x")
+    assert "lien_annuel" not in biz["offres"]["pro"] and not any(d and d.get("recurring[interval]") == "year" for _, _, d in calls)
+    assert biz["offres"]["essentiel"]["stripe_paliers"] == ["price_2900", "price_1999", "price_999"]
+    assert biz["offres"]["essentiel"]["stripe_price_ids"][-3:] == ["price_2900", "price_1999", "price_999"]
+    assert len(biz["offres"]["essentiel"]["stripe_price_ids"]) == 5   # anciens prix gardés pour les abonnés existants
+    assert biz["stripe_mode"] == "test" and biz["portail_client"].endswith("test_x") and biz["nouvelle_grille_depuis"]
+    assert biz["essai_gratuit_jours"] == 7
     assert biz["dossier"]["lien_paiement"].endswith("price_19900") and biz["dossier"]["lien_pro"].endswith("price_14900")
     assert biz["dossier"]["stripe_link_ids"] == ["plink_price_19900", "plink_price_14900", "plink_price_9900"]
     assert biz["dossier"]["lien_cle"].endswith("price_9900")
-    assert biz["offres"]["cle"]["lien_paiement"].endswith("price_14900") and biz["offres"]["cle"]["lien_annuel"].endswith("price_149000")
+    assert biz["offres"]["cle"]["lien_paiement"].endswith("price_14900") and biz["offres"]["cle"]["stripe_paliers"][1] == "price_11999"
+    depuis = biz["nouvelle_grille_depuis"]
     stripe_setup.run()  # relancer ne casse pas le fichier
-    assert config.business()["offres"]["pro"]["stripe_price_ids"] == ["price_4900", "price_49000"]
+    biz = config.business()
+    assert biz["offres"]["pro"]["stripe_paliers"] == ["price_4900", "price_3999", "price_2999"]
+    assert len(biz["offres"]["pro"]["stripe_price_ids"]) == 5 and biz["nouvelle_grille_depuis"] == depuis
 
 
 def test_secrets_never_logged(monkeypatch):
@@ -1017,3 +1024,167 @@ def test_veille_relance_si_pas_d_envoi(tmp_path, monkeypatch):
         assert res["relance"] and (tmp_path / "out" / "relancer").exists()
         (tmp_path / "runs" / f"{date.today().isoformat()}.json").write_text("{}")
         assert cli.run_veille()["ok"]
+
+
+# ---------------------------------------------------------------- prix selon l'ancienneté et essai unique (radar/paliers.py)
+
+def _biz_paliers(**extra):
+    biz = business()
+    for k, o in biz["offres"].items():
+        o["stripe_paliers"] = [f"price_{k}_{i}" for i in range(3)]
+    biz.update({"nouvelle_grille_depuis": "2026-10-19T00:00:00+00:00", "nouvelle_grille_anciens": False}, **extra)
+    return biz
+
+
+class FauxStripe:
+    """Abonnements Stripe simulés : mise à jour des prix, fin d'essai, factures mensuelles au prix en cours."""
+    def __init__(self, biz):
+        self.subs, self.posts, self.factures = [], [], {}
+        self.montants = {pid: round(p * 100) for o in biz["offres"].values()
+                         for pid, (_, p) in zip(o["stripe_paliers"], __import__("radar.paliers").paliers.grille(o))}
+
+    def ajouter(self, sid, debut, plan="essentiel", essai=7, email="a@x.fr", carte="fp_a", status=None, **kw):
+        fin_essai = debut + essai * 86400 if essai else None
+        pid = f"price_{plan}_0"
+        s = {"id": sid, "status": status or ("trialing" if essai else "active"), "created": debut, "start_date": debut,
+             "trial_start": debut if essai else None, "trial_end": fin_essai, "billing_cycle_anchor": fin_essai or debut,
+             "current_period_end": fin_essai or self.mois(debut, 1), "metadata": {}, "cancel_at_period_end": False,
+             "customer": {"id": f"cus_{sid}", "email": email},
+             "default_payment_method": {"type": "card", "card": {"fingerprint": carte}},
+             "items": {"data": [{"id": f"si_{sid}", "price": {"id": pid, "unit_amount": self.montants[pid], "recurring": {"interval": "month"}}}]}}
+        s.update(kw)
+        self.subs.append(s)
+        self.factures[sid] = [] if essai else [self.montants[pid]]   # sans essai : 1er mois facturé à la création
+        return s
+
+    @staticmethod
+    def mois(ts, n):
+        from datetime import datetime, timezone
+        d = datetime.fromtimestamp(ts, timezone.utc)
+        m = d.month - 1 + n
+        y, m = d.year + m // 12, m % 12 + 1
+        import calendar
+        return int(d.replace(year=y, month=m, day=min(d.day, calendar.monthrange(y, m)[1])).timestamp())
+
+    def renouveler(self, s):
+        """Fin de période : Stripe facture le prix en cours et passe à la période suivante."""
+        s["status"] = "active"
+        self.factures[s["id"]].append(s["items"]["data"][0]["price"]["unit_amount"])
+        k = len(self.factures[s["id"]])
+        s["current_period_end"] = self.mois(s["billing_cycle_anchor"], k)
+
+    def call(self, method, path, data=None, params=None):
+        if method == "GET":
+            return {"data": self.subs, "has_more": False}
+        self.posts.append((path, data))
+        s = next(x for x in self.subs if f"subscriptions/{x['id']}" == path)
+        if data.get("trial_end") == "now":
+            s["trial_end"] = s["billing_cycle_anchor"] = self.maintenant
+            self.renouveler(s)   # le 1er mois est facturé tout de suite
+        elif "trial_end" in data:
+            s["trial_end"] = s["billing_cycle_anchor"] = s["current_period_end"] = data["trial_end"]
+        if "items[0][price]" in data:
+            pid = data["items[0][price]"]
+            s["items"]["data"][0]["price"] = {"id": pid, "unit_amount": self.montants[pid], "recurring": {"interval": "month"}}
+        for k, v in data.items():
+            if k.startswith("metadata["):
+                s["metadata"][k[9:-1]] = v
+        return dict(s)
+
+
+T0 = 1792540800   # 2026-10-20 00:00 UTC, après nouvelle_grille_depuis
+
+
+def test_grille_et_textes():
+    from radar import paliers
+    biz = business()
+    assert paliers.texte_grille(biz["offres"]["essentiel"]) == "29 € les 2 premiers mois, 19,99 € du 3e au 5e mois, puis 9,99 € à partir du 6e mois"
+    assert [paliers.prix_du_mois(biz["offres"]["pro"], n) for n in (1, 2, 3, 5, 6, 40)] == [49, 49, 39.99, 39.99, 29.99, 29.99]
+    assert [paliers.centimes(p) for p in (19.99, 119.99, 9.99, 29.99)] == [1999, 11999, 999, 2999]   # pas d'erreur d'arrondi
+
+
+def test_paliers_factures_exactes_sur_un_an(monkeypatch, tmp_path):
+    """Essai 7 j, puis 29, 29, 19,99 x3, 9,99… à la date anniversaire, même avec un début un 31 et une ancienneté longue."""
+    from radar import paliers
+    monkeypatch.setenv("RADAR_DRY_RUN", "1")
+    monkeypatch.setattr("radar.mailer.OUTBOX", tmp_path)
+    for plan, attendu in (("essentiel", [2900, 2900, 1999, 1999, 1999] + [999] * 31),
+                          ("pro", [4900, 4900, 3999, 3999, 3999] + [2999] * 31),
+                          ("cle", [14900, 14900, 11999, 11999, 11999] + [9999] * 31)):
+        biz = _biz_paliers()
+        f = FauxStripe(biz)
+        s = f.ajouter("sub_1", T0 + 11 * 86400, plan=plan)    # essai jusqu'au 7/11 ; une fin de mois testée plus bas
+        dates = []
+        for _ in range(36):
+            r = paliers.traiter(biz, call=f.call, maintenant=s["current_period_end"] - 3600)
+            assert not r["erreurs"]
+            assert paliers.traiter(biz, call=f.call, maintenant=s["current_period_end"] - 60)["paliers"] == 0   # rien en double
+            dates.append(s["current_period_end"])
+            f.renouveler(s)
+        assert f.factures["sub_1"] == attendu, (plan, f.factures["sub_1"])
+        assert dates[0] == s["trial_end"] and all(FauxStripe.mois(s["billing_cycle_anchor"], i) == d for i, d in enumerate(dates))
+        assert len(f.posts) == 2 and all(d["proration_behavior"] == "none" for _, d in f.posts)   # 2 changements de prix, sans prorata
+    assert sum("baisse" in m.name for m in tmp_path.glob("*.html")) == 6   # client prévenu à chaque baisse
+    f = FauxStripe(_biz_paliers())
+    s = f.ajouter("sub_31", 1801958400, essai=0)   # abonnement sans essai démarré un 31 janvier
+    for _ in range(8):
+        paliers.traiter(_biz_paliers(), call=f.call, maintenant=s["current_period_end"] - 3600)
+        f.renouveler(s)
+    assert f.factures["sub_31"] == [2900, 2900, 1999, 1999, 1999, 999, 999, 999, 999]
+
+
+def test_reabonnement_repart_au_prix_de_depart(monkeypatch, tmp_path):
+    """Résilier puis revenir = nouvel abonnement = prix de départ ; changer de carte ne change rien."""
+    from radar import paliers
+    monkeypatch.setenv("RADAR_DRY_RUN", "1")
+    monkeypatch.setattr("radar.mailer.OUTBOX", tmp_path)
+    biz = _biz_paliers()
+    f = FauxStripe(biz)
+    ancien = f.ajouter("sub_old", T0, carte="fp_1", essai=7)
+    for mois in range(4):   # 4 mois payés (carte changée au 3e), puis résiliation
+        if mois == 2:
+            ancien["default_payment_method"] = {"type": "card", "card": {"fingerprint": "fp_9"}}
+        paliers.traiter(biz, call=f.call, maintenant=ancien["current_period_end"] - 3600)
+        f.renouveler(ancien)
+    assert f.factures["sub_old"] == [2900, 2900, 1999, 1999]
+    ancien["status"] = "canceled"
+    t1 = ancien["current_period_end"] + 20 * 86400
+    retour = f.ajouter("sub_new", t1, carte="fp_1", essai=0)   # sans essai (anti_abus.py l'a arrêté)
+    for _ in range(4):
+        paliers.traiter(biz, call=f.call, maintenant=retour["current_period_end"] - 3600)
+        f.renouveler(retour)
+    assert f.factures["sub_new"] == [2900, 2900, 1999, 1999, 1999]
+    paliers.traiter(biz, call=f.call, maintenant=retour["current_period_end"] - 3600)
+    n = len(f.posts)
+    paliers.traiter(biz, call=f.call, maintenant=retour["current_period_end"] - 60)
+    assert len(f.posts) == n   # rien de refait au passage suivant
+
+
+def test_essai_trop_long_et_exceptions(monkeypatch, tmp_path):
+    from radar import paliers
+    monkeypatch.setenv("RADAR_DRY_RUN", "1")
+    monkeypatch.setattr("radar.mailer.OUTBOX", tmp_path)
+    biz = _biz_paliers()
+    f = FauxStripe(biz)
+    long = f.ajouter("sub_long", T0, essai=14, carte="fp_l", email="l@x.fr")
+    client = f.ajouter("sub_client", T0 - 4 * 86400, plan="pro", essai=14, carte="fp_c", email="c@x.fr")   # avant la nouvelle grille
+    fin = f.ajouter("sub_fin", T0 - 90 * 86400, essai=0, carte="fp_f", email="f@x.fr", cancel_at_period_end=True)
+    non = f.ajouter("sub_non", T0 - 90 * 86400, essai=0, carte="fp_n", email="n@x.fr")
+    non["metadata"]["paliers"] = "non"
+    autre = f.ajouter("sub_autre", T0, essai=0, carte="fp_o", email="o@x.fr")
+    autre["items"]["data"][0]["price"] = {"id": "price_inconnu", "unit_amount": 1234, "recurring": {"interval": "month"}}
+    r = paliers.traiter(biz, call=f.call, maintenant=T0 + 3600)
+    assert r["essais_raccourcis"] == 1 and long["trial_end"] == T0 + 7 * 86400
+    assert [p for p, _ in f.posts] == ["subscriptions/sub_long"]   # rien d'autre touché
+    # Choix du propriétaire : l'ancien client garde ses 14 jours, puis suit la nouvelle grille
+    biz["nouvelle_grille_anciens"] = True
+    client["trial_end"] = client["billing_cycle_anchor"] = client["current_period_end"]
+    for _ in range(3):
+        paliers.traiter(biz, call=f.call, maintenant=client["current_period_end"] - 3600)
+        f.renouveler(client)
+    assert client["trial_start"] + 14 * 86400 == client["billing_cycle_anchor"]   # essai de 14 jours conservé
+    assert f.factures["sub_client"] == [4900, 4900, 3999]
+    assert paliers.traiter({**biz, "nouvelle_grille_depuis": ""}, call=lambda *a, **k: 1 / 0)["paliers"] == 0   # inactif avant stripe.yml
+    # Les mentions affichées suivent la même grille
+    assert paliers.tarif_abonne(biz, {"plan": "pro", "debut": T0}) == paliers.texte_grille(biz["offres"]["pro"])
+    assert paliers.tarif_abonne({**biz, "nouvelle_grille_anciens": False}, {"plan": "pro", "debut": T0 - 86400 * 4, "prix_mois": 4900}) == "49 € par mois"

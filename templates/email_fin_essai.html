@@ -3,7 +3,7 @@
 <h2 style="color:#0b1b33;font-size:21px;margin:0 0 14px">Votre essai gratuit se termine le {{ fin_fr }}</h2>
 <p>Bonjour,</p>
 <p>Comme promis, nous vous prévenons à l'avance : votre essai gratuit de {{ biz.nom }} se termine le <b>{{ fin_fr }}</b>.</p>
-<p>Si vous ne faites rien, votre abonnement <b>{{ offre.nom }}</b> démarre automatiquement à cette date, au tarif choisi lors de votre inscription, et vos alertes continuent sans interruption pour :</p>
+<p>Si vous ne faites rien, votre abonnement <b>{{ offre.nom }}</b> démarre automatiquement à cette date, au tarif de votre offre ({{ tarif or (offre | grille) }}), et vos alertes continuent sans interruption pour :</p>
 <p style="background:#f4f5f7;padding:12px 14px;border-radius:8px;border-left:3px solid #ffb020"><b>{{ criteres }}</b></p>
 <p>Si le service ne vous convient pas, vous pouvez arrêter avant cette date, sans frais{% if biz.portail_client %}, en un clic depuis <a href="{{ lien_compte or biz.portail_client }}">votre espace client</a>{% endif %}. Une remarque ou des alertes hors sujet ? Répondez à cet e-mail, nous ajustons votre filtre.</p>
 <p>Bonne chasse aux marchés,</p>

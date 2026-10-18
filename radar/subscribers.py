@@ -91,6 +91,7 @@ def from_stripe(biz, metiers, session=None):
                     "mots_cles": mots if plan in PLANS_PRO else [], "source": "stripe",
                     "stripe_subscription": sub["id"], "debut": sub.get("start_date") or sub.get("created"),
                     "customer": cs.get("customer") or sub.get("customer"), "ref": cs.get("client_reference_id"),
+                    "prix_mois": (items[0].get("price") or {}).get("unit_amount"),   # centimes, palier en cours
                     "fin_essai": sub.get("trial_end") if sub["status"] == "trialing" else None})
     return out
 

@@ -3,6 +3,7 @@ et le portail client. Fonctionne en mode test (sk_test_…) comme en réel (sk_l
 Les liens et identifiants de prix sont écrits dans config/business.yaml."""
 import os
 import re
+from datetime import datetime, timezone
 
 import requests
 
@@ -60,6 +61,13 @@ def _apres_paiement(biz):
             "after_completion[redirect][url]": biz["site_url"].rstrip("/") + "/merci/"}
 
 
+def _texte_paiement(biz, offre):
+    """Texte affiché sur la page de paiement : essai unique et grille de prix exacte."""
+    from .paliers import texte_grille
+    return (f"Essai gratuit de {biz['essai_gratuit_jours']} jours, une seule fois par client (déjà abonné : 1er mois prélevé "
+            f"tout de suite). Ensuite : {texte_grille(offre)}. Sans engagement, résiliable en un clic.")
+
+
 def _link_for(key, price, biz, metiers, mode, offre):
     link = None
     for pl in _call("GET", "payment_links", params={"active": "true", "limit": 100})["data"]:
@@ -77,9 +85,19 @@ def _link_for(key, price, biz, metiers, mode, offre):
         if (link.get("after_completion") or {}).get("type") != "redirect":
             link = _call("POST", f"payment_links/{link['id']}", data=_apres_paiement(biz))
             print(f"[{mode}] {offre['nom']} : redirection vers /merci/ après paiement")
+        maj = {}
+        if (price.get("recurring") or {}).get("interval") == "month":
+            if ((link.get("subscription_data") or {}).get("trial_period_days")) != biz["essai_gratuit_jours"]:
+                maj["subscription_data[trial_period_days]"] = biz["essai_gratuit_jours"]
+            if (((link.get("custom_text") or {}).get("submit") or {}).get("message")) != _texte_paiement(biz, offre):
+                maj["custom_text[submit][message]"] = _texte_paiement(biz, offre)
+        if maj:
+            link = _call("POST", f"payment_links/{link['id']}", data=maj)
+            print(f"[{mode}] {offre['nom']} : essai {biz['essai_gratuit_jours']} jours et grille de prix sur la page de paiement")
     if not link:
         data = {"line_items[0][price]": price["id"], "line_items[0][quantity]": 1,
                 "subscription_data[trial_period_days]": biz["essai_gratuit_jours"],
+                "custom_text[submit][message]": _texte_paiement(biz, offre),
                 "allow_promotion_codes": "true", "billing_address_collection": "auto",
                 "tax_id_collection[enabled]": "true",
                 **_apres_paiement(biz),
@@ -132,15 +150,24 @@ def run():
         elif product.get("description") != desc:
             product = _call("POST", f"products/{product['id']}", data={"description": desc})
         results[key] = {}
-        periodes = [("month", offre["prix_mensuel"], "lien_paiement")]
+        # Prix mensuel de départ puis un prix par palier d'ancienneté (radar/paliers.py) ; l'annuel n'est plus vendu.
+        from .paliers import centimes, grille
+        prix_mois = [_price_for(product, centimes(prix), "month") for _, prix in grille(offre)]
+        results[key]["paliers"] = results[key]["prices"] = [pr["id"] for pr in prix_mois]
+        link = _link_for(key, prix_mois[0], biz, metiers, mode, offre)
+        results[key]["lien_paiement"] = link["url"]
+        print(f"[{mode}] {offre['nom']} : {link['url']} (prix {', '.join(results[key]['paliers'])})")
         if offre.get("prix_annuel"):
-            periodes.append(("year", offre["prix_annuel"], "lien_annuel"))
-        for interval, prix, champ in periodes:
-            price = _price_for(product, int(prix * 100), interval)
+            price = _price_for(product, centimes(offre["prix_annuel"]), "year")
             link = _link_for(key, price, biz, metiers, mode, offre)
-            results[key][champ] = link["url"]
-            results[key].setdefault("prices", []).append(price["id"])
-            print(f"[{mode}] {offre['nom']} ({'an' if interval == 'year' else 'mois'}) : {link['url']} (prix {price['id']})")
+            results[key]["lien_annuel"] = link["url"]
+            results[key]["prices"] = results[key]["paliers"] + [price["id"]]
+        else:  # liens annuels encore actifs : désactivés (réactivables dans Stripe)
+            for pl in _call("GET", "payment_links", params={"active": "true", "limit": 100})["data"]:
+                m = pl.get("metadata") or {}
+                if m.get("radar_offre") == key and m.get("radar_price") not in results[key]["paliers"]:
+                    _call("POST", f"payment_links/{pl['id']}", data={"active": "false"})
+                    print(f"[{mode}] {offre['nom']} : ancien lien {pl['id']} désactivé")
 
     dossier = _dossier(biz) if biz.get("dossier") else None
 
@@ -168,8 +195,12 @@ def run():
         for champ in ("lien_paiement", "lien_annuel"):
             if r.get(champ):
                 new = re.sub(rf'{champ}: ".*?"', f'{champ}: "{r[champ]}"', new)
-        ids = ", ".join(f'"{i}"' for i in r["prices"])
+        anciens = re.findall(r'"(price_[^"]+)"', (re.search(r"stripe_price_ids: \[.*?\]", new) or [""])[0])
+        ids = ", ".join(f'"{i}"' for i in dict.fromkeys(anciens + r["prices"]))  # garder les anciens : abonnés existants
         new = re.sub(r"stripe_price_ids: \[.*?\]", f"stripe_price_ids: [{ids}]", new)
+        paliers = ", ".join(f'"{i}"' for i in r["paliers"])
+        new = re.sub(r"stripe_paliers: \[.*?\]", f"stripe_paliers: [{paliers}]", new) if "stripe_paliers:" in new \
+            else new.replace("    stripe_price_ids:", f"    stripe_paliers: [{paliers}]\n    stripe_price_ids:", 1)
         text = text.replace(block, new)
     if dossier:
         block = re.search(r"\ndossier:\n(?:  .*\n)+", text).group(0)
@@ -182,6 +213,9 @@ def run():
     if portal:
         text = re.sub(r'portail_client: ".*?"', f'portail_client: "{portal}"', text) if "portail_client:" in text \
             else text.replace("essai_gratuit_jours:", f'portail_client: "{portal}"\nessai_gratuit_jours:', 1)
+    if "nouvelle_grille_depuis:" not in text:  # date de mise en service des paliers et de l'essai unique
+        quand = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+        text = text.replace("essai_gratuit_jours:", f'nouvelle_grille_depuis: "{quand}"\nessai_gratuit_jours:', 1)
     text = re.sub(r'stripe_mode: ".*?"\n', "", text)
     text = text.replace("essai_gratuit_jours:", f'stripe_mode: "{mode}"\nessai_gratuit_jours:', 1)
     path.write_text(text, encoding="utf-8")
