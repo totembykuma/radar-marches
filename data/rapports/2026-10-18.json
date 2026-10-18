@@ -1,0 +1,43 @@
+{
+ "kpi": {
+  "mrr": 0.0,
+  "abonnes_payants": 0,
+  "en_essai": 1,
+  "impayes": 0,
+  "nouveaux_7j": 1,
+  "resilies_7j": 1,
+  "runs_7j": 2,
+  "runs_avec_erreur": 0,
+  "emails_7j": 0,
+  "avis_moyens_jour": 1991,
+  "objectif_mensuel_ca": [
+   800,
+   1300
+  ],
+  "essais_commences_7j": 1,
+  "ventes_7j": 0,
+  "dossiers_livres_7j": 0,
+  "visites_7j": 101,
+  "ia_cout_mois_usd": 0,
+  "ia_avis_7j": 0,
+  "ia_hors_metier_7j": 0,
+  "collectes_reportees_7j": 0,
+  "prospects_contactes_7j": 20,
+  "prospects_contactes_total": 20,
+  "prospects_relances_7j": 0,
+  "alerte_gratuite_inscrits": 0,
+  "prospects_clics_7j": null
+ },
+ "finance": {
+  "chiffre_affaires": 0.0,
+  "frais_stripe": 0.0,
+  "autres_depenses": 0.0,
+  "benefice_apres_depenses": 0.0,
+  "cotisations_et_impot": 0.0,
+  "taux_prelevement": 0.256,
+  "revenu_net": 0.0
+ },
+ "decisions": [
+  "Moins de 5 envois quotidiens cette semaine : vérifier l'onglet Actions de GitHub."
+ ]
+}
