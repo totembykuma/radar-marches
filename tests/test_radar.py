@@ -99,7 +99,7 @@ def test_demo_end_to_end(tmp_path, monkeypatch):
     monkeypatch.setattr(cli, "OUT", tmp_path)
     run = cli.run_demo()
     assert run["emails_envoyes"] == 2 and not run["erreurs"] or run["erreurs"] == []
-    mails = sorted(m.name for m in (tmp_path / "outbox").glob("*.html"))
+    mails = sorted(m.name for m in (tmp_path / "outbox").glob("*.html") if "attribués" not in m.name)   # sans le bilan du lundi
     assert len(mails) == 5 and sum("Bienvenue" in m for m in mails) == 2   # 2 bienvenues + 2 alertes + 1 rappel d'essai
     assert run["rappels_essai"] == 1 and sum("essai" in m for m in mails) == 1
     assert (tmp_path / "site" / "criteres" / "index.html").exists()
