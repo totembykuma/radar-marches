@@ -504,7 +504,7 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
             run["erreurs"].append(f"rappels de favoris non envoyés : {safe(exc)}")
 
     # 5b. Offre Pro : bilan « qui a gagné » le lundi
-    if date.today().weekday() == 0 or os.getenv("RADAR_FORCE_RESULTATS") == "1":
+    if (date.today().weekday() == 0 and not os.getenv("RADAR_DEMO")) or os.getenv("RADAR_FORCE_RESULTATS") == "1":
         try:
             run["bilans_resultats"] = envoyer_resultats(subs, biz, metiers, matcher, state, records=resultats_records)
         except Exception as exc:
