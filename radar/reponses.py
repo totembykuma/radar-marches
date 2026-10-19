@@ -81,7 +81,7 @@ def _consigne(faits, texte, sujet):
             "Si le message demande autre chose qu'une information couverte par les faits (négociation, partenariat, plainte, "
             "colère, demande juridique, devis particulier, rendez-vous, appel téléphonique, question technique précise, "
             "ou si tu as le moindre doute), choisis « transmettre ».\n"
-            "Réponds UNIQUEMENT en JSON : {\"action\": \"repondre\" ou \"transmettre\", \"reponse\": \"texte\", "
+            "Réponds UNIQUEMENT avec un objet JSON, sans texte avant ni après, sans bloc de code : {\"action\": \"repondre\" ou \"transmettre\", \"reponse\": \"texte\", "
             "\"motif\": \"en 8 mots, pour le propriétaire\"}.\n\n"
             f"FAITS :\n{faits}\n\nOBJET : {sujet}\nMESSAGE DU PROSPECT :\n{texte}")
 
@@ -163,7 +163,7 @@ def traiter(biz, metiers, state, alert_owner, session=None, ask_fn=None, today=N
             ia_ok = biz.get("ia_active") and (budget is None or usage["cout_usd"] < budget)
             if ia_ok and auteurs.get(hx, 0) < MAX_REPONSES and texte:
                 d = _json((ask_fn or ai.ask)(_consigne(_faits(biz, metiers), texte, sujet),
-                                             model=biz["ia"]["modele"], max_tokens=700, usage=usage))
+                                             model=biz["ia"]["modele"], max_tokens=1500, usage=usage))
             reponse = (d.get("reponse") or "").strip()
             if d.get("action") == "repondre" and 40 <= len(reponse) <= 1500:
                 mailer.send(exp, sujet_re, render("email_reponse_prospect.html", biz=biz, corps=_html(reponse)),
