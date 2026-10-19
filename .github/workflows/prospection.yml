@@ -24,6 +24,7 @@ jobs:
         env:
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_INBOUND_KEY: ${{ secrets.RESEND_INBOUND_KEY }}
           OWNER_EMAIL: ${{ secrets.OWNER_EMAIL }}
         run: python -m radar.cli prospection ${{ inputs.apercu && '--apercu' || '' }}
       - name: Memoriser les entreprises contactees

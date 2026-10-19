@@ -46,7 +46,8 @@ def send(to, subject, html, sender, reply_to=None, session=None, headers=None, t
 
 
 def _api(method, path, **kw):
-    key = (os.getenv("RESEND_API_KEY") or "").strip()
+    # Lecture (clics, domaines) : la clé d'envoi n'a que le droit d'envoyer, d'où la clé complète en priorité.
+    key = (os.getenv("RESEND_INBOUND_KEY") or os.getenv("RESEND_API_KEY") or "").strip()
     if not key:
         return None
     r = requests.request(method, "https://api.resend.com" + path, timeout=30,

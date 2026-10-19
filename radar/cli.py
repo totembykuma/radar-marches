@@ -19,7 +19,7 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 from . import avis, criteres, gratuit, ai, dossier, paliers, parrainage, boamp, finance, historique, barometre, laureats, mailer, prospects, site, subscribers
-from . import annuel, anti_abus, compte, comptes, rapport
+from . import annuel, anti_abus, compte, comptes, rapport, reponses
 from .config import ROOT, business, cle_actif, dossier_actif, metiers as load_metiers
 from .matching import Matcher
 from .render import date_fr, date_limite_fr, render
@@ -41,7 +41,7 @@ def _save_json(path, obj):
     Path(path).write_text(json.dumps(obj, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
-SECRETS = ("RESEND_API_KEY", "STRIPE_SECRET_KEY", "ANTHROPIC_API_KEY", "OWNER_EMAIL")
+SECRETS = ("RESEND_API_KEY", "RESEND_INBOUND_KEY", "STRIPE_SECRET_KEY", "ANTHROPIC_API_KEY", "OWNER_EMAIL")
 
 
 def safe(msg):
@@ -254,13 +254,15 @@ def run_bienvenue():
     envoyer_bienvenues(subs, biz, metiers, state, run)
     n, errs = compte.traiter(subs, biz, metiers, state)
     run["erreurs"] += errs
+    rp = reponses.traiter(biz, metiers, state, alert_owner)   # réponses des prospects : l'agent IA répond ou transmet
+    run["erreurs"] += rp.pop("erreurs")
     comptes_espace(biz, metiers, subs, run, state)
-    if run.get("bienvenues") or n or state.get("compte_vus") or run.get("invitations_compte") or run.get("textes_annuels") is not None:
+    if run.get("bienvenues") or n or any(rp.values()) or state.get("reponses_vues") or state.get("compte_vus") or run.get("invitations_compte") or run.get("textes_annuels") is not None:
         _save_json(DATA / "state.json", state)
     return {"bienvenues": run.get("bienvenues", 0), "liens_espace_client": n, "comptes": run.get("comptes"),
             "abonnements_remplaces": len(run.get("remplaces") or []),
             "criteres_espace": run.get("criteres_espace", 0), "paliers": run.get("paliers", 0),
-            "essais_refuses": run.get("essais_refuses", 0), "erreurs": run["erreurs"]}
+            "essais_refuses": run.get("essais_refuses", 0), "reponses_prospects": rp, "erreurs": run["erreurs"]}
 
 
 def _historique_collecte(n=10):
@@ -641,6 +643,9 @@ def run_weekly():
     kpi["prospects_relances_7j"] = sum(j.get("relances", 0) for j in pj if j.get("date", "") >= debut)
     kpi["alerte_gratuite_inscrits"] = len(gratuit.charger()["abonnes"])
     kpi["prospects_clics_7j"] = _clics([i for j in pj if j.get("date", "") >= debut for i in j.get("ids", [])])
+    rj = _load_json(DATA / "state.json", {}).get("reponses_journal", [])
+    for action in ("repondu", "transmis", "desinscrit"):
+        kpi[f"prospects_{action}_7j"] = sum(1 for x in rj if x.get("date", "") >= debut and x.get("action") == action)
     decisions = []
     if kpi["visites_7j"] is None and biz.get("statistiques_goatcounter"):
         decisions.append("Visites illisibles : sur goatcounter.com, Settings, cocher « Allow adding visitor counts on your website » puis Save.")
@@ -668,6 +673,9 @@ def run_weekly():
               + ligne("Entreprises prospectées", kpi["prospects_contactes_7j"], "1 seul e-mail par entreprise")
               + ligne("Clics dans ces e-mails", kpi["prospects_clics_7j"], "")
               + ligne("Relances (prospects qui avaient cliqué)", kpi["prospects_relances_7j"], "1 seule relance, 5 jours après")
+              + ligne("Réponses de prospects traitées par l'agent IA", kpi["prospects_repondu_7j"], "")
+              + ligne("Réponses transmises à toi", kpi["prospects_transmis_7j"], "questions que l'agent ne tranche pas")
+              + ligne("Prospects désinscrits (STOP)", kpi["prospects_desinscrit_7j"], "")
               + (ligne("Inscrits à l'alerte gratuite", kpi["alerte_gratuite_inscrits"], "3 marchés par semaine") if biz.get("alerte_gratuite") else "")
               + ligne("Essais gratuits commencés", kpi["essais_commences_7j"], "")
               + ligne("Ventes (passés payants)", kpi["ventes_7j"], "")
@@ -789,15 +797,24 @@ def run_prospection(apercu=False):
     except Exception as exc:
         log.warning("Suivi des clics non activé : %s", safe(exc))
     envoyes, ids, suivi = 0, [], {}
-    quota = quota_prospection(int(conf.get("par_jour") or 20), state["journal"])
+    par_jour = int(conf.get("par_jour") or 20)
+    if conf.get("par_jour_ensuite") and date.today().isoformat() >= str(conf.get("ensuite_depuis") or "9999"):
+        # Plus d'envois seulement si la semaine passée est propre (rebonds et plaintes lus chez Resend).
+        sante = sante_envois(state["journal"])
+        resume["sante_envois"] = sante
+        if sante and sante["envoyes"] >= 20 and sante["problemes"] <= 0.05 * sante["envoyes"]:
+            par_jour = int(conf["par_jour_ensuite"])
+    quota = quota_prospection(par_jour, state["journal"])
     resume["quota_du_jour"] = quota
     # Relance unique, 5 jours après, seulement pour ceux qui ont cliqué sans s'inscrire (avant les nouveaux prospects).
     nb_relances = relancer(state["journal"], biz, metiers, conf, zone_de, clients, quota)
     resume["relances"] = nb_relances
     quota -= nb_relances
+    etat = _load_json(DATA / "state.json", {})
+    cands = [c for c in cands if not reponses.est_refuse(c["email"], etat)]
     for c in cands[:max(0, quota)]:
         subject, html, _ = compose(c)
-        reply = biz.get("email_proprietaire") or biz["email_contact"]
+        reply = _adresse_reponse(biz, conf)
         try:
             res = mailer.send(c["email"], subject, html, conf["expediteur"], reply_to=reply,
                               headers={"List-Unsubscribe": f"<mailto:{reply}?subject=STOP>"})
@@ -844,6 +861,11 @@ def quota_prospection(par_jour, journal, today=None):
     return max(0, min(par_jour, reste_jour, int(reste_mois)))
 
 
+def _adresse_reponse(biz, conf):
+    """Les prospects répondent à l'agent IA (réception Resend) ; sans elle, au propriétaire comme avant."""
+    return (conf.get("reponses_adresse") or "").strip() or biz.get("email_proprietaire") or biz["email_contact"]
+
+
 RELANCE_APRES, RELANCE_JUSQUA = 5, 12   # jours après le premier e-mail
 
 
@@ -852,7 +874,8 @@ def relancer(journal, biz, metiers, conf, zone_de, clients, quota, today=None):
     Seuls les e-mails dont le pied de page annonçait ce rappel (champ « suivi » du journal) sont concernés."""
     today = today or date.today()
     clients = {gratuit.h(e) for e in clients} | gratuit.emails_connus()
-    reply = biz.get("email_proprietaire") or biz["email_contact"]
+    etat = _load_json(DATA / "state.json", {})
+    reply = _adresse_reponse(biz, conf)
     n = 0
     for j in journal:
         if not j.get("suivi") or j.get("relance_faite"):
@@ -874,7 +897,8 @@ def relancer(journal, biz, metiers, conf, zone_de, clients, quota, today=None):
                 break
             verifies.add(i)
             to = ((e.get("to") or [""])[0] or "").lower()
-            if e.get("last_event") != "clicked" or not to or gratuit.h(to) in clients or metier not in metiers:
+            if (e.get("last_event") != "clicked" or not to or gratuit.h(to) in clients or metier not in metiers
+                    or reponses.est_refuse(to, etat)):
                 continue
             nb, zone, ex, lien = zone_de(metier, dep, "relance")
             if nb < 2:
@@ -895,6 +919,21 @@ def relancer(journal, biz, metiers, conf, zone_de, clients, quota, today=None):
             j["relance_faite"] = True
             j.pop("verifies", None)
     return n
+
+
+def sante_envois(journal, jours=7, today=None):
+    """Rebonds et plaintes des e-mails de prospection des derniers jours (None si Resend ne répond pas)."""
+    debut = ((today or date.today()) - timedelta(days=jours)).isoformat()
+    ids = [i for j in journal if j.get("date", "") >= debut for i in j.get("ids", [])]
+    n = 0
+    for i in ids:
+        try:
+            n += mailer.dernier_evenement(i) in ("bounced", "complained")
+        except Exception as exc:
+            log.warning("Santé des envois non lue : %s", safe(exc))
+            return None
+        time.sleep(0.6)  # limite Resend : 2 requêtes/seconde
+    return {"envoyes": len(ids), "problemes": n}
 
 
 def _clics(ids):

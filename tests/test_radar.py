@@ -1291,3 +1291,53 @@ def test_point_du_jour_sans_nouveaute(monkeypatch, tmp_path):
     assert "2 dans le 92" in html and "1 dans le 93" in html and "dans le 33" not in html
     cli.envoyer_rien_de_neuf(subs, {cle_b: None}, recents, ouverts, biz, metiers, Matcher(metiers), state, run)
     assert len(envoyes) == 1 and run["emails_rien_de_neuf"] == 1  # une seule fois par jour
+
+
+def test_agent_reponses_prospects(monkeypatch, tmp_path):
+    """STOP → plus jamais contacté ; absence → ignorée ; question simple → réponse IA ; le reste → propriétaire."""
+    from radar import reponses
+    monkeypatch.setenv("RESEND_INBOUND_KEY", "re_x")
+    monkeypatch.setenv("RADAR_DRY_RUN", "1")
+    monkeypatch.setattr("radar.mailer.OUTBOX", tmp_path)
+    biz = dict(business(), ia_active=True)
+    adr = biz["prospection"]["reponses_adresse"]
+    corps = {"r1": "STOP merci\n\n> Le 16 oct. Radar Marchés a écrit :\n> Bonjour",
+             "r2": "Je suis absent jusqu'au 3 novembre.",
+             "r3": "Bonjour, c'est combien pour la peinture dans le 33 ?",
+             "r4": "Je veux une remise de 50 % et un rendez-vous téléphonique.",
+             "r5": "Hors adresse"}
+    rec = [{"id": k, "from": f"Contact <{k}@entreprise-{k}.fr>", "to": [adr if k != "r5" else "autre@x.resend.app"],
+            "subject": "Re: 12 marchés publics"} for k in corps]
+    monkeypatch.setattr(reponses, "_resend", lambda path, key, session=None:
+                        {"data": rec} if "limit" in path else {"text": corps[path.rsplit("/", 1)[1]]})
+
+    def ia(prompt, **kw):
+        kw["usage"]["cout_usd"] += 0.001
+        if "remise" in prompt.split("MESSAGE DU PROSPECT")[1]:
+            return '{"action": "transmettre", "reponse": "", "motif": "demande de remise"}'
+        return '{"action": "repondre", "reponse": "L\'offre Essentiel coûte 29 € par mois, avec 7 jours d\'essai.", "motif": ""}'
+    alertes = []
+    state = {}
+    res = reponses.traiter(biz, metiers(), state, lambda b, sujet, html: alertes.append(sujet), ask_fn=ia)
+    assert res == {"repondus": 1, "transmis": 1, "desinscrits": 1, "ignores": 1, "erreurs": []}
+    assert len(alertes) == 1 and reponses.est_refuse("autre@entreprise-r1.fr", state)
+    assert not reponses.est_refuse("r3@entreprise-r3.fr", state)
+    assert reponses.traiter(biz, metiers(), state, lambda *a: None, ask_fn=ia)["repondus"] == 0   # pas de double traitement
+    # IA coupée : tout est transmis, rien n'est inventé
+    rec.append({"id": "r6", "from": "z@ent.fr", "to": [adr], "subject": "Question"})
+    corps["r6"] = "Vous couvrez la Corse ?"
+    res = reponses.traiter(dict(biz, ia_active=False), metiers(), state, lambda *a: None, ask_fn=ia)
+    assert res["transmis"] == 1 and res["repondus"] == 0
+
+
+def test_prospection_plus_d_envois_si_semaine_propre(monkeypatch):
+    from radar import cli
+    journal = [{"date": date.today().isoformat(), "ids": [f"i{n}" for n in range(40)]}]
+    monkeypatch.setattr(cli.time, "sleep", lambda s: None)
+    monkeypatch.setattr(cli.mailer, "dernier_evenement", lambda i: "bounced" if i in ("i1", "i2") else "delivered")
+    assert cli.sante_envois(journal) == {"envoyes": 40, "problemes": 2}
+
+    def illisible(i):
+        raise RuntimeError("401")
+    monkeypatch.setattr(cli.mailer, "dernier_evenement", illisible)
+    assert cli.sante_envois(journal) is None

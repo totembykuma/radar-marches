@@ -1,0 +1,28 @@
+name: Test de l'agent de réponse aux prospects (manuel)
+# Envoie une vraie question à l'adresse de l'agent, comme un prospect. bienvenue.yml (toutes les 10 min) y répond :
+# la réponse arrive sur alertes@radar-marches.fr (redirigée vers le propriétaire). Compteurs dans le journal de bienvenue.yml.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+        run: |
+          python - <<'PY'
+          from radar import mailer
+          from radar.config import business
+          biz = business()
+          r = mailer.send(biz["prospection"]["reponses_adresse"], "Re: [Test agent] marchés publics peinture",
+                          "<p>Bonjour, combien coûte votre service pour la peinture en Gironde, et y a-t-il un essai ?</p>",
+                          biz["email_expediteur"])
+          print("question envoyée :", bool(r.get("id")))
+          PY
