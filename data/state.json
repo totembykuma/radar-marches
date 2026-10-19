@@ -41,5 +41,23 @@
  "resultats": {
   "e916360b8962214f": "2026-W43",
   "58cadc2b1d19872f": "2026-W43"
+ },
+ "reponses_vues": [
+  "bcaf3dc2-4661-4287-b4bf-a7fd6acfcc9d"
+ ],
+ "reponses_auteurs": {},
+ "prospects_refus": [],
+ "reponses_journal": [
+  {
+   "date": "2026-10-19",
+   "action": "transmis"
+  }
+ ],
+ "ia_usage": {
+  "2026-10": {
+   "entree": 1255,
+   "sortie": 700,
+   "cout_usd": 0.000476
+  }
  }
 }
