@@ -24,6 +24,9 @@ jobs:
           curl -fsSL -o static/fonts/inter.woff2 https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/files/inter-latin-wght-normal.woff2
           curl -fsSL -o static/fonts/jakarta.woff2 https://cdn.jsdelivr.net/npm/@fontsource-variable/plus-jakarta-sans@5/files/plus-jakarta-sans-latin-wght-normal.woff2
       - name: Site avec les données réelles du jour (aucun e-mail envoyé)
+        # La clé ne sert qu'à savoir si l'IA est active (offre Clé en main affichée comme sur le site) : aucun appel IA ici.
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python -m radar.cli essai | tail -5
       - run: python scripts/film_video.py out/site out/film-explicatif.mp4
       - name: Publier l'aperçu sur la branche apercu-film

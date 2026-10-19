@@ -1,93 +1,194 @@
-{# Film de l'accueil (HTML/CSS, aucune vidéo à charger), 19 s sans voix, construit chaque jour avec un vrai avis BOAMP et l'historique DECP de son acheteur.
-   Musique jazz : static/film.mp3 (scripts/film_musique.py) ; texte et durées des scènes : config/film.yaml.
-   Prix et paliers lus dans config/business.yaml ; Clé en main seulement si l'offre est ouverte (biz.cle_actif). #}
+{# Film de l'accueil (motion design HTML/CSS, aucune vidéo à charger), 19 s sans voix, construit chaque jour avec un vrai avis BOAMP et l'historique DECP de son acheteur.
+   Musique jazz : static/film.mp3 (scripts/film_musique.py) ; texte et durées des scènes (calées sur le tempo) : config/film.yaml.
+   Prix et paliers lus dans config/business.yaml ; Clé en main affichée quand l'offre est ouverte (biz.cle_actif), comme sur la page Tarifs.
+   Styles du film : dans ce fichier (préfixe fm-), pour ne pas dépendre du design des pages. #}
 {% import "_ui.html" as ui %}{% if film %}
 {% set av = film.avis %}{% set fi = film.fiche %}{% set lib = metiers[film.metier].libelle %}
 {# data-o = position de la scène dans film.mp3 (la musique reste calée quand on saute d'un chapitre à l'autre) #}
-{% set ordre = ["matin", "alerte"] + (["fiche"] if fi else []) + ["offres", "fin"] %}
+{% set ordre = ["intro", "tri", "alerte"] + (["fiche"] if fi else []) + ["offres", "fin"] %}
 {% set ns = namespace(o=0, pos={}) %}{% for k in ordre %}{% set _ = ns.pos.update({k: ns.o}) %}{% set ns.o = ns.o + film.sc[k].ms %}{% endfor %}
-{% macro attrs(id) %}data-t="{{ 0 if id == 'fin' else film.sc[id].ms }}" data-o="{{ ns.pos[id] }}" data-titre="{{ film.sc[id].titre }}" data-cap="{{ film.sc[id].cap }}"{% endmacro %}
+{% macro attrs(id) %}data-t="{{ 0 if id == 'fin' else film.sc[id].ms }}" data-o="{{ ns.pos[id] }}" data-titre="{{ film.sc[id].titre }}" data-cap="{{ film.sc[id].cap }}" style="--dur:{{ film.sc[id].ms or 3000 }}ms"{% endmacro %}
 {% set duree = (ns.o / 1000)|round|int %}
 {% macro eur(v) %}{{ "{:,}".format(v|int).replace(",", " ") }}{% endmacro %}
+{% macro rv(texte, d, cls="") %}<span class="fm-rv {{ cls }}"><span class="a" style="--an:fm-rv;--t:.65s;--d:{{ d }}s">{{ texte }}</span></span>{% endmacro %}
 {% set logo %}<svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#0b1b33"/><circle cx="16" cy="16" r="10" fill="none" stroke="#ffb020" stroke-opacity=".35" stroke-width="1.6"/><circle cx="16" cy="16" r="6" fill="none" stroke="#ffb020" stroke-opacity=".7" stroke-width="1.6"/><path d="M16 16L24 9" stroke="#ffb020" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="16" r="2.4" fill="#ffb020"/></svg>{% endset %}
-{% set cur %}<svg class="cur-svg" viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d="M4 2l15 10-6.5 1.4L16 21l-3 1.4-3.6-7.5L4 19z" fill="#fff" stroke="#0b1b33" stroke-width="1.5" stroke-linejoin="round"/></svg>{% endset %}
+{% set cur %}<svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d="M4 2l15 10-6.5 1.4L16 21l-3 1.4-3.6-7.5L4 19z" fill="#fff" stroke="#0b1b33" stroke-width="1.5" stroke-linejoin="round"/></svg>{% endset %}
+<style>
+#film .film-stage{background:radial-gradient(520px 340px at 78% 30%,#18396a 0%,transparent 70%),linear-gradient(160deg,#0a1830,#0e2344)}
+#film .fm-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);background-size:40px 40px;-webkit-mask-image:radial-gradient(70% 80% at 60% 40%,#000,transparent);mask-image:radial-gradient(70% 80% at 60% 40%,#000,transparent)}
+#film .sc{transition:opacity 0s .31s,visibility 0s .31s}
+/* volet : la scène change quand il couvre l'écran (0,31 s), ses animations démarrent d'autant plus tard */
+#film .sc:not(:first-of-type){--w:.31s}
+#film .sc.on .a{animation-delay:calc(var(--d,0s) + var(--w,0s))}
+#film .sc.on{animation:fm-cam var(--dur) linear both}
+@keyframes fm-cam{from{transform:scale(1.035)}to{transform:scale(1)}}
+@keyframes fm-rv{from{transform:translateY(110%)}}
+@keyframes fm-in{from{opacity:0;transform:translateY(24px);filter:blur(8px)}}
+@keyframes fm-pop{0%{opacity:0;transform:scale(.5)}65%{opacity:1;transform:scale(1.08)}100%{transform:scale(1)}}
+@keyframes fm-tilt{from{opacity:0;transform:perspective(900px) rotateX(38deg) translateY(90px) scale(.88)}}
+@keyframes fm-flip{from{opacity:0;transform:perspective(900px) rotateY(-75deg) translateX(-40px)}}
+@keyframes fm-gy{from{transform:scaleY(0)}}
+@keyframes fm-gx{from{transform:scaleX(0)}}
+@keyframes fm-dim{to{opacity:.13;transform:scale(.6)}}
+@keyframes fm-hit{to{background:#ffb020;transform:scale(1.9);box-shadow:0 0 0 4px rgba(255,176,32,.25),0 0 18px 4px rgba(255,176,32,.55)}}
+@keyframes fm-ring{0%{opacity:.9;transform:translate(-50%,-50%) scale(.2)}100%{opacity:0;transform:translate(-50%,-50%) scale(2.6)}}
+@keyframes fm-dash{from{stroke-dashoffset:var(--l)}}
+@keyframes fm-spin{to{transform:rotate(360deg)}}
+@keyframes fm-cur{0%{opacity:0;transform:translate(140px,120px)}25%{opacity:1}85%{transform:translate(0,0)}92%{transform:translate(0,0) scale(.85)}100%{opacity:1;transform:translate(0,0)}}
+@keyframes fm-wipe{from{transform:translateX(0) skewX(-14deg)}to{transform:translateX(225%) skewX(-14deg)}}
+#film .fm-wipe{position:absolute;inset:0;z-index:6;pointer-events:none;overflow:hidden}
+#film .fm-wipe i{position:absolute;top:-10%;bottom:-10%;left:-135%;width:120%;transform:translateX(0) skewX(-14deg)}
+#film .fm-wipe i:first-child{background:#ffb020}#film .fm-wipe i:last-child{background:#f4f1ea}
+#film .fm-wipe.go i:first-child{animation:fm-wipe .62s cubic-bezier(.7,0,.3,1) both}#film .fm-wipe.go i:last-child{animation:fm-wipe .62s cubic-bezier(.7,0,.3,1) .07s both}
+#film .fm-rv{display:block;overflow:hidden;padding-bottom:.06em}#film .fm-rv>span{display:inline-block}
+#film .fm-kick{margin:0 0 10px;color:#ffb020;font:800 14px var(--font);letter-spacing:.16em;text-transform:uppercase}
+#film .fm-h{margin:0;font:800 50px/1.02 var(--title);letter-spacing:-.035em;color:#fff}
+#film .fm-h em{font-style:normal;color:#ffb020}
+#film .fm-left{position:absolute;left:56px;top:50%;transform:translateY(-50%);width:400px}
+#film .fm-huge{display:block;font:800 128px/.95 var(--title);letter-spacing:-.06em;color:#fff;font-variant-numeric:tabular-nums}
+#film .fm-sub{margin:14px 0 0;color:#b9c7dd;font:600 17px/1.35 var(--font)}
+#film .fm-radar{position:absolute;right:-70px;top:50%;width:440px;height:440px;margin-top:-220px;border-radius:50%}
+#film .fm-radar span{position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(255,176,32,.22)}#film .fm-radar span:nth-child(2){inset:70px}#film .fm-radar span:nth-child(3){inset:140px}
+#film .fm-radar i{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,rgba(255,176,32,.42),transparent 55deg);animation:fm-spin 2.3s linear infinite}
+#film .fm-radar b{position:absolute;left:50%;top:50%;width:10px;height:10px;margin:-5px;border-radius:50%;background:#ffb020;box-shadow:0 0 18px 4px rgba(255,176,32,.6)}
+#film .fm-dots{position:absolute;left:420px;top:44px;width:340px;height:360px}
+#film .fm-dots i{position:absolute;width:9px;height:9px;border-radius:50%;background:#8aa3c7}
+#film .fm-dots i.n{animation:fm-pop .4s calc(var(--d) + .31s) both,fm-dim .5s ease 1.1s forwards}
+#film .fm-dots i.h{animation:fm-pop .4s calc(var(--d) + .31s) both,fm-hit .45s cubic-bezier(.3,1.6,.5,1) 1.15s forwards}
+#film .fm-chip{display:inline-flex;align-items:center;gap:8px;margin-top:16px;background:rgba(255,255,255,.1);box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);border-radius:999px;padding:7px 14px;color:#fff;font:700 15px var(--font)}
+#film .fm-chip .f-ico{color:#ffb020}
+#film .fm-mail{position:absolute;left:290px;top:58px;width:470px;background:#fff;color:var(--ink);border-radius:18px;box-shadow:0 40px 70px -30px rgba(0,0,0,.8);overflow:hidden;padding-bottom:12px;transform-origin:50% 100%}
+#film .fm-mail .item p{font-size:15.5px}
+#film .sc.on .fm-mail .item.hl{animation:fm-in .6s cubic-bezier(.2,.9,.25,1) .75s both,hl .45s ease 1.85s forwards}
+#film .fm-j{position:absolute;right:-8px;top:-14px;background:#ef4444;color:#fff;font:800 15px var(--title);border-radius:10px;padding:5px 10px;box-shadow:0 8px 18px -6px rgba(239,68,68,.8)}
+#film .fm-click{position:absolute;width:56px;height:56px;border-radius:50%;border:3px solid #ffb020;opacity:0}
+#film .sc.on .fm-click{animation:fm-ring .7s ease-out 2.4s both}
+#film .fm-cur{position:absolute;z-index:5;filter:drop-shadow(0 4px 6px rgba(0,0,0,.45));opacity:0}
+#film .sc.on .fm-cur{animation:fm-cur 1.15s cubic-bezier(.3,.8,.3,1) 1.35s both}
+#film .fm-alerte-left{position:absolute;left:44px;top:50%;transform:translateY(-50%);width:228px}
+#film .fm-alerte-left .fm-h{font-size:38px}
+#film .fm-card{position:absolute;right:36px;top:62px;width:446px;background:#fff;color:var(--ink);border-radius:18px;padding:20px 22px;box-shadow:0 40px 70px -30px rgba(0,0,0,.8)}
+#film .fm-card h4{margin:0;font:800 19px var(--title)}#film .fm-card .sub2{margin:4px 0 12px;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#film .fm-card .bar{grid-template-columns:118px 1fr 100px;font-size:12.5px}
+#film .fm-card .bar i{transform-origin:left}
+#film .fm-med{display:flex;align-items:baseline;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+#film .fm-med span{color:var(--muted);font-weight:700;font-size:13px}#film .fm-med b{font:800 34px var(--title);letter-spacing:-.03em;color:var(--navy)}
+#film .fm-fiche-left{position:absolute;left:44px;top:50%;transform:translateY(-50%);width:270px}
+#film .fm-fiche-left .fm-h{font-size:40px}
+#film .fm-titre{position:absolute;left:0;right:0;top:50px;text-align:center}
+#film .fm-titre .fm-h{font-size:36px}
+#film .fm-offres{position:absolute;left:40px;right:40px;top:122px;display:flex;justify-content:center;gap:16px}
+#film .fm-o{position:relative;flex:1;max-width:236px;background:#fff;color:var(--ink);border-radius:18px;padding:16px 16px 12px;box-shadow:0 30px 60px -28px rgba(0,0,0,.85);transform-origin:0 50%}
+#film .fm-o-pro{box-shadow:0 30px 60px -28px rgba(0,0,0,.85),0 0 0 3px #ffb020}#film .fm-o-cle{box-shadow:0 30px 60px -28px rgba(0,0,0,.85),0 0 0 3px #22d3a6}
+#film .fm-rub{position:absolute;right:12px;top:-12px;background:#ffb020;color:#0b1b33;font:800 11.5px var(--font);border-radius:999px;padding:4px 10px}
+#film .fm-o-nom{margin:0;font:800 19px var(--title);color:var(--navy)}
+#film .fm-o-prix{margin:0;font:800 38px/1.1 var(--title);letter-spacing:-.04em;color:var(--navy);white-space:nowrap}#film .fm-o-prix span{font:600 14px var(--font);letter-spacing:0;color:var(--muted)}
+#film .fm-o-quoi{margin:2px 0 10px;min-height:2.5em;font:600 13px/1.25 var(--font);color:var(--muted)}
+#film .fm-esc{display:flex;align-items:flex-end;gap:6px;height:86px;padding-top:8px;border-top:1px solid var(--line)}
+#film .fm-esc div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+#film .fm-esc b{font:800 13.5px var(--title);color:var(--navy);white-space:nowrap;margin-bottom:3px}
+#film .fm-esc i{display:block;width:100%;border-radius:6px 6px 2px 2px;background:#c9d7ef;transform-origin:bottom}
+#film .fm-esc div:last-child i{background:#22c55e}#film .fm-esc div:last-child b{color:#15803d}
+#film .fm-esc small{margin-top:4px;font:700 10.5px var(--font);color:var(--muted);white-space:nowrap}
+#film .fm-end{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding-bottom:64px}
+#film .fm-mark{width:86px;height:86px}#film .fm-mark circle,#film .fm-mark path{stroke-dasharray:var(--l);animation:fm-dash .9s cubic-bezier(.6,0,.2,1) var(--d,0s) both}
+#film .fm-end .fm-h{font-size:44px;margin-top:14px}
+#film .fm-end .fm-sub{font-size:18px;color:#dbe5f3}
+@media (prefers-reduced-motion:reduce){ #film .sc{transition:none} #film .sc.on,#film .fm-wipe i,#film .fm-dots i,#film .fm-mark *{animation:none!important}}
+</style>
 <div class="film" id="film" role="region" aria-label="Vidéo de {{ duree }} secondes : comment fonctionne Radar Marchés et nos offres">
   <div class="film-view">
     <div class="film-stage" aria-hidden="true">
-      <div class="film-bg"><span></span><span></span><span></span><i></i></div>
+      <div class="fm-grid"></div>
       <div class="film-brand">{{ logo }}<b>{{ biz.nom }}</b></div>
 
-      {# 1. Chaque matin #}{% set m = film.sc.matin.m %}
-      <section class="sc on" {{ attrs('matin') }}>
-        <div class="phone a" style="--an:up">
-          <div class="ph-notch"></div>
-          <p class="ph-time">6:20</p><p class="ph-date">{{ date_fr }}</p>
-          <div class="ph-notif a" style="--an:drop;--d:{{ m[1] + 0.5 }}s">
-            <span class="n-ico">{{ logo }}</span>
-            <div><small>{{ biz.nom }} · maintenant</small><b>{{ film.n_dep }} marché{{ "s" if film.n_dep > 1 }} « {{ lib|lower }} » dans le {{ film.dep }}</b></div>
-          </div>
-        </div>
-        <div class="funnel">
-          <p class="a" style="--d:.2s"><b class="big-n" data-n="{{ stats.total }}" data-d="200">{{ stats.total }}</b><span>nouveaux avis publiés au dernier tri</span></p>
-          <p class="arrow a" style="--an:fade;--d:{{ m[1] }}s">↓ triés pour vous</p>
-          <p class="a" style="--an:pop;--d:{{ m[1] + 0.4 }}s"><b class="big-n n-acc">{{ film.n_dep }}</b><span>pour votre métier dans le {{ film.dep }}</span></p>
+      {# 1. Le volume du jour #}
+      <section class="sc on" {{ attrs('intro') }}>
+        <div class="fm-radar a" style="--an:fm-pop;--t:.9s"><span></span><span></span><span></span><i></i><b></b></div>
+        <div class="fm-left">
+          <p class="fm-kick">{{ rv("Aujourd'hui", 0.05) }}</p>
+          <b class="fm-huge" data-n="{{ stats.total }}" data-d="120">{{ stats.total }}</b>
+          <p class="fm-h">{{ rv("appels d'offres", 0.35) }}{{ rv("publiés.", 0.5) }}</p>
         </div>
       </section>
 
-      {# 2. L'alerte #}
+      {# 2. Le tri #}{% set hits = [film.n_dep, 14]|min %}
+      <section class="sc" {{ attrs('tri') }}>
+        <div class="fm-dots">{% set nh = namespace(k=0) %}{% for i in range(72) %}{% set h = (i % 6 == 3) and nh.k < hits %}{% if h %}{% set nh.k = nh.k + 1 %}{% endif %}
+          <i class="{{ 'h' if h else 'n' }}" style="left:{{ (i * 61 % 97) * 3.4 }}px;top:{{ (i * 37 % 89) * 3.95 }}px;--d:{{ (i % 12) * 0.025 }}s"></i>{% endfor %}</div>
+        <div class="fm-left">
+          <p class="fm-kick">{{ rv("Pour vous", 0.05) }}</p>
+          <b class="fm-huge" style="color:#ffb020"><span class="fm-rv"><span class="a" style="--an:fm-rv;--t:.6s;--d:.75s">{{ film.n_dep }}</span></span></b>
+          <p class="fm-h" style="font-size:40px">{{ rv("seulement les vôtres.", 0.2) }}</p>
+          <span class="fm-chip a" style="--an:fm-in;--d:1.3s"><span class="f-ico">{{ ui.icone(film.metier, 18) }}</span>{{ lib }} · dép. {{ film.dep }}</span>
+        </div>
+      </section>
+
+      {# 3. L'alerte #}
       <section class="sc" {{ attrs('alerte') }}>
-        <div class="win a" style="--an:up">
+        <div class="fm-alerte-left">
+          <p class="fm-kick">{{ rv("Chaque matin", 0.05) }}</p>
+          <p class="fm-h">{{ rv("Dans votre", 0.15) }}{{ rv("boîte mail", 0.28) }}{{ rv("à <em>6 h 20</em>."|safe, 0.41) }}</p>
+        </div>
+        <div class="fm-mail a" style="--an:fm-tilt;--t:.85s;--d:.1s">
           <div class="win-bar"><span></span><span></span><span></span></div>
           <div class="win-head">{{ logo }}<div><b>{{ biz.nom }}</b> <small>· aujourd'hui, 6h20</small><br><span>{{ film.n_dep }} appel{{ "s" if film.n_dep > 1 }} d'offres « {{ lib|lower }} »</span></div></div>
-          <div class="item hl a" style="--d:.3s">
-            <div class="row"><span class="chip">Dép. {{ av.departements|join(', ') }}</span><span class="due">Réponse avant le {{ film.dl }} · J-{{ av.jours_restants }}</span></div>
-            <p>{{ av.objet|truncate(78) }}</p>
-            <small>{{ av.acheteur|truncate(48) }}</small>
-            {% if av.pme %}<span class="pme a" style="--an:pop;--d:1.3s">✓ Accessible PME</span>{% endif %}
+          <div class="item hl">
+            <div class="row"><span class="chip">Dép. {{ av.departements|join(', ') }}</span><span class="due">Réponse avant le {{ film.dl }}</span></div>
+            <p>{{ av.objet|truncate(70) }}</p>
+            <small>{{ av.acheteur|truncate(44) }}</small>
+            <span class="fm-j a" style="--an:fm-pop;--t:.5s;--d:1.7s">J-{{ av.jours_restants }}</span>
           </div>
-          {% if film.autre %}{% set b = film.autre %}<div class="item a" style="--d:.55s">
+          {% if film.autre %}{% set b = film.autre %}<div class="item a" style="--an:fm-in;--d:.7s">
             <div class="row"><span class="chip">Dép. {{ b.departements|join(', ') }}</span><span class="due">Réponse avant le {{ b.date_limite_fr }}</span></div>
-            <p>{{ b.objet|truncate(78) }}</p>
-            <small>{{ b.acheteur|truncate(48) }}</small>
+            <p>{{ b.objet|truncate(70) }}</p>
           </div>{% endif %}
         </div>
-        <span class="cur a" style="--an:cur2;--t:1s;--d:1.6s;left:648px;top:150px">{{ cur }}</span>
+        <span class="fm-click" style="left:690px;top:175px"></span>
+        <span class="fm-cur" style="left:700px;top:182px">{{ cur }}</span>
       </section>
 
-      {% if fi %}{# 3. Avant de répondre (Pro) #}{% set m = film.sc.fiche.m %}
+      {% if fi %}{# 4. Avant de répondre (Pro) #}
       <section class="sc" {{ attrs('fiche') }}>
-        <p class="tag a">Avec Pro</p>
-        <div class="card fiche ff-fiche a" style="--an:up">
+        <div class="fm-fiche-left">
+          <p class="fm-kick">{{ rv("Avec Pro", 0.05) }}</p>
+          <p class="fm-h">{{ rv("Ce que", 0.15) }}{{ rv("l'acheteur a", 0.27) }}{{ rv("<em>déjà payé</em>."|safe, 0.39) }}</p>
+        </div>
+        <div class="fm-card a" style="--an:fm-tilt;--t:.8s;--d:.15s">
           <h4>Avant de répondre</h4>
-          <p class="sub2">{{ av.acheteur|truncate(52) }} · {{ fi.n }} marché{{ "s" if fi.n > 1 }} en {{ fi.mois // 12 }} ans</p>
-          <div class="bars">
-            {% for d in fi.derniers if d.montant %}{% if loop.index <= 3 %}<div class="bar"><span>{{ d.date_fr }}{% if d.offres %} · {{ d.offres }} offre{{ "s" if d.offres > 1 }}{% endif %}</span><i class="a" style="--an:growx;--t:.8s;--d:{{ m[1] + loop.index0 * 0.3 }}s;width:{{ d.pct }}%"></i><b>{{ eur(d.montant) }} €</b></div>{% endif %}
-            {% endfor %}<div class="bar you"><span>Montant habituel</span><i class="a" style="--an:growx;--t:.8s;--d:{{ m[1] + 1.2 }}s;width:{{ fi.median_pct }}%"></i><b>{{ eur(fi.montant_median) }} €</b></div>
-          </div>
+          <p class="sub2">{{ av.acheteur|truncate(46) }} · {{ fi.n }} marché{{ "s" if fi.n > 1 }} en {{ fi.mois // 12 }} ans</p>
+          {% for d in fi.derniers if d.montant %}{% if loop.index <= 3 %}<div class="bar"><span>{{ d.date_fr }}{% if d.offres %} · {{ d.offres }} offre{{ "s" if d.offres > 1 }}{% endif %}</span><i class="a" style="--an:fm-gx;--t:.7s;--d:{{ 0.6 + loop.index0 * 0.18 }}s;width:{{ d.pct }}%"></i><b>{{ eur(d.montant) }} €</b></div>{% endif %}{% endfor %}
+          <p class="fm-med"><span>Montant habituel</span><b data-n="{{ fi.montant_median }}" data-d="1100">{{ eur(fi.montant_median) }}</b><b>€</b></p>
         </div>
       </section>{% endif %}
 
-      {# 4. Nos offres #}{% set m = film.sc.offres.m %}
+      {# 5. Nos offres #}
       <section class="sc" {{ attrs('offres') }}>
-        <p class="tag a">Nos offres · sans engagement</p>
-        <div class="offres3">
-          {% for k, quoi in [("essentiel", "1 métier, 1 département"), ("pro", "Toute la France + prix déjà payés"), ("cle", "Tout Pro + " ~ (biz.offres.cle.dossiers_inclus or 2) ~ " dossiers rédigés/mois")] if k != "cle" or biz.cle_actif %}{% set o = biz.offres[k] %}
-          <div class="o3 o3-{{ k }} a" style="--an:up;--d:{{ m[loop.index0] if loop.index0 < m|length else m[-1] }}s">
-            {% if k == "pro" %}<span class="o3-rub">Recommandé</span>{% endif %}
-            <p class="o3-nom">{{ o.nom }}</p>
-            <p class="o3-prix">{{ o.prix_mensuel|prix_fr }}<span>/mois</span></p>
-            <p class="o3-quoi">{{ quoi }}</p>
-            {% if o.paliers %}<ul>{% for p in o.paliers %}<li class="a" style="--an:fade;--d:{{ m[-1] + 0.9 + loop.index0 * 0.5 }}s"><span>Dès le {{ p.des_mois }}e mois</span><b>{{ p.prix|prix_fr }}</b></li>{% endfor %}</ul>{% endif %}
+        <div class="fm-titre"><p class="fm-h">{{ rv("Votre formule, <em>sans engagement</em>."|safe, 0.05) }}</p></div>
+        <div class="fm-offres">
+          {% for k, quoi in [("essentiel", "1 métier, 1 département"), ("pro", "Toute la France, prix déjà payés"), ("cle", "Tout Pro + " ~ (biz.offres.cle.dossiers_inclus or 2) ~ " dossiers rédigés par mois")] if k != "cle" or biz.cle_actif %}{% set o = biz.offres[k] %}{% set d0 = 0.3 + loop.index0 * 0.22 %}
+          <div class="fm-o fm-o-{{ k }} a" style="--an:fm-flip;--t:.75s;--d:{{ d0 }}s">
+            {% if k == "pro" %}<span class="fm-rub a" style="--an:fm-pop;--t:.45s;--d:{{ d0 + 0.6 }}s">Recommandé</span>{% endif %}
+            <p class="fm-o-nom">{{ o.nom }}</p>
+            <p class="fm-o-prix">{{ o.prix_mensuel|prix_fr }}<span>/mois</span></p>
+            <p class="fm-o-quoi">{{ quoi }}</p>
+            <div class="fm-esc">
+              <div><b>{{ o.prix_mensuel|prix_fr }}</b><i class="a" style="--an:fm-gy;--t:.5s;--d:{{ d0 + 0.9 }}s;height:58px"></i><small>mois 1-2</small></div>
+              {% for p in o.paliers or [] %}<div><b class="a" style="--an:fm-pop;--t:.4s;--d:{{ d0 + 1.35 + loop.index0 * 0.4 }}s">{{ p.prix|prix_fr }}</b><i class="a" style="--an:fm-gy;--t:.5s;--d:{{ d0 + 1.15 + loop.index0 * 0.4 }}s;height:{{ (58 * p.prix / o.prix_mensuel)|round|int }}px"></i><small>dès le {{ p.des_mois }}e</small></div>{% endfor %}
+            </div>
           </div>{% endfor %}
         </div>
       </section>
 
-      {# 5. Fin #}{% set m = film.sc.fin.m %}
-      <section class="sc end" {{ attrs('fin') }}>
-        <div class="end-logo a" style="--an:pop">{{ logo }}<b>{{ biz.nom }}</b></div>
-        <h4 class="a" style="--d:{{ m[1] }}s">Votre prochain marché sera peut-être publié <em>demain matin</em>.</h4>
-        <p class="a" style="--d:.7s">{{ biz.essai_gratuit_jours }} jours d'essai gratuit · sans engagement</p>
+      {# 6. Fin #}
+      <section class="sc" {{ attrs('fin') }}>
+        <div class="fm-end">
+          <svg class="fm-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#0b1b33"/><circle cx="16" cy="16" r="10" fill="none" stroke="#ffb020" stroke-opacity=".5" stroke-width="1.4" style="--l:63;--d:.05s"/><circle cx="16" cy="16" r="6" fill="none" stroke="#ffb020" stroke-opacity=".85" stroke-width="1.4" style="--l:38;--d:.2s"/><path d="M16 16L24 9" stroke="#ffb020" stroke-width="2" stroke-linecap="round" style="--l:11;--d:.5s"/><circle cx="16" cy="16" r="2.4" fill="#ffb020"/></svg>
+          <p class="fm-h">{{ rv("Votre prochain marché", 0.25) }}{{ rv("sort peut-être <em>demain matin</em>."|safe, 0.4) }}</p>
+          <p class="fm-sub a" style="--an:fm-in;--d:.8s">{{ biz.essai_gratuit_jours }} jours d'essai gratuit · sans engagement</p>
+        </div>
       </section>
+      <div class="fm-wipe"><i></i><i></i></div>
     </div>
     <div class="film-poster"><p class="kick">En vidéo · {{ duree }} secondes</p><p class="ttl">Vos marchés publics,<br><em>triés chaque matin</em></p></div>
     <a class="btn btn-lg film-cta" href="#tarifs" hidden>Essayer {{ biz.essai_gratuit_jours }} jours gratuitement</a>
@@ -105,7 +206,7 @@
 (function(){
   var f=document.getElementById('film');if(!f)return;
   var view=f.querySelector('.film-view'),stage=f.querySelector('.film-stage'),sc=[].slice.call(f.querySelectorAll('.sc')),
-      box=f.querySelector('.film-segs'),capT=f.querySelector('.film-cap b'),capS=f.querySelector('.film-cap span'),
+      box=f.querySelector('.film-segs'),wipe=f.querySelector('.fm-wipe'),capT=f.querySelector('.film-cap b'),capS=f.querySelector('.film-cap span'),
       play=f.querySelector('.film-play'),son=f.querySelector('.film-son'),au=f.querySelector('.film-audio'),sound=false,muted=false,big=f.querySelector('.film-big'),cta=f.querySelector('.film-cta'),
       rm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches,
       i=0,timer=null,left=0,t0=0,playing=false,auto=false,started=false,segs=[];
@@ -124,6 +225,7 @@
     play.setAttribute('aria-label',i===sc.length-1?'Revoir':playing?'Pause':'Lecture');cta.hidden=i!==sc.length-1;music()}
   function arm(ms){clearTimeout(timer);left=ms;t0=Date.now();if(playing&&ms>0)timer=setTimeout(function(){go(i+1,playing)},ms)}
   function go(n,run){clearTimeout(timer);sc.forEach(function(s){s.classList.remove('on')});void stage.offsetWidth;
+    if(wipe&&!rm&&n!==i&&started){wipe.classList.remove('go');void wipe.offsetWidth;wipe.classList.add('go')}
     i=n;var s=sc[i],ms=+s.dataset.t;s.classList.add('on');capT.textContent=(i+1)+'/'+sc.length+' · '+s.dataset.titre;capS.textContent=s.dataset.cap;
     segs.forEach(function(b,k){b.className='film-seg'+(k<i?' s-done':'');b.style.setProperty('--dur',(ms||1)+'ms')});
     void box.offsetWidth;segs[i].className='film-seg s-cur'+(ms?' s-run':' s-done');

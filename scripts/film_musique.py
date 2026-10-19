@@ -1,5 +1,5 @@
 """Musique du film de l'accueil : petit morceau de jazz d'ambiance, composé et synthétisé ici (création originale, aucun droit à payer).
-Trio piano électrique + contrebasse + balais, swing à 88 battements/min, grille Fmaj9 | Dm9 | Gm9 | C13 | Am7 D7 | Gm9 C13 | Fmaj9.
+Trio piano électrique + contrebasse + balais, swing à 104 battements/min, grille Fmaj9 | Dm9 | Gm9 | C13 | Fmaj9 | Am7 D7 | Gm9 C13 | Fmaj9.
 Écrit static/film.mp3 (≈ 19 s, fin en douceur). Usage : python scripts/film_musique.py   (numpy + ffmpeg)"""
 import subprocess
 from pathlib import Path
@@ -8,10 +8,10 @@ import numpy as np
 
 RACINE = Path(__file__).resolve().parent.parent
 SR = 44100
-BPM = 88
+BPM = 104
 B = 60 / BPM                      # durée d'un temps (s)
 SW = 2 / 3                        # croche swing : la 2e croche tombe aux 2/3 du temps
-MESURES = 7
+MESURES = 8
 DUREE = (MESURES - 1) * 4 * B + 3.0   # dernier accord qui résonne 3 s
 rng = np.random.default_rng(7)
 
@@ -22,6 +22,7 @@ GRILLE = [
     [(0, D, [53, 57, 60, 64])],                              # Dm9   : F A C E
     [(0, G, [58, 62, 65, 69])],                              # Gm9   : Bb D F A
     [(0, C, [58, 62, 64, 69])],                              # C13   : Bb D E A
+    [(0, F, [57, 60, 64, 67])],                              # Fmaj9
     [(0, A, [55, 60, 64, 67]), (2, D, [54, 60, 63, 69])],    # Am7 G C E G, D7(b9) F# C Eb A
     [(0, G, [58, 62, 65, 69]), (2, C, [58, 62, 64, 69])],    # Gm9, C13
     [(0, F, [57, 60, 64, 67, 72])],                          # Fmaj9 final
@@ -32,9 +33,10 @@ MELODIE = [
     (1, 1, .66, 74), (1, 1 + SW, .4, 72), (1, 2, 1, 69), (1, 3, 1, 65),
     (2, SW, .4, 70), (2, 1, 1, 74), (2, 2, 1.6, 77), (2, 3 + SW, .4, 76),
     (3, 0, 1.8, 74), (3, 2, .66, 70), (3, 2 + SW, .4, 69), (3, 3, 1, 67),
-    (4, SW, .4, 72), (4, 1, 1, 76), (4, 2, .66, 75), (4, 2 + SW, .4, 72), (4, 3, 1, 69),
-    (5, 0, 1.6, 70), (5, 1 + SW, .4, 69), (5, 2, 1, 67), (5, 3, .66, 64), (5, 3 + SW, .4, 67),
-    (6, 0, 4, 69),
+    (4, 0, 1, 72), (4, 1, .66, 69), (4, 1 + SW, .4, 67), (4, 2, 1.5, 64), (4, 3 + SW, .4, 67),
+    (5, SW, .4, 72), (5, 1, 1, 76), (5, 2, .66, 75), (5, 2 + SW, .4, 72), (5, 3, 1, 69),
+    (6, 0, 1.6, 70), (6, 1 + SW, .4, 69), (6, 2, 1, 67), (6, 3, .66, 64), (6, 3 + SW, .4, 67),
+    (7, 0, 4, 69),
 ]
 
 

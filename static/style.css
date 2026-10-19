@@ -247,7 +247,7 @@ footer .logo{color:#fff}footer p{margin:12px 0 0;max-width:420px;line-height:1.5
 .ph-notif b{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.ph-notif small{display:block;color:var(--muted);font-size:11px;margin-bottom:2px}
 .funnel{position:absolute;left:400px;top:80px;width:330px}
 .funnel p{margin:0;display:grid;grid-template-columns:190px 1fr;align-items:center;gap:16px}.funnel span{font-size:17px;color:#c9d6ea;max-width:180px;line-height:1.3}
-.big-n{font:800 56px var(--title);letter-spacing:-.03em;text-align:right;white-space:nowrap}.big-n.n-acc{color:var(--accent)}
+.big-n{font:800 56px var(--title);letter-spacing:-.03em;text-align:right;white-space:nowrap}.big-n.acc{color:var(--accent)}
 .funnel .arrow{display:block;margin:14px 0 14px 120px;color:var(--accent);font-weight:700;font-size:17px}
 .win{position:absolute;left:150px;top:44px;width:500px;background:#fff;color:var(--ink);border-radius:18px;box-shadow:var(--shadow-lg);overflow:hidden;padding-bottom:12px}
 .win-bar{display:flex;gap:6px;padding:10px 14px;background:#f1f4f9;border-bottom:1px solid var(--line)}
@@ -255,7 +255,7 @@ footer .logo{color:#fff}footer p{margin:12px 0 0;max-width:420px;line-height:1.5
 .win-head{display:flex;gap:10px;align-items:center;padding:12px 18px 4px;font-size:14px;line-height:1.35}.win-head small,.win-head span{color:var(--muted)}
 .item{position:relative;margin:10px 14px 0;padding:12px 14px;border:1px solid var(--line);border-radius:12px}
 .item p{margin:6px 0 2px;font-weight:700;font-size:16px;line-height:1.3}.item small{color:var(--muted);font-size:13px}
-.sc.on .item.hl{animation:fup .7s cubic-bezier(.2,.9,.25,1) .3s both,hl .5s ease 2.2s forwards}
+.sc.on .item.hl{animation:fup .7s cubic-bezier(.2,.9,.25,1) .5s both,hl .5s ease 3.2s forwards}
 .row{display:flex;justify-content:space-between;align-items:center}
 .chip{background:#eef3ff;color:#1d4ed8;font-size:12px;font-weight:700;border-radius:6px;padding:2px 8px}
 .due{font-size:12.5px;font-weight:600;color:#b45309}
@@ -351,16 +351,6 @@ footer .logo{color:#fff}footer p{margin:12px 0 0;max-width:420px;line-height:1.5
 .film-son .on,.film.son .film-son .off{display:none}.film.son .film-son .on{display:inline}
 .film.son .film-son{background:var(--navy);color:#fff;box-shadow:none}
 @media (max-width:600px){.film-son{padding:8px 10px;font-size:12.5px}}
-.fiche.ff-fiche{left:110px;top:78px;width:580px;padding:22px 26px}.ff-fiche h4{font-size:26px}.ff-fiche .sub2{font-size:15px}.ff-fiche .bar{grid-template-columns:150px 1fr 110px;font-size:14px;margin:9px 0}.ff-fiche .bar i{height:20px}.ff-fiche .bar b{font-size:17px}
-.offres3{position:absolute;left:44px;right:44px;top:74px;display:flex;gap:16px;justify-content:center}
-.o3{position:relative;flex:1;max-width:250px;background:#fff;color:var(--ink);border-radius:18px;padding:18px 18px 14px;box-shadow:var(--shadow-lg)}
-.o3-pro{box-shadow:var(--shadow-lg),0 0 0 3px var(--accent)}.o3-cle{box-shadow:var(--shadow-lg),0 0 0 3px #22d3a6}
-.o3-rub{position:absolute;right:12px;top:-11px;background:var(--accent);color:var(--navy);font-weight:800;font-size:11.5px;border-radius:999px;padding:3px 10px}
-.o3-nom{margin:0;font:800 21px var(--title);color:var(--navy)}
-.o3-prix{margin:2px 0 0;font:800 40px var(--title);letter-spacing:-.03em;color:var(--navy);white-space:nowrap}.o3-prix span{font-size:15px;color:var(--muted);font-weight:600}
-.o3-quoi{margin:6px 0 12px;min-height:2.6em;font-size:14px;font-weight:600;line-height:1.3;color:var(--muted)}
-.o3 ul{list-style:none;margin:0;padding:10px 0 0;border-top:1px solid var(--line)}
-.o3 li{display:flex;justify-content:space-between;align-items:baseline;margin:4px 0;font-size:13.5px;color:var(--muted)}.o3 li b{font:800 18px var(--title);color:var(--ok)}
 .avis-client{margin:0;background:#fff;border:1px solid #e3e7ef;border-radius:14px;padding:18px 20px}
 .avis-client .etoiles{color:#ffb020;letter-spacing:2px}.avis-client .etoiles span{color:#d9dee8}
 .avis-client blockquote{margin:10px 0;font-size:15px;line-height:1.55}.avis-client figcaption{font-size:14px;color:#5a6478}

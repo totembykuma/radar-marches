@@ -81,10 +81,10 @@ MOIS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sep
 
 
 def _film_scenes():
-    """Texte, durée et moments clés de chaque scène du film de l'accueil (config/film.yaml)."""
+    """Texte et durée de chaque scène du film de l'accueil (config/film.yaml)."""
     from .config import ROOT
     scenes = yaml.safe_load((ROOT / "config" / "film.yaml").read_text(encoding="utf-8"))["scenes"]
-    return {s["id"]: {"titre": s["titre"], "cap": s["cap"], "ms": s["ms"], "m": s["m"]} for s in scenes}
+    return {s["id"]: {"titre": s["titre"], "cap": s["cap"], "ms": s["ms"]} for s in scenes}
 
 
 def _film(by_metier, histo=None, essais=8):

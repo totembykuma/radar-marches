@@ -1,30 +1,29 @@
 # Film de l'accueil (templates/_film.html) : 19 s, sans voix, musique jazz (static/film.mp3, faite par scripts/film_musique.py).
-# Une entrée par scène, dans l'ordre. ms : durée de la scène ; m : moments (en s depuis le début de la scène) où les éléments apparaissent ;
-# cap : sous-titre affiché sous la vidéo. La dernière scène reste affichée (durée = fin de la musique).
+# Une entrée par scène, dans l'ordre. ms : durée de la scène, calée sur le tempo de la musique (1 temps = 577 ms à 104/min) ;
+# cap : sous-titre affiché sous la vidéo. La dernière scène reste affichée jusqu'à la fin de la musique.
 # Après modification : relancer le workflow film.yml, qui refait la musique et l'aperçu MP4.
 scenes:
-  - id: matin
-    titre: "Chaque matin"
-    ms: 3400
-    m: [0, 1.0]
-    cap: "Chaque jour, des centaines de marchés publics sont publiés. Chaque matin, vous recevez ceux de votre métier, près de chez vous."
+  - id: intro
+    titre: "Chaque jour"
+    ms: 2308
+    cap: "Chaque jour, des centaines d'appels d'offres publics sont publiés."
+  - id: tri
+    titre: "Le tri"
+    ms: 2308
+    cap: "Radar Marchés garde seulement ceux de votre métier, près de chez vous."
   - id: alerte
     titre: "L'alerte"
-    ms: 3600
-    m: [0]
-    cap: "Un e-mail clair : objet, acheteur, date limite et lien vers l'avis officiel. Ici, un vrai avis ouvert en ce moment."
+    ms: 3462
+    cap: "Chaque matin, un e-mail clair : objet, acheteur, date limite. Ici, un vrai avis ouvert en ce moment."
   - id: fiche
     titre: "Avant de répondre"
-    ms: 3800
-    m: [0, 0.6]
+    ms: 2885
     cap: "Avec Pro : ce que l'acheteur a déjà payé et combien d'entreprises ont répondu."
   - id: offres
     titre: "Nos offres"
-    ms: 5200
-    m: [0, 0.5, 1.0]
+    ms: 5192
     cap: "Le prix baisse dès le 3e mois, puis encore dès le 6e. Sans engagement."
   - id: fin
     titre: "À vous"
-    ms: 3400
-    m: [0, 0.4]
+    ms: 3000
     cap: "7 jours d'essai gratuit, sans engagement, résiliable en un clic."
