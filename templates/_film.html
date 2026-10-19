@@ -1,18 +1,17 @@
-{# Film explicatif animé (HTML/CSS, aucune vidéo à charger), construit chaque jour avec un vrai avis BOAMP et l'historique DECP de son acheteur.
-   Voix off + fond sonore : static/film.mp3 ; texte et durées des scènes : config/film.yaml et config/film_temps.json (scripts/film_audio.py). #}
+{# Film de l'accueil (HTML/CSS, aucune vidéo à charger), 19 s sans voix, construit chaque jour avec un vrai avis BOAMP et l'historique DECP de son acheteur.
+   Musique jazz : static/film.mp3 (scripts/film_musique.py) ; texte et durées des scènes : config/film.yaml.
+   Prix et paliers lus dans config/business.yaml ; Clé en main seulement si l'offre est ouverte (biz.cle_actif). #}
 {% import "_ui.html" as ui %}{% if film %}
 {% set av = film.avis %}{% set fi = film.fiche %}{% set lib = metiers[film.metier].libelle %}
-{# Clé en main masquée (offre pas encore ouverte) : sa scène est sautée et « Laquelle choisir ? » s'arrête avant la phrase qui la cite ;
-   data-o = position de la scène dans film.mp3, pour que la voix reste calée même quand une scène est sautée. #}
-{% set ordre = ["matin", "gratuit", "alerte", "essentiel", "pro", "cle", "choisir", "gagne", "fin"] %}
+{# data-o = position de la scène dans film.mp3 (la musique reste calée quand on saute d'un chapitre à l'autre) #}
+{% set ordre = ["matin", "alerte"] + (["fiche"] if fi else []) + ["offres", "fin"] %}
 {% set ns = namespace(o=0, pos={}) %}{% for k in ordre %}{% set _ = ns.pos.update({k: ns.o}) %}{% set ns.o = ns.o + film.sc[k].ms %}{% endfor %}
-{% set coupe_choisir = (film.sc.choisir.m[3] * 1000)|round|int if not biz.cle_actif and film.sc.choisir.m|length > 3 else none %}
-{% macro attrs(id) %}data-t="{{ coupe_choisir if id == 'choisir' and coupe_choisir else film.sc[id].ms }}" data-o="{{ ns.pos[id] }}" data-titre="{{ film.sc[id].titre }}" data-cap="{{ 'Près de chez vous : Essentiel. Plus de chantiers, plusieurs départements : Pro. Vous changez quand vous voulez.' if id == 'choisir' and not biz.cle_actif else film.sc[id].cap }}"{% endmacro %}
-{% set duree = film.duree if biz.cle_actif else ((ns.o - film.sc.cle.ms - film.sc.choisir.ms + (coupe_choisir or film.sc.choisir.ms)) / 1000)|round|int %}
+{% macro attrs(id) %}data-t="{{ 0 if id == 'fin' else film.sc[id].ms }}" data-o="{{ ns.pos[id] }}" data-titre="{{ film.sc[id].titre }}" data-cap="{{ film.sc[id].cap }}"{% endmacro %}
+{% set duree = (ns.o / 1000)|round|int %}
 {% macro eur(v) %}{{ "{:,}".format(v|int).replace(",", " ") }}{% endmacro %}
 {% set logo %}<svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#0b1b33"/><circle cx="16" cy="16" r="10" fill="none" stroke="#ffb020" stroke-opacity=".35" stroke-width="1.6"/><circle cx="16" cy="16" r="6" fill="none" stroke="#ffb020" stroke-opacity=".7" stroke-width="1.6"/><path d="M16 16L24 9" stroke="#ffb020" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="16" r="2.4" fill="#ffb020"/></svg>{% endset %}
 {% set cur %}<svg class="cur-svg" viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d="M4 2l15 10-6.5 1.4L16 21l-3 1.4-3.6-7.5L4 19z" fill="#fff" stroke="#0b1b33" stroke-width="1.5" stroke-linejoin="round"/></svg>{% endset %}
-<div class="film" id="film" role="region" aria-label="Vidéo : ce que change Radar Marchés par rapport au gratuit, nos offres et laquelle choisir">
+<div class="film" id="film" role="region" aria-label="Vidéo de {{ duree }} secondes : comment fonctionne Radar Marchés et nos offres">
   <div class="film-view">
     <div class="film-stage" aria-hidden="true">
       <div class="film-bg"><span></span><span></span><span></span><i></i></div>
@@ -23,172 +22,81 @@
         <div class="phone a" style="--an:up">
           <div class="ph-notch"></div>
           <p class="ph-time">6:20</p><p class="ph-date">{{ date_fr }}</p>
-          <div class="ph-notif a" style="--an:drop;--d:{{ m[1] + 0.6 }}s">
+          <div class="ph-notif a" style="--an:drop;--d:{{ m[1] + 0.5 }}s">
             <span class="n-ico">{{ logo }}</span>
             <div><small>{{ biz.nom }} · maintenant</small><b>{{ film.n_dep }} marché{{ "s" if film.n_dep > 1 }} « {{ lib|lower }} » dans le {{ film.dep }}</b></div>
           </div>
         </div>
         <div class="funnel">
-          <p class="a" style="--d:.4s"><b class="big-n" data-n="{{ stats.total }}" data-d="500">{{ stats.total }}</b><span>nouveaux avis publiés au dernier tri</span></p>
+          <p class="a" style="--d:.2s"><b class="big-n" data-n="{{ stats.total }}" data-d="200">{{ stats.total }}</b><span>nouveaux avis publiés au dernier tri</span></p>
           <p class="arrow a" style="--an:fade;--d:{{ m[1] }}s">↓ triés pour vous</p>
-          <p class="a" style="--an:pop;--d:{{ m[1] + 0.5 }}s"><b class="big-n acc">{{ film.n_dep }}</b><span>pour votre métier dans le {{ film.dep }}</span></p>
+          <p class="a" style="--an:pop;--d:{{ m[1] + 0.4 }}s"><b class="big-n n-acc">{{ film.n_dep }}</b><span>pour votre métier dans le {{ film.dep }}</span></p>
         </div>
       </section>
 
-      {# 2. Et le gratuit ? #}{% set m = film.sc.gratuit.m %}
-      <section class="sc" {{ attrs('gratuit') }}>
-        <p class="tag a">Gratuit ou Radar Marchés ?</p>
-        <div class="vs free a" style="--an:left">
-          <h5>Le site officiel <em>gratuit</em></h5>
-          <div class="flot"><div>{% for k in range(14) %}<i style="width:{{ [92,70,84,60,78,88,66,95,72,58,86,64,80,74][k] }}%"></i>{% endfor %}</div><span class="flot-n">{{ stats.total }} avis à lire</span></div>
-          <ul>
-            <li class="a" style="--an:right;--d:{{ m[1] }}s"><b>✕</b>À chercher vous-même, chaque jour</li>
-            <li class="a" style="--an:right;--d:{{ m[1] + 0.5 }}s"><b>✕</b>Tous les métiers mélangés</li>
-            <li class="a" style="--an:right;--d:{{ m[1] + 1 }}s"><b>✕</b>Aucun rappel de date limite</li>
-          </ul>
-        </div>
-        <span class="vs-mid a" style="--an:pop;--d:{{ m[2] - 0.3 }}s">VS</span>
-        <div class="vs radar a" style="--an:right;--d:{{ m[2] }}s">
-          <h5>{{ logo }} {{ biz.nom }}</h5>
-          <div class="tri"><span class="chip">{{ lib }}</span><span class="chip">Dép. {{ film.dep }}</span><b>{{ film.n_dep }}</b></div>
-          <ul>
-            <li class="a" style="--an:left;--d:{{ m[2] + 0.5 }}s"><b>✓</b>Ça arrive tout seul, chaque matin</li>
-            <li class="a" style="--an:left;--d:{{ m[2] + 1 }}s"><b>✓</b>Seulement votre métier, chez vous</li>
-            <li class="a" style="--an:left;--d:{{ m[2] + 1.5 }}s"><b>✓</b>La date limite dans votre agenda</li>
-          </ul>
-        </div>
-      </section>
-
-      {# 3. L'alerte #}
+      {# 2. L'alerte #}
       <section class="sc" {{ attrs('alerte') }}>
         <div class="win a" style="--an:up">
           <div class="win-bar"><span></span><span></span><span></span></div>
           <div class="win-head">{{ logo }}<div><b>{{ biz.nom }}</b> <small>· aujourd'hui, 6h20</small><br><span>{{ film.n_dep }} appel{{ "s" if film.n_dep > 1 }} d'offres « {{ lib|lower }} »</span></div></div>
-          <div class="item hl a" style="--d:.5s">
+          <div class="item hl a" style="--d:.3s">
             <div class="row"><span class="chip">Dép. {{ av.departements|join(', ') }}</span><span class="due">Réponse avant le {{ film.dl }} · J-{{ av.jours_restants }}</span></div>
             <p>{{ av.objet|truncate(78) }}</p>
             <small>{{ av.acheteur|truncate(48) }}</small>
-            {% if av.pme %}<span class="pme a" style="--an:pop;--d:2s">✓ Accessible PME</span>{% endif %}
+            {% if av.pme %}<span class="pme a" style="--an:pop;--d:1.3s">✓ Accessible PME</span>{% endif %}
           </div>
-          {% if film.autre %}{% set b = film.autre %}<div class="item a" style="--d:.8s">
+          {% if film.autre %}{% set b = film.autre %}<div class="item a" style="--d:.55s">
             <div class="row"><span class="chip">Dép. {{ b.departements|join(', ') }}</span><span class="due">Réponse avant le {{ b.date_limite_fr }}</span></div>
             <p>{{ b.objet|truncate(78) }}</p>
             <small>{{ b.acheteur|truncate(48) }}</small>
           </div>{% endif %}
         </div>
-        <span class="cur a" style="--an:cur2;--t:1.4s;--d:3.4s;left:648px;top:150px">{{ cur }}</span>
+        <span class="cur a" style="--an:cur2;--t:1s;--d:1.6s;left:648px;top:150px">{{ cur }}</span>
       </section>
 
-      {# 4. Essentiel #}{% set m = film.sc.essentiel.m %}{% set o = biz.offres.essentiel %}
-      <section class="sc" {{ attrs('essentiel') }}>
-        <div class="offre a" style="--an:left">
-          <p class="o-nom">{{ o.nom }}</p>
-          <p class="o-prix">{{ o.prix_mensuel }} €<span>/mois</span></p>
-          <ul>
-            <li class="a" style="--an:fade;--d:{{ m[0] + 1.6 }}s">✓ 1 métier</li>
-            <li class="a" style="--an:fade;--d:{{ m[0] + 2.4 }}s">✓ 1 département</li>
-            <li class="a" style="--an:fade;--d:{{ m[0] + 3 }}s">✓ L'alerte chaque matin</li>
-          </ul>
-        </div>
-        <div class="zone a" style="--an:pop;--d:.5s">
-          <span></span><span></span><span></span><i></i>
-          <b class="pin a" style="--an:drop;--d:1.4s"><span class="f-ico" style="--c:{{ ui.couleur(film.metier) }}">{{ ui.icone(film.metier, 22) }}</span>Dép. {{ film.dep }}</b>
-        </div>
-        <p class="pour a" style="--an:up;--d:{{ m[1] }}s">Pour l'artisan qui travaille <em>près de chez lui</em></p>
-      </section>
-
-      {# 5. Pro #}{% set m = film.sc.pro.m %}{% set o = biz.offres.pro %}
-      <section class="sc" {{ attrs('pro') }}>
-        <div class="offre a" style="--an:left">
-          <span class="o-rub">Recommandé</span>
-          <p class="o-nom">{{ o.nom }}</p>
-          <p class="o-prix">{{ o.prix_mensuel }} €<span>/mois</span></p>
-          <ul>
-            <li class="a" style="--an:fade;--d:{{ m[0] + 1.7 }}s">✓ Tous les départements</li>
-            <li class="a" style="--an:fade;--d:{{ m[0] + 2.8 }}s">✓ Vos mots-clés</li>
-            <li class="a" style="--an:fade;--d:{{ m[1] }}s">✓ Prix déjà payés</li>
-            <li class="a" style="--an:fade;--d:{{ m[2] }}s">✓ Bilan du lundi</li>
-          </ul>
-        </div>
-        {% if fi %}<div class="card fiche f2 a" style="--d:{{ m[1] - 0.2 }}s">
+      {% if fi %}{# 3. Avant de répondre (Pro) #}{% set m = film.sc.fiche.m %}
+      <section class="sc" {{ attrs('fiche') }}>
+        <p class="tag a">Avec Pro</p>
+        <div class="card fiche ff-fiche a" style="--an:up">
           <h4>Avant de répondre</h4>
-          <p class="sub2">{{ av.acheteur|truncate(40) }} · {{ fi.n }} marché{{ "s" if fi.n > 1 }} en {{ fi.mois // 12 }} ans</p>
+          <p class="sub2">{{ av.acheteur|truncate(52) }} · {{ fi.n }} marché{{ "s" if fi.n > 1 }} en {{ fi.mois // 12 }} ans</p>
           <div class="bars">
-            {% for d in fi.derniers if d.montant %}{% if loop.index <= 3 %}<div class="bar"><span>{{ d.date_fr }}{% if d.offres %} · {{ d.offres }} offre{{ "s" if d.offres > 1 }}{% endif %}</span><i class="a" style="--an:growx;--t:.9s;--d:{{ m[1] + 0.6 + loop.index0 * 0.35 }}s;width:{{ d.pct }}%"></i><b>{{ eur(d.montant) }} €</b></div>{% endif %}
-            {% endfor %}<div class="bar you"><span>Montant habituel</span><i class="a" style="--an:growx;--t:.9s;--d:{{ m[1] + 1.8 }}s;width:{{ fi.median_pct }}%"></i><b>{{ eur(fi.montant_median) }} €</b></div>
+            {% for d in fi.derniers if d.montant %}{% if loop.index <= 3 %}<div class="bar"><span>{{ d.date_fr }}{% if d.offres %} · {{ d.offres }} offre{{ "s" if d.offres > 1 }}{% endif %}</span><i class="a" style="--an:growx;--t:.8s;--d:{{ m[1] + loop.index0 * 0.3 }}s;width:{{ d.pct }}%"></i><b>{{ eur(d.montant) }} €</b></div>{% endif %}
+            {% endfor %}<div class="bar you"><span>Montant habituel</span><i class="a" style="--an:growx;--t:.8s;--d:{{ m[1] + 1.2 }}s;width:{{ fi.median_pct }}%"></i><b>{{ eur(fi.montant_median) }} €</b></div>
           </div>
-        </div>{% else %}<div class="motscles">{% for w, x, y in [("crèche", 0, 0), ("toiture-terrasse", 150, 40), ("gymnase", 30, 100), ("vitrerie", 190, 140)] %}<span class="a" style="--an:pop;--d:{{ m[0] + 2.8 + loop.index0 * 0.25 }}s;left:{{ x }}px;top:{{ y }}px">« {{ w }} »</span>{% endfor %}</div>{% endif %}
-        <div class="lundi a" style="--an:up;--d:{{ m[2] }}s"><b>Lundi</b> Bilan : qui a gagné, à quel prix</div>
-      </section>
-
-      {% if biz.cle_actif %}{# 6. Clé en main #}{% set m = film.sc.cle.m %}{% set o = biz.offres.cle %}
-      <section class="sc" {{ attrs('cle') }}>
-        <div class="offre cle a" style="--an:left">
-          <span class="o-rub">On fait tout</span>
-          <p class="o-nom">{{ o.nom }}</p>
-          <p class="o-prix">{{ o.prix_mensuel }} €<span>/mois</span></p>
-          <ul>
-            <li class="a" style="--an:fade;--d:{{ m[0] + 1.8 }}s">✓ Tout Pro</li>
-            <li class="a" style="--an:fade;--d:{{ m[1] }}s">✓ Rapport « comment gagner »</li>
-            <li class="a" style="--an:fade;--d:{{ m[2] }}s">✓ {{ o.dossiers_inclus }} dossiers / mois</li>
-          </ul>
-        </div>
-        <div class="rapport a" style="--an:up;--d:{{ m[1] - 0.2 }}s">
-          <h5>Comment gagner ce marché</h5>
-          <p><b>①</b> Ce que l'acheteur va noter</p>
-          <p><b>②</b> Les pièces à fournir</p>
-          <p class="prix-rep a" style="--an:pop;--d:{{ m[1] + 1.6 }}s">Prix de repère{% if fi %} <b>{{ eur(fi.montant_median) }} € HT</b>{% else %} <b>tiré des marchés attribués</b>{% endif %}</p>
-        </div>
-        <div class="dossiers">
-          {% for t in ["Mémoire technique", "Lettre de candidature"] %}<div class="doc a" style="--an:fly2;--t:.9s;--d:{{ m[2] + loop.index0 * 0.4 }}s"><b>W</b>{{ t }}<i></i><i></i></div>{% endfor %}
-          <span class="pret a" style="--an:stamp;--t:.5s;--d:{{ m[2] + 1.3 }}s">✓ Prêt à signer</span>
         </div>
       </section>{% endif %}
 
-      {# 7. Laquelle choisir ? #}{% set m = film.sc.choisir.m %}
-      <section class="sc" {{ attrs('choisir') }}>
-        <p class="tag a">Laquelle choisir ?</p>
-        <div class="choix">
-          {% for k, ico, qui in [("essentiel", "🏠", "Vous travaillez autour de chez vous"), ("pro", "🚚", "Plus de chantiers, plusieurs départements"), ("cle", "⏱️", "Pas le temps de rédiger")] if k != "cle" or biz.cle_actif %}{% set o = biz.offres[k] %}
-          <div class="ch ch-{{ k }} a" style="--an:up;--d:{{ m[loop.index] - 0.1 }}s">
-            <span class="ch-ico">{{ ico }}</span>
-            <p>{{ qui }}</p>
-            <b class="a" style="--an:pop;--d:{{ m[loop.index] + 1.2 }}s">{{ o.nom }}<small>{{ o.prix_mensuel }} €/mois</small></b>
+      {# 4. Nos offres #}{% set m = film.sc.offres.m %}
+      <section class="sc" {{ attrs('offres') }}>
+        <p class="tag a">Nos offres · sans engagement</p>
+        <div class="offres3">
+          {% for k, quoi in [("essentiel", "1 métier, 1 département"), ("pro", "Toute la France + prix déjà payés"), ("cle", "Tout Pro + " ~ (biz.offres.cle.dossiers_inclus or 2) ~ " dossiers rédigés/mois")] if k != "cle" or biz.cle_actif %}{% set o = biz.offres[k] %}
+          <div class="o3 o3-{{ k }} a" style="--an:up;--d:{{ m[loop.index0] if loop.index0 < m|length else m[-1] }}s">
+            {% if k == "pro" %}<span class="o3-rub">Recommandé</span>{% endif %}
+            <p class="o3-nom">{{ o.nom }}</p>
+            <p class="o3-prix">{{ o.prix_mensuel|prix_fr }}<span>/mois</span></p>
+            <p class="o3-quoi">{{ quoi }}</p>
+            {% if o.paliers %}<ul>{% for p in o.paliers %}<li class="a" style="--an:fade;--d:{{ m[-1] + 0.9 + loop.index0 * 0.5 }}s"><span>Dès le {{ p.des_mois }}e mois</span><b>{{ p.prix|prix_fr }}</b></li>{% endfor %}</ul>{% endif %}
           </div>{% endfor %}
         </div>
       </section>
 
-      {# 8. Gagné #}
-      <section class="sc" {{ attrs('gagne') }}>
-        <div class="confetti">{% for c in range(18) %}<i style="--x:{{ [-330,-250,-190,-120,-60,0,70,130,200,260,330,-290,-160,-30,100,230,-210,290][c] }}px;--y:{{ [-150,-200,-90,-210,-140,-230,-170,-220,-110,-190,-130,60,90,110,70,100,140,150][c] }}px;--r:{{ c * 47 }}deg;--c:{{ ['#ffb020','#22c55e','#60a5fa','#ff8a00','#fff'][c % 5] }}"></i>{% endfor %}</div>
-        <div class="win-card a" style="--an:pop;--d:.3s">
-          <span class="trophy">🏆</span>
-          {% if fi %}{% set g = fi.gagne %}<small>{{ av.acheteur|truncate(40) }} · attribué en {{ g.date_fr }}</small>
-          <h4>Marché attribué</h4>
-          <p class="amount"><b data-n="{{ g.montant }}" data-d="1100">{{ eur(g.montant) }}</b> € HT</p>
-          <p class="sub2">{{ g.objet|truncate(70) }}{% if g.offres %} · {{ g.offres }} offre{{ "s" if g.offres > 1 }} reçue{{ "s" if g.offres > 1 }}{% endif %}</p>
-          {% else %}<small>Décision d'attribution</small>
-          <h4>Votre offre est retenue</h4>
-          <p class="sub2">{{ av.objet|truncate(70) }}</p>{% endif %}
-        </div>
-      </section>
-
-      {# 9. Fin #}{% set m = film.sc.fin.m %}
-      <section class="sc end" data-t="0" data-o="{{ ns.pos.fin }}" data-titre="{{ film.sc.fin.titre }}" data-cap="{{ film.sc.fin.cap }}">
+      {# 5. Fin #}{% set m = film.sc.fin.m %}
+      <section class="sc end" {{ attrs('fin') }}>
         <div class="end-logo a" style="--an:pop">{{ logo }}<b>{{ biz.nom }}</b></div>
         <h4 class="a" style="--d:{{ m[1] }}s">Votre prochain marché sera peut-être publié <em>demain matin</em>.</h4>
-        <p class="end-offres a" style="--d:.5s">{% for k in ["essentiel", "pro", "cle"] if k != "cle" or biz.cle_actif %}<span>{{ biz.offres[k].nom }} <b>{{ biz.offres[k].prix_mensuel }} €</b></span>{% endfor %}</p>
-        <p class="a" style="--d:.9s">{{ biz.essai_gratuit_jours }} jours d'essai gratuit · sans engagement</p>
+        <p class="a" style="--d:.7s">{{ biz.essai_gratuit_jours }} jours d'essai gratuit · sans engagement</p>
       </section>
     </div>
-    <div class="film-poster"><p class="kick">En vidéo · {{ duree // 60 }} min {{ "%02d"|format(duree % 60) }}</p><p class="ttl">Gratuit ou abonnement ?<br><em>Quelle offre choisir</em></p></div>
+    <div class="film-poster"><p class="kick">En vidéo · {{ duree }} secondes</p><p class="ttl">Vos marchés publics,<br><em>triés chaque matin</em></p></div>
     <a class="btn btn-lg film-cta" href="#tarifs" hidden>Essayer {{ biz.essai_gratuit_jours }} jours gratuitement</a>
     <button class="film-big" type="button" aria-label="Lancer la vidéo"><svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg></button>
   </div>
   <div class="film-ctrl">
     <button class="film-play" type="button" aria-label="Lecture"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path class="i-play" d="M8 5v14l11-7z" fill="currentColor"/><path class="i-pause" d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor"/><path class="i-again" d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z" fill="currentColor"/></svg></button>
     <div class="film-segs"></div>
-    <button class="film-son" type="button" aria-pressed="false"><span class="on">🔊 Son activé</span><span class="off">🔇 Écouter la voix off</span></button>
+    <button class="film-son" type="button" aria-pressed="false"><span class="on">🔊 Musique</span><span class="off">🔇 Activer la musique</span></button>
     <audio class="film-audio" preload="none" src="{{ root }}static/film.mp3"></audio>
   </div>
   <p class="film-cap"><b></b> <span></span></p>

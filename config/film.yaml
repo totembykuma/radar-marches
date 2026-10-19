@@ -1,62 +1,30 @@
-# Texte du film de l'accueil (templates/_film.html). Une entrée par scène, dans l'ordre.
-# voix : phrases lues par la voix off (nombres en toutes lettres) ; cap : sous-titre affiché sous la vidéo.
-# Après modification : relancer le workflow film.yml, qui refait la voix, le fond sonore (static/film.mp3)
-# et les durées des scènes (config/film_temps.json).
+# Film de l'accueil (templates/_film.html) : 19 s, sans voix, musique jazz (static/film.mp3, faite par scripts/film_musique.py).
+# Une entrée par scène, dans l'ordre. ms : durée de la scène ; m : moments (en s depuis le début de la scène) où les éléments apparaissent ;
+# cap : sous-titre affiché sous la vidéo. La dernière scène reste affichée (durée = fin de la musique).
+# Après modification : relancer le workflow film.yml, qui refait la musique et l'aperçu MP4.
 scenes:
   - id: matin
     titre: "Chaque matin"
-    voix:
-      - "Chaque jour, des centaines de marchés publics sont publiés."
-      - "Radar Marchés vous envoie chaque matin ceux de votre métier, près de chez vous."
-    cap: "Chaque jour, des centaines de marchés publics sont publiés. Chaque matin, nous vous envoyons ceux de votre métier, près de chez vous."
-  - id: gratuit
-    titre: "Et le gratuit ?"
-    voix:
-      - "Le site officiel des marchés publics est gratuit."
-      - "Mais il faut y chercher vous-même, chaque jour, parmi des centaines d'avis."
-      - "Avec Radar Marchés, le tri est fait pour vous, et aucune date limite ne vous échappe."
-    cap: "Le BOAMP est gratuit, mais il faut y chercher vous-même chaque jour. Avec Radar Marchés, le tri est fait pour vous et rien ne vous échappe."
+    ms: 3400
+    m: [0, 1.0]
+    cap: "Chaque jour, des centaines de marchés publics sont publiés. Chaque matin, vous recevez ceux de votre métier, près de chez vous."
   - id: alerte
     titre: "L'alerte"
-    voix:
-      - "Chaque matin, un mail clair : l'objet du marché, l'acheteur, la date limite, et le lien vers l'avis officiel."
-    cap: "Un e-mail clair chaque matin : objet, acheteur, date limite et lien vers l'avis officiel. Ici, un vrai avis ouvert en ce moment."
-  - id: essentiel
-    titre: "Essentiel · 29 €"
-    voix:
-      - "Essentiel, vingt-neuf euros par mois : un métier, un département."
-      - "L'idéal pour l'artisan qui travaille près de chez lui."
-    cap: "Essentiel, 29 € par mois : un métier, un département. Pour l'artisan qui travaille près de chez lui."
-  - id: pro
-    titre: "Pro · 49 €"
-    voix:
-      - "Pro, quarante-neuf euros : tous les départements, et vos mots-clés."
-      - "Avant de répondre, vous voyez ce que l'acheteur a déjà payé, et combien d'entreprises ont répondu."
-      - "Et chaque lundi, le bilan de vos concurrents."
-    cap: "Pro, 49 € par mois : tous les départements, vos mots-clés, les prix déjà payés par l'acheteur et le bilan de vos concurrents chaque lundi."
-  - id: cle
-    titre: "Clé en main · 149 €"
-    voix:
-      - "Clé en main, cent quarante-neuf euros : on prépare vos réponses."
-      - "Un rapport pour gagner chaque marché, avec un prix de repère,"
-      - "et deux dossiers prêts à signer chaque mois."
-    cap: "Clé en main, 149 € par mois : un rapport « comment gagner » avec un prix de repère, et 2 dossiers de réponse prêts à signer chaque mois."
-  - id: choisir
-    titre: "Laquelle choisir ?"
-    voix:
-      - "Alors, laquelle choisir ?"
-      - "Vous travaillez autour de chez vous : Essentiel."
-      - "Vous voulez plus de chantiers, sur plusieurs départements : Pro."
-      - "Vous n'avez pas le temps de rédiger : Clé en main."
-    cap: "Près de chez vous : Essentiel. Plus de chantiers, plusieurs départements : Pro. Pas le temps de rédiger : Clé en main. Vous changez quand vous voulez."
-  - id: gagne
-    titre: "Marché gagné"
-    voix:
-      - "Un seul marché gagné peut rembourser des années d'abonnement."
-    cap: "Un seul marché gagné peut rembourser des années d'abonnement."
+    ms: 3600
+    m: [0]
+    cap: "Un e-mail clair : objet, acheteur, date limite et lien vers l'avis officiel. Ici, un vrai avis ouvert en ce moment."
+  - id: fiche
+    titre: "Avant de répondre"
+    ms: 3800
+    m: [0, 0.6]
+    cap: "Avec Pro : ce que l'acheteur a déjà payé et combien d'entreprises ont répondu."
+  - id: offres
+    titre: "Nos offres"
+    ms: 5200
+    m: [0, 0.5, 1.0]
+    cap: "Le prix baisse dès le 3e mois, puis encore dès le 6e. Sans engagement."
   - id: fin
     titre: "À vous"
-    voix:
-      - "Essayez gratuitement pendant sept jours, sans engagement."
-      - "Votre prochain marché sera peut-être publié demain matin."
+    ms: 3400
+    m: [0, 0.4]
     cap: "7 jours d'essai gratuit, sans engagement, résiliable en un clic."

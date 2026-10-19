@@ -1,19 +1,19 @@
-"""Enregistre le film de l'accueil en MP4 1920x1080, 30 images/s, avec sa voix off et son fond sonore (aperçu / réseaux sociaux).
+"""Enregistre le film de l'accueil en MP4 1920x1080, 30 images/s, avec sa musique (aperçu / réseaux sociaux).
 Horloge virtuelle : chaque image est calculée puis capturée, donc aucune saccade quelle que soit la machine.
 Usage : python scripts/film_video.py out/site out/film.mp4  (nécessite playwright + chromium + ffmpeg)"""
 import asyncio
-import json
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
 
+import yaml
 from playwright.async_api import async_playwright
 
 SITE, SORTIE = Path(sys.argv[1]), Path(sys.argv[2])
 EXE = sys.argv[3] if len(sys.argv) > 3 else None
-TEMPS = Path(__file__).resolve().parent.parent / "config" / "film_temps.json"
-DUREE = round(json.loads(TEMPS.read_text())["total_ms"] / 1000 + 1) if TEMPS.exists() else 60
+SCENES = yaml.safe_load((Path(__file__).resolve().parent.parent / "config" / "film.yaml").read_text(encoding="utf-8"))["scenes"]
+DUREE = sum(s["ms"] for s in SCENES) / 1000   # la musique dure autant que le film
 FPS = 30
 HORLOGE = """(()=>{let vt=0,id=1;const q=[],raf=[],t0=Date.now(),seen=new Map();
 Date.now=()=>t0+vt;performance.now=()=>vt;
@@ -51,7 +51,7 @@ async def main():
                               "x.querySelector('audio')?.remove();window.dispatchEvent(new Event('resize'))}", CSS)
             await pg.wait_for_timeout(800)
             await pg.evaluate("document.querySelector('#film .film-big').click();__step(0)")
-            for k in range(DUREE * FPS):
+            for k in range(round(DUREE * FPS)):
                 await pg.screenshot(path=str(d / f"{k:05d}.jpg"), type="jpeg", quality=95)
                 await pg.evaluate(f"__step({1000 / FPS})")
             await b.close()
@@ -60,7 +60,7 @@ async def main():
         subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-framerate", str(FPS), "-i", str(d / "%05d.jpg"), "-i", str(musique),
                         "-vf", "format=yuv420p", "-c:v", "libx264", "-preset", "slow", "-crf", "18",
                         "-c:a", "aac", "-b:a", "160k", "-t", str(DUREE), "-movflags", "+faststart", str(SORTIE)], check=True)
-    print(f"{DUREE * FPS} images, {SORTIE} ({SORTIE.stat().st_size // 1024} Ko)")
+    print(f"{round(DUREE * FPS)} images, {SORTIE} ({SORTIE.stat().st_size // 1024} Ko)")
 
 
 asyncio.run(main())
