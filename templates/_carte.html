@@ -2,16 +2,16 @@
 {% macro carte(carte, n, liens) -%}
 {% set vals = n.values()|select|sort|list %}{% set nb = vals|length %}{% set s1, s2, s3 = (vals[(nb * 0.25)|int] if nb else 0), (vals[(nb * 0.5)|int] if nb else 0), (vals[(nb * 0.8)|int] if nb else 0) %}
 <figure class="carte">
-  <style>.carte a.dep{cursor:pointer}.carte a.dep:hover path,.carte a.dep:focus path{fill:#ff8a00;stroke:#0b1b33;stroke-width:1.6}</style>
+  <style>.carte a.dep{cursor:pointer}.carte a.dep:hover path,.carte a.dep:focus path{fill:#101C2C;stroke:#101C2C;stroke-width:1.6}</style>
   <svg viewBox="{{ carte.viewbox }}" width="100%" style="display:block;height:auto" role="img" aria-label="Carte des départements de France : cliquez sur un département">
-    {% for e in carte.encarts %}<rect class="encart" fill="#fff" stroke="#e6eaf1" x="{{ e.x }}" y="{{ e.y }}" width="{{ e.w }}" height="{{ e.h }}" rx="8"/><text class="encart-t" font-size="11" fill="#5b6679" x="{{ e.x + 8 }}" y="{{ e.y + 13 }}">{{ e.titre }}</text>{% endfor %}
+    {% for e in carte.encarts %}<rect class="encart" fill="#fff" stroke="#E1E5EA" x="{{ e.x }}" y="{{ e.y }}" width="{{ e.w }}" height="{{ e.h }}" rx="8"/><text class="encart-t" font-size="11" fill="#647184" x="{{ e.x + 8 }}" y="{{ e.y + 13 }}">{{ e.titre }}</text>{% endfor %}
     {% for d in carte.departements %}{% set k = n.get(d.code, 0) %}
     {% set niv = 0 if not k else (1 if k < s1 else (2 if k < s2 else (3 if k < s3 else 4))) %}{# niveaux par quartiles : une grosse valeur (Paris) n'écrase pas les autres #}
     {% if k and liens.get(d.code) %}<a class="dep n{{ niv }}" href="{{ liens[d.code] }}" data-nom="{{ d.nom }}" data-code="{{ d.code }}" data-n="{{ k }}"><title>{{ d.nom }} ({{ d.code }}) · {{ k }} marché{{ 's' if k > 1 }}</title>
     {%- else %}<g class="dep n0" data-nom="{{ d.nom }}" data-code="{{ d.code }}" data-n="0"><title>{{ d.nom }} ({{ d.code }}) · aucun marché en cours</title>{% endif -%}
-    {% set fill = ["#e3e8f0", "#bcd0ec", "#7fa6dc", "#3f73bf", "#13294b"][niv] %}{% for e in carte.encarts if e.code == d.code %}<rect x="{{ e.x }}" y="{{ e.y }}" width="{{ e.w }}" height="{{ e.h }}" rx="8" fill="transparent"/>{% endfor %}<path d="{{ d.d }}" fill="{{ fill }}" stroke="#fff" stroke-width=".7"/>{% if d.zoom %}<path d="{{ d.zoom }}" fill="{{ fill }}" stroke="#fff" stroke-width=".7"/>{% endif %}{{ '</a>'|safe if k and liens.get(d.code) else '</g>'|safe }}
+    {% set fill = ["#E1E5EA", "#D2D9E2", "#8F9BAD", "#4A5B73", "#1B2B41"][niv] %}{% for e in carte.encarts if e.code == d.code %}<rect x="{{ e.x }}" y="{{ e.y }}" width="{{ e.w }}" height="{{ e.h }}" rx="8" fill="transparent"/>{% endfor %}<path d="{{ d.d }}" fill="{{ fill }}" stroke="#fff" stroke-width=".7"/>{% if d.zoom %}<path d="{{ d.zoom }}" fill="{{ fill }}" stroke="#fff" stroke-width=".7"/>{% endif %}{{ '</a>'|safe if k and liens.get(d.code) else '</g>'|safe }}
     {% endfor %}
-    <path class="carte-hl" d="" fill="#ff8a00" stroke="#0b1b33" stroke-width="1.6" style="display:none;pointer-events:none"/><g class="carte-label" style="display:none;pointer-events:none"><rect height="26" rx="7" fill="#0b1b33"/><text text-anchor="middle" fill="#fff" font-size="13" font-weight="700"></text></g>
+    <path class="carte-hl" d="" fill="#101C2C" stroke="#101C2C" stroke-width="1.6" style="display:none;pointer-events:none"/><g class="carte-label" style="display:none;pointer-events:none"><rect height="26" rx="7" fill="#101C2C"/><text text-anchor="middle" fill="#fff" font-size="13" font-weight="700"></text></g>
   </svg>
   <figcaption>Survolez un département pour voir son nom, cliquez pour ouvrir ses appels d'offres. Plus la couleur est foncée, plus il y a de marchés en cours.</figcaption>
 </figure>

@@ -5,21 +5,23 @@
 <meta name="description" content="{{ description }}">{% if biz.google_verification %}<meta name="google-site-verification" content="{{ biz.google_verification }}">{% endif %}{% if noindex %}<meta name="robots" content="noindex">{% endif %}
 <link rel="canonical" href="{{ biz.site_url }}{{ path }}">
 <meta property="og:title" content="{{ title }}"><meta property="og:description" content="{{ description }}"><meta property="og:type" content="website">
-<meta name="theme-color" content="#0b1b33">
-<link rel="icon" href="{{ biz.site_url }}/favicon.ico" sizes="16x16 32x32 48x48"><link rel="icon" href="{{ biz.site_url }}/static/icons/icon.svg" type="image/svg+xml"><link rel="icon" href="{{ biz.site_url }}/static/icons/favicon-48.png" type="image/png" sizes="48x48"><link rel="icon" href="{{ biz.site_url }}/static/icons/favicon-96.png" type="image/png" sizes="96x96"><link rel="icon" href="{{ biz.site_url }}/static/icons/icon-192.png" type="image/png" sizes="192x192"><meta property="og:site_name" content="{{ biz.nom }}"><meta property="og:locale" content="fr_FR"><meta property="og:url" content="{{ biz.site_url }}{{ path }}"><meta property="og:image" content="{{ biz.site_url }}/static/icons/icon-512.png"><meta property="og:image:width" content="512"><meta property="og:image:height" content="512"><meta property="og:image:alt" content="Logo {{ biz.nom }}"><meta name="twitter:card" content="summary"><link rel="apple-touch-icon" href="{{ root }}static/icons/apple-touch-icon.png"><link rel="manifest" href="{{ root }}static/site.webmanifest"><meta name="apple-mobile-web-app-title" content="{{ biz.nom }}">
+<meta name="theme-color" content="#101C2C">
+<link rel="icon" href="{{ biz.site_url }}/favicon.ico" sizes="16x16 32x32 48x48"><link rel="icon" href="{{ biz.site_url }}/static/icons/icon.svg" type="image/svg+xml"><link rel="icon" href="{{ biz.site_url }}/static/icons/favicon-48.png" type="image/png" sizes="48x48"><link rel="icon" href="{{ biz.site_url }}/static/icons/favicon-96.png" type="image/png" sizes="96x96"><link rel="icon" href="{{ biz.site_url }}/static/icons/icon-192.png" type="image/png" sizes="192x192"><meta property="og:site_name" content="{{ biz.nom }}"><meta property="og:locale" content="fr_FR"><meta property="og:url" content="{{ biz.site_url }}{{ path }}"><meta property="og:image" content="{{ biz.site_url }}/static/og-image.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="{{ biz.nom }} : les marchés publics de votre métier, chaque matin"><meta name="twitter:card" content="summary_large_image"><link rel="apple-touch-icon" href="{{ root }}static/icons/apple-touch-icon.png"><link rel="manifest" href="{{ root }}static/site.webmanifest"><meta name="apple-mobile-web-app-title" content="{{ biz.nom }}">
+<link rel="preload" href="{{ root }}static/fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="{{ root }}static/style.css{% if css_v %}?v={{ css_v }}{% endif %}">
 {% if path in ("", "/") %}<script type="application/ld+json">{"@context":"https://schema.org","@graph":[
 {"@type":"Organization","@id":"{{ biz.site_url }}/#organisation","name":"{{ biz.nom }}","alternateName":"Radar Marches","url":"{{ biz.site_url }}/","email":"{{ biz.email_contact }}","description":{{ biz.slogan|tojson }},"logo":{"@type":"ImageObject","@id":"{{ biz.site_url }}/#logo","url":"{{ biz.site_url }}/static/icons/icon-512.png","contentUrl":"{{ biz.site_url }}/static/icons/icon-512.png","width":512,"height":512,"caption":"{{ biz.nom }}"},"image":{"@id":"{{ biz.site_url }}/#logo"}},
 {"@type":"WebSite","@id":"{{ biz.site_url }}/#site","name":"{{ biz.nom }}","alternateName":["Radar Marches","radar-marches.fr"],"url":"{{ biz.site_url }}/","inLanguage":"fr-FR","publisher":{"@id":"{{ biz.site_url }}/#organisation"}}]}</script>{% endif %}
 {% block head %}{% endblock %}
 </head><body{% block body_attr %}{% endblock %}>
+<a class="evitement" href="#contenu">Aller au contenu</a>
 <header class="top"><div class="wrap">
-  <a class="logo" href="{{ root }}"><span class="logo-mark"><svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#0b1b33"/><circle cx="16" cy="16" r="10" fill="none" stroke="#ffb020" stroke-opacity=".35" stroke-width="1.6"/><circle cx="16" cy="16" r="6" fill="none" stroke="#ffb020" stroke-opacity=".7" stroke-width="1.6"/><path d="M16 16L24 9" stroke="#ffb020" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="16" r="2.4" fill="#ffb020"/></svg></span>{{ biz.nom }}</a>
+  <a class="logo" href="{{ root }}"><span class="logo-mark"><svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#101C2C"/><circle cx="16" cy="16" r="10" fill="none" stroke="#B8F36B" stroke-opacity=".35" stroke-width="1.6"/><circle cx="16" cy="16" r="6" fill="none" stroke="#B8F36B" stroke-opacity=".7" stroke-width="1.6"/><path d="M16 16L24 9" stroke="#B8F36B" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="16" r="2.4" fill="#B8F36B"/></svg></span>{{ biz.nom }}</a>
   <nav><a href="{{ root }}appels-offres/" class="hide-sm">Appels d'offres</a><a href="{{ root }}guides/" class="hide-sm">Guides</a><a href="{{ root }}#tarifs" class="hide-sm">Tarifs</a><a href="{{ root }}compte/" class="hide-sm">Mon compte</a><a href="{{ root }}#tarifs" class="btn btn-sm">Essai gratuit</a>
     <details class="menu-mob"><summary aria-label="Ouvrir le menu"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></summary>
       <div class="menu-mob-panel"><a href="{{ root }}appels-offres/">Appels d'offres</a><a href="{{ root }}entreprises/">Qui a gagné quoi</a><a href="{{ root }}guides/">Guides</a><a href="{{ root }}#tarifs">Tarifs</a><a href="{{ root }}compte/">Mon compte</a></div></details></nav>
 </div></header>
-<main>{% block main %}{% endblock %}</main>
+<main id="contenu" tabindex="-1">{% block main %}{% endblock %}</main>
 <footer><div class="wrap foot">
   <div><a class="logo" href="{{ root }}">{{ biz.nom }}</a><p>Les appels d'offres publics de votre métier, chaque matin. Données officielles du BOAMP (open data DILA, Licence Ouverte). Service indépendant, non affilié à l'administration.</p></div>
   <div class="foot-links"><a href="{{ root }}appels-offres/">Appels d'offres par métier</a><a href="{{ root }}guides/">Guides pour répondre</a><a href="{{ root }}entreprises/">Qui a gagné quoi</a><a href="{{ root }}barometre/">Baromètre mensuel</a><a href="{{ root }}#tarifs">Tarifs</a>{% if biz.alerte_gratuite %}<a href="{{ root }}alerte-gratuite/">Alerte gratuite</a>{% endif %}{% if biz.dossier_actif %}<a href="{{ root }}dossier/">Dossier prêt à signer</a>{% endif %}<a href="{{ root }}compte/">Espace client</a><a href="{{ root }}parrainage/">Parrainage</a><a href="mailto:{{ biz.email_contact }}">Contact</a></div>
@@ -46,16 +48,16 @@ function envoyerMail(to, sujet, corps) {
   var ol = "https://outlook.live.com/mail/0/deeplink/compose?to=" + e(to) + "&subject=" + e(sujet) + "&body=" + e(corps);
   var box = document.createElement("div");
   box.id = "em-box"; box.setAttribute("role", "dialog");
-  box.style.cssText = "position:fixed;inset:0;background:rgba(11,27,51,.55);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px";
+  box.style.cssText = "position:fixed;inset:0;background:rgba(16,28,44,.55);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px";
   box.innerHTML = '<div style="background:#fff;border-radius:14px;max-width:440px;width:100%;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,.25)">' +
     '<p style="margin:0 0 6px;font-weight:700;font-size:18px">Envoyez ce message pour terminer</p>' +
-    '<p style="margin:0 0 14px;color:#4a5568">Votre e-mail est déjà rédigé. Choisissez votre messagerie, puis cliquez sur « Envoyer ».</p>' +
+    '<p style="margin:0 0 14px;color:#4F5D70">Votre e-mail est déjà rédigé. Choisissez votre messagerie, puis cliquez sur « Envoyer ».</p>' +
     '<a class="btn btn-block" style="margin-bottom:8px" target="_blank" rel="noopener" href="' + gm + '">Ouvrir dans Gmail</a>' +
     '<a class="btn btn-block btn-ghost-dark" style="margin-bottom:8px" target="_blank" rel="noopener" href="' + ol + '">Ouvrir dans Outlook / Hotmail</a>' +
     '<a class="btn btn-block btn-ghost-dark" style="margin-bottom:8px" href="mailto:' + to + '?subject=' + e(sujet) + '&body=' + e(corps) + '">Autre messagerie (Apple Mail, Orange…)</a>' +
-    '<p style="margin:12px 0 4px;font-size:14px;color:#4a5568">Ou copiez le message et envoyez-le à <b>' + to + '</b> :</p>' +
+    '<p style="margin:12px 0 4px;font-size:14px;color:#4F5D70">Ou copiez le message et envoyez-le à <b>' + to + '</b> :</p>' +
     '<button type="button" class="btn btn-block btn-ghost-dark" id="em-copy">Copier le message</button>' +
-    '<button type="button" id="em-x" style="margin-top:10px;background:none;border:0;color:#4a5568;text-decoration:underline;cursor:pointer;width:100%">Fermer</button></div>';
+    '<button type="button" id="em-x" style="margin-top:10px;background:none;border:0;color:#4F5D70;text-decoration:underline;cursor:pointer;width:100%">Fermer</button></div>';
   document.body.appendChild(box);
   box.querySelector("#em-x").onclick = function () { box.remove(); };
   box.onclick = function (ev) { if (ev.target === box) box.remove(); };

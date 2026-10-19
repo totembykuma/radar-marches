@@ -2,7 +2,7 @@
 {% set promo = biz.promo if biz.promo and (biz.promo.publie or promo_apercu) and biz.offres[biz.promo.offre].lien_paiement else None %}
 {% set nb_offres = "trois" if biz.cle_actif else "deux" %}
 {% if promo %}<div class="promo-bar" id="promo-bar" hidden data-semaine="{{ promo.semaine }}"><div class="wrap">
-  <b>Cette semaine</b> : l'offre {{ biz.offres[promo.offre].nom }} à <b>{{ promo.prix }} €/mois au lieu de {{ biz.offres[promo.offre].prix_mensuel }} €</b><span class="hide-sm"> pendant {{ promo.mois }} mois, puis la baisse habituelle avec l'ancienneté ({{ promo.places_par_jour }} places par jour).</span>
+  <b>Cette semaine</b> : l'offre {{ biz.offres[promo.offre].nom }} à <b>{{ promo.prix }}&nbsp;€/mois au lieu de {{ biz.offres[promo.offre].prix_mensuel }}&nbsp;€</b><span class="hide-sm"> pendant {{ promo.mois }} mois, puis la baisse habituelle avec l'ancienneté ({{ promo.places_par_jour }} places par jour).</span>
   <a href="#tarifs">J'en profite →</a>
 </div></div>{% endif %}
 
@@ -22,7 +22,7 @@
     </div>
     <div class="a-mail" aria-label="Exemple d'alerte reçue le matin">
       <div class="a-mail-top">
-        <span class="a-mail-logo"><svg viewBox="0 0 32 32" width="34" height="34" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#0b1b33"/><circle cx="16" cy="16" r="10" fill="none" stroke="#ffb020" stroke-opacity=".35" stroke-width="1.6"/><circle cx="16" cy="16" r="6" fill="none" stroke="#ffb020" stroke-opacity=".7" stroke-width="1.6"/><path d="M16 16L24 9" stroke="#ffb020" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="16" r="2.4" fill="#ffb020"/></svg></span>
+        <span class="a-mail-logo"><svg viewBox="0 0 32 32" width="34" height="34" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#101C2C"/><circle cx="16" cy="16" r="10" fill="none" stroke="#B8F36B" stroke-opacity=".35" stroke-width="1.6"/><circle cx="16" cy="16" r="6" fill="none" stroke="#B8F36B" stroke-opacity=".7" stroke-width="1.6"/><path d="M16 16L24 9" stroke="#B8F36B" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="16" r="2.4" fill="#B8F36B"/></svg></span>
         <div><b>Vos marchés du jour</b><small>{{ biz.nom }} · ce matin, 6&nbsp;h&nbsp;20</small></div>
         {% if exemple %}<span class="a-mail-n">{{ exemple|length }} nouveau{{ "x" if exemple|length > 1 }}</span>{% endif %}
       </div>
@@ -42,10 +42,10 @@
 </section>
 
 <div class="wrap a-kpis">
-  <div style="--c:#22c39a"><b>{{ "{:,}".format(stats.ouverts|default(0)).replace(",", " ") }}</b><span>marchés ouverts aujourd'hui</span></div>
-  <div style="--c:#4c7dff"><b>{% if vitrine %}{{ vitrine.recents }}{% else %}{{ metiers|length }}{% endif %}</b><span>{% if vitrine %}publiés ces {{ recents_jours }} derniers jours{% else %}métiers suivis{% endif %}</span></div>
-  <div style="--c:#e5484d"><b>101</b><span>départements couverts</span></div>
-  <div style="--c:#ffb020"><b>6&nbsp;h&nbsp;20</b><span>votre alerte, chaque jour ouvré</span></div>
+  {% set n_ouv = stats.ouverts|default(0) %}<div><b>{{ "{:,}".format(n_ouv).replace(",", " ") }}</b><span>{{ "marchés ouverts" if n_ouv > 1 else "marché ouvert" }} aujourd'hui</span></div>
+  <div><b>{% if vitrine %}{{ vitrine.recents }}{% else %}{{ metiers|length }}{% endif %}</b><span>{% if vitrine %}{{ "publiés" if vitrine.recents > 1 else "publié" }} ces {{ recents_jours }} derniers jours{% else %}métiers suivis{% endif %}</span></div>
+  <div><b>101</b><span>départements couverts</span></div>
+  <div><b>6&nbsp;h&nbsp;20</b><span>votre alerte, chaque jour ouvré</span></div>
 </div>
 
 <section class="wrap a-bloc" id="comment">
@@ -53,7 +53,7 @@
   <h2>Trois étapes. Ensuite, plus rien à faire.</h2>
   <ol class="a-etapes">
     <li><span class="a-num">1</span><h3>Vous choisissez</h3><p>Votre métier et vos départements, en une minute. Vos {{ biz.essai_gratuit_jours }} jours d'essai commencent tout de suite.</p></li>
-    <li><span class="a-num">2</span><h3>Nous trions chaque nuit</h3><p>Tout le BOAMP est lu. Seul votre métier passe le filtre : « peinture routière » n'arrive pas chez un peintre en bâtiment.</p></li>
+    <li><span class="a-num">2</span><h3>Nous trions chaque nuit</h3><p>Tout le BOAMP est lu. Seul votre métier passe le filtre : «&nbsp;peinture routière&nbsp;» n'arrive pas chez un peintre en bâtiment.</p></li>
     <li><span class="a-num">3</span><h3>Vous répondez</h3><p>À 6&nbsp;h&nbsp;20, un e-mail clair, seulement s'il y a du nouveau. Vos favoris et vos échéances restent dans votre espace client.</p></li>
   </ol>
   <div class="a-film">{% include "_film.html" %}</div>
@@ -67,13 +67,13 @@
     {% else %}{% set av = {"acheteur": "Commune de Saint-Exemple", "departements": ["33"], "objet": "Entretien des espaces verts des écoles et du cimetière", "date_limite_fr": "12/11", "pme": true} %}{% set fi = {"n": 3, "mois": 24, "montant_median": 38000, "offres_median": 4} %}{% set barres = [{"date_fr": "03/2026", "montant": 41200, "offres": 5}, {"date_fr": "09/2025", "montant": 36800, "offres": 3}, {"date_fr": "02/2025", "montant": 34500, "offres": 4}] %}{% set lib = "espaces verts" %}{% set reel = false %}{% endif %}
     <article class="a-carte a-carte-fiche">
       <span class="a-tag">Offre Pro</span>
-      <h3>La fiche « avant de répondre »</h3>
+      <h3>La fiche «&nbsp;avant de répondre&nbsp;»</h3>
       <p>Sous chaque marché : ce que l'acheteur a déjà payé, combien d'entreprises ont répondu, et qui a gagné.</p>
       <div class="a-fiche">
         <small>{{ av.acheteur }} · Dép. {{ av.departements|join(', ') }}</small>
         <b class="a-fiche-titre">{{ av.objet|truncate(90) }}</b>
         <p class="a-fiche-meta">Réponse avant le <b>{{ av.date_limite_fr }}</b>{% if av.pme %} · <span class="ok">✔ Accessible PME</span>{% endif %}</p>
-        <div class="a-fiche-kpi"><div><b>{{ "{:,}".format(fi.montant_median).replace(",", " ") }} €</b><span>montant habituel HT</span></div>{% if fi.offres_median %}<div><b>{{ fi.offres_median }}</b><span>offres reçues en général</span></div>{% endif %}<div><b>{{ fi.n }}</b><span>marchés « {{ lib }} » en {{ fi.mois // 12 }} ans</span></div></div>
+        <div class="a-fiche-kpi"><div><b>{{ "{:,}".format(fi.montant_median).replace(",", " ") }} €</b><span>montant habituel HT</span></div>{% if fi.offres_median %}<div><b>{{ fi.offres_median }}</b><span>offres reçues en général</span></div>{% endif %}<div><b>{{ fi.n }}</b><span>marchés «&nbsp;{{ lib }}&nbsp;» en {{ fi.mois // 12 }} ans</span></div></div>
         {% if barres %}{% set mx = barres|map(attribute="montant")|max %}<div class="a-barres">{% for d in barres %}<div><span>{{ d.date_fr }}</span><i style="--w:{{ (100 * d.montant / mx)|round(1) }}%"></i><b>{{ "{:,}".format(d.montant).replace(",", " ") }} €</b></div>{% endfor %}</div>{% endif %}
         <p class="a-fiche-note">{% if reel %}Exemple réel, mis à jour chaque jour (BOAMP et données officielles de la commande publique).{% else %}Exemple d'affichage avec des données fictives.{% endif %}</p>
       </div>
@@ -151,7 +151,7 @@
 <section class="a-fond" id="derniers"><div class="wrap a-bloc">
   <p class="kicker">En direct du BOAMP</p>
   <h2>Les derniers marchés publiés.</h2>
-  <p class="a-sous">{{ vitrine.recents }} marchés en {{ recents_jours }} jours. Les plus récents sont réservés aux abonnés.</p>
+  <p class="a-sous">{{ vitrine.recents }} {{ "marchés" if vitrine.recents > 1 else "marché" }} en {{ recents_jours }} jours. Les plus récents sont réservés aux abonnés.</p>
   <div class="vitrine a-vitrine">
   {% for t, k, a in vitrine.cartes %}{% if t == 'flou' %}{{ carte_floue(a, root, biz, metiers) }}{% else %}
     <article class="avis" style="--c:{{ ui.couleur(k) }}">
@@ -178,6 +178,22 @@
   <p class="muted">Avis publiés uniquement par des abonnés (adresse vérifiée), sans tri sur la note et sans contrepartie. <a href="cgv.html">En savoir plus</a>.</p>
 </section>
 {% endif %}
+
+<section class="wrap a-bloc" id="comparer">
+  <p class="kicker">Comparer</p>
+  <h2>Chercher seul, ou recevoir le tri fait.</h2>
+  <p class="a-sous">Ce qui change concrètement par rapport à une veille faite à la main.</p>
+  <table class="a-compare">
+    <thead><tr><th scope="col">Étape</th><th scope="col">Seul, à la main</th><th scope="col" class="rm">Avec {{ biz.nom }}</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Trouver les avis</th><td class="sans">Ouvrir le BOAMP chaque jour et relancer ses recherches</td><td class="rm">Les avis de votre métier arrivent par e-mail chaque matin ouvré, vers 6&nbsp;h&nbsp;20</td></tr>
+      <tr><th scope="row">Trier</th><td class="sans">Lire beaucoup d'avis hors sujet</td><td class="rm">Filtre par métier et départements{% if biz.offres.pro %}, plus vos mots-clés en Pro{% endif %}</td></tr>
+      <tr><th scope="row">Dates limites</th><td class="sans">Les noter soi-même</td><td class="rm">Échéances dans votre espace client, rappel 3&nbsp;jours avant pour vos favoris</td></tr>
+      <tr><th scope="row">Concurrence</th><td class="sans">Fouiller les attributions publiées</td><td class="rm">Fiche «&nbsp;avant de répondre&nbsp;» et bilan du lundi (Pro)</td></tr>
+      <tr><th scope="row">Répondre</th><td class="sans">Seul face au dossier de consultation</td><td class="rm">{% if biz.dossier_actif %}Guides gratuits, et réponse rédigée au format Word en option{% if biz.cle_actif %} (2 par mois dans Clé en main){% endif %}{% else %}Guides gratuits pas à pas : DC1, DC2, mémoire technique, prix{% endif %}</td></tr>
+    </tbody>
+  </table>
+</section>
 
 <section id="tarifs" class="a-tarifs"><div class="wrap a-bloc">
   <div class="a-tete">
@@ -214,8 +230,8 @@
       <ul class="a-checks">
         <li>Toute l'offre Essentiel, plus :</li>
         <li><b>Départements illimités</b>, ou toute la France</li>
-        <li><b>Vos mots-clés</b> en plus du métier (« crèche », « vitrerie »…)</li>
-        <li><b>La fiche « avant de répondre »</b> : prix déjà payés, nombre de concurrents, derniers gagnants</li>
+        <li><b>Vos mots-clés</b> en plus du métier («&nbsp;crèche&nbsp;», «&nbsp;vitrerie&nbsp;»…)</li>
+        <li><b>La fiche «&nbsp;avant de répondre&nbsp;»</b> : prix déjà payés, nombre de concurrents, derniers gagnants</li>
         <li><b>Le bilan du lundi</b> : qui a gagné dans votre secteur, et à quel prix</li>
       </ul>
     </div>
@@ -228,7 +244,7 @@
       {% if biz.stripe_mode == 'réel' %}<a class="btn btn-lg btn-block btn-clair" href="{{ o.lien_paiement }}" data-mois-href="{{ o.lien_paiement }}" data-an-href="{{ o.lien_annuel or o.lien_paiement }}"{% if o.lien_annuel %} data-an-txt="Payer {{ o.prix_annuel }} € pour 12 mois"{% endif %}>Essayer {{ biz.essai_gratuit_jours }} jours gratuitement</a>{% else %}<a class="btn btn-lg btn-block disabled" href="mailto:{{ biz.email_contact }}">Bientôt disponible</a>{% endif %}
       <ul class="a-checks">
         <li>Toute l'offre Pro, plus :</li>
-        <li><b>Le rapport « comment gagner »</b> : critères de l'acheteur, pièces, pièges, prix de repère et plan d'action</li>
+        <li><b>Le rapport «&nbsp;comment gagner&nbsp;»</b> : critères de l'acheteur, pièces, pièges, prix de repère et plan d'action</li>
         <li><b>{{ o.dossiers_inclus }} dossiers de réponse prêts à signer par mois</b> : vous relisez, mettez vos prix, signez</li>
         <li>Un dossier de plus : {{ biz.dossier.prix_cle }} € au lieu de {{ biz.dossier.prix }} €</li>
       </ul>
@@ -290,12 +306,12 @@
   <details open><summary>D'où viennent les annonces ?</summary><p>Du BOAMP, le Bulletin officiel des annonces des marchés publics, publié en open data par l'État. Nous lisons chaque avis publié, tous les jours ouvrés.</p></details>
   <details><summary>Est-ce que vous répondez aux appels d'offres à ma place ?</summary><p>{% if biz.dossier_actif %}Nous pouvons rédiger votre réponse. Avec l'option <a href="dossier/">Dossier prêt à signer</a> ({{ biz.dossier.prix }} €, {{ biz.dossier.prix_pro }} € pour les abonnés Pro){% if biz.cle_actif %} ou l'offre Clé en main ({{ biz.offres.cle.dossiers_inclus }} dossiers inclus par mois){% endif %}, vous recevez votre mémoire technique, votre lettre de candidature et la liste des pièces au format Word. Vous relisez, mettez vos prix, signez et déposez vous-même l'offre sur la plateforme de l'acheteur.{% else %}Non. Nous repérons {% if biz.ia_active %}et résumons {% endif %}les opportunités ; vous décidez et répondez sur la plateforme de l'acheteur, dont le lien est dans chaque alerte.{% endif %}</p></details>
   <details><summary>Je suis une petite entreprise, c'est pour moi ?</summary><p>Oui. Beaucoup de marchés locaux (nettoyage d'une mairie, entretien d'un parc, travaux dans une école) sont à la portée des artisans et des TPE. Le plus dur, c'est de les voir à temps.</p></details>
-  <details><summary>Quelle offre choisir ?</summary><p>Si vous travaillez dans un seul département, l'offre Essentiel suffit. Si vous intervenez sur plusieurs départements, si vous voulez cibler des chantiers précis avec vos mots-clés, ou savoir qui gagne les marchés de votre métier et à quel prix, prenez l'offre Pro.{% if biz.cle_actif %} Si vous manquez de temps pour rédiger vos réponses, l'offre Clé en main ajoute le rapport « comment gagner » et {{ biz.offres.cle.dossiers_inclus }} dossiers prêts à signer chaque mois.{% endif %} Vous pouvez changer d'offre à tout moment.</p></details>
+  <details><summary>Quelle offre choisir ?</summary><p>Si vous travaillez dans un seul département, l'offre Essentiel suffit. Si vous intervenez sur plusieurs départements, si vous voulez cibler des chantiers précis avec vos mots-clés, ou savoir qui gagne les marchés de votre métier et à quel prix, prenez l'offre Pro.{% if biz.cle_actif %} Si vous manquez de temps pour rédiger vos réponses, l'offre Clé en main ajoute le rapport «&nbsp;comment gagner&nbsp;» et {{ biz.offres.cle.dossiers_inclus }} dossiers prêts à signer chaque mois.{% endif %} Vous pouvez changer d'offre à tout moment.</p></details>
   <details><summary>Combien ça coûte, et pourquoi le prix baisse ?</summary><p>{% for k in ["essentiel", "pro", "cle"] if k != "cle" or biz.cle_actif %}{{ biz.offres[k].nom }} : {{ biz.offres[k] | grille }}{{ " ; " if not loop.last else "." }}{% endfor %} Plus vous restez, moins vous payez, sans rien faire. Si vous résiliez puis revenez, le prix repart au tarif de départ.</p></details>
   {% if biz.offres.pro.lien_annuel and biz.stripe_mode == 'réel' %}<details><summary>Mensuel ou annuel ?</summary><p>Le mensuel commence par {{ biz.essai_gratuit_jours }} jours d'essai gratuit, sans engagement. L'annuel est payé en une fois pour 12 mois, sans essai, à prix fixe : {{ biz.offres.essentiel.prix_annuel }} € pour Essentiel, {{ biz.offres.pro.prix_annuel }} € pour Pro{% if biz.cle_actif and biz.offres.cle.lien_annuel %}, {{ biz.offres.cle.prix_annuel }} € pour Clé en main{% endif %}. Vous passez du mensuel à l'annuel ? Le mensuel s'arrête tout seul et la part non utilisée vous est remboursée.</p></details>{% endif %}
-  <details><summary>C'est quoi, la fiche « avant de répondre » ?</summary><p>Sous chaque appel d'offres, les abonnés Pro voient ce que le même acheteur a déjà attribué dans leur métier ces deux dernières années : le montant habituel, le nombre d'offres reçues (donc la concurrence à attendre) et les dernières entreprises retenues. De quoi décider en 30 secondes si le marché vaut le coup, et caler votre prix. Source : données essentielles de la commande publique, publiées par l'État.</p></details>
+  <details><summary>C'est quoi, la fiche «&nbsp;avant de répondre&nbsp;» ?</summary><p>Sous chaque appel d'offres, les abonnés Pro voient ce que le même acheteur a déjà attribué dans leur métier ces deux dernières années : le montant habituel, le nombre d'offres reçues (donc la concurrence à attendre) et les dernières entreprises retenues. De quoi décider en 30 secondes si le marché vaut le coup, et caler votre prix. Source : données essentielles de la commande publique, publiées par l'État.</p></details>
   <details><summary>C'est quoi, le bilan du lundi ?</summary><p>Chaque lundi, les abonnés Pro reçoivent la liste des marchés de leur métier attribués la semaine précédente dans leur secteur : l'acheteur, l'entreprise qui a gagné et le montant quand l'avis le publie. C'est le meilleur moyen de connaître ses concurrents et les prix du marché.</p></details>
-  {% if biz.dossier_actif %}<details><summary>Comment marche le dossier prêt à signer ?</summary><p>Un marché vous intéresse ? Cliquez sur « Préparer ma réponse » dans l'alerte, puis envoyez le dossier de consultation et quelques informations sur votre entreprise. Sous 24 heures ouvrées, vous recevez votre réponse rédigée au format Word ; les informations manquantes sont surlignées, rien n'est inventé. C'est une aide à la rédaction préparée par intelligence artificielle : vous restez seul responsable de l'offre déposée et aucun résultat n'est garanti. <a href="dossier/">En savoir plus</a>.</p></details>{% endif %}
+  {% if biz.dossier_actif %}<details><summary>Comment marche le dossier prêt à signer ?</summary><p>Un marché vous intéresse ? Cliquez sur «&nbsp;Préparer ma réponse&nbsp;» dans l'alerte, puis envoyez le dossier de consultation et quelques informations sur votre entreprise. Sous 24 heures ouvrées, vous recevez votre réponse rédigée au format Word ; les informations manquantes sont surlignées, rien n'est inventé. C'est une aide à la rédaction préparée par intelligence artificielle : vous restez seul responsable de l'offre déposée et aucun résultat n'est garanti. <a href="dossier/">En savoir plus</a>.</p></details>{% endif %}
   <details><summary>Et si je reçois des alertes hors sujet ?</summary><p>Répondez simplement à l'e-mail avec vos remarques : nous ajustons votre filtre.</p></details>
   <details><summary>Puis-je arrêter quand je veux ?</summary><p>Oui pour le mensuel, sans engagement. Aucun prélèvement pendant l'essai si vous résiliez avant la fin, et nous vous prévenons par e-mail 3 jours avant. La formule annuelle, elle, engage pour 12 mois. Pour changer de métier ou de départements, <a href="criteres/">un formulaire d'une minute</a>.</p></details>
   <details><summary>Y a-t-il un parrainage ?</summary><p>Oui. Chaque abonné a un lien personnel (dans ses alertes). Le confrère qui s'inscrit par ce lien a son premier mois après l'essai offert, et le parrain reçoit un mois offert dès que le confrère devient client. Sans limite, tout est automatique. <a href="parrainage/">Comment ça marche</a>.</p></details>

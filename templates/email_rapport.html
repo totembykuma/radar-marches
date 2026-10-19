@@ -1,13 +1,13 @@
 {% extends "_email.html" %}
 {% block contenu %}
-{% set h2 = "color:#0b1b33;font-size:21px;margin:0 0 14px" %}{% set h3 = "color:#0b1b33;font-size:16px;margin:22px 0 8px" %}
+{% set h2 = "color:#101C2C;font-size:21px;margin:0 0 14px" %}{% set h3 = "color:#101C2C;font-size:16px;margin:22px 0 8px" %}
 {% if cas == "rapport" %}
 <h2 style="{{ h2 }}">Comment gagner ce marché</h2>
 <p style="margin:0 0 4px"><b>{{ avis.objet }}</b></p>
 <p style="margin:0 0 14px;color:#5b6475;font-size:14px">{{ avis.acheteur }}{% if avis.ville %} · {{ avis.ville }}{% endif %}{% if avis.date_limite %} · date limite {{ avis.date_limite[:10]|date_courte }}{% endif %} · <a href="{{ avis.url }}">voir l'avis</a></p>
-{% set couleurs = {"bonnes": "#0f8a5f", "moyennes": "#b26a00", "faibles": "#b42318"} %}
-<p style="background:#f4f5f7;padding:12px 14px;border-radius:8px;border-left:3px solid #ffb020">{{ r.en_bref }}<br><br>
-<b>Vos chances : <span style="color:{{ couleurs.get(r.chances, '#0b1b33') }}">{{ r.chances }}</span></b>. {{ r.pourquoi_chances }}</p>
+{% set couleurs = {"bonnes": "#21845B", "moyennes": "#101C2C", "faibles": "#C83C48"} %}
+<p style="background:#f4f5f7;padding:12px 14px;border-radius:8px;border-left:3px solid #B8F36B">{{ r.en_bref }}<br><br>
+<b>Vos chances : <span style="color:{{ couleurs.get(r.chances, '#101C2C') }}">{{ r.chances }}</span></b>. {{ r.pourquoi_chances }}</p>
 
 {% if r.criteres %}<h3 style="{{ h3 }}">Ce que l'acheteur va noter, et comment marquer des points</h3>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;border-collapse:collapse">
@@ -25,12 +25,12 @@
 <ul style="margin:0;padding-left:20px;font-size:14px">{% for p in r.pieges %}<li>{{ p }}</li>{% endfor %}</ul>{% endif %}
 
 {% if r.plan %}<h3 style="{{ h3 }}">Votre plan d'action</h3>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px">{% for p in r.plan %}<tr><td style="padding:4px 10px 4px 0;white-space:nowrap;vertical-align:top;color:#0b1b33"><b>{{ p.quand }}</b></td><td style="padding:4px 0">{{ p.action }}</td></tr>{% endfor %}</table>{% endif %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px">{% for p in r.plan %}<tr><td style="padding:4px 10px 4px 0;white-space:nowrap;vertical-align:top;color:#101C2C"><b>{{ p.quand }}</b></td><td style="padding:4px 0">{{ p.action }}</td></tr>{% endfor %}</table>{% endif %}
 
 {% if r.a_demander %}<h3 style="{{ h3 }}">Questions à poser à l'acheteur</h3>
 <ul style="margin:0;padding-left:20px;font-size:14px">{% for q in r.a_demander %}<li>{{ q }}</li>{% endfor %}</ul>{% endif %}
 
-<p style="margin:24px 0 8px"><a href="{{ lien_dossier }}" style="display:inline-block;background:#0b1b33;color:#ffffff;font-weight:bold;padding:11px 18px;border-radius:8px;text-decoration:none">Préparer mon dossier (inclus dans votre offre)</a></p>
+<p style="margin:24px 0 8px"><a href="{{ lien_dossier }}" style="display:inline-block;background:#101C2C;color:#ffffff;font-weight:bold;padding:11px 18px;border-radius:8px;text-decoration:none">Préparer mon dossier (inclus dans votre offre)</a></p>
 <p style="font-size:13px;color:#5b6475">{% if not avec_dce %}Rapport établi à partir de l'avis et de l'historique de l'acheteur. Pour un rapport encore plus précis, renvoyez la demande avec le dossier de consultation en pièces jointes. {% endif %}Ce rapport est préparé avec l'aide d'une intelligence artificielle : vérifiez toujours les exigences dans le règlement de la consultation. Aucune attribution n'est garantie.</p>
 {% elif cas == "refuse" %}
 <h2 style="{{ h2 }}">Rapport réservé à l'offre Clé en main</h2>

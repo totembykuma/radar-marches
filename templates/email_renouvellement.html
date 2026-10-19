@@ -1,14 +1,14 @@
 {% extends "_email.html" %}
 {% block contenu %}
 {% if genre == "rappel" %}
-<h2 style="color:#0b1b33;font-size:21px;margin:0 0 14px">Votre abonnement annuel est renouvelé le {{ date_fr }}</h2>
+<h2 style="color:#101C2C;font-size:21px;margin:0 0 14px">Votre abonnement annuel est renouvelé le {{ date_fr }}</h2>
 <p>Bonjour,</p>
 <p>Comme prévu, nous vous prévenons à l'avance : votre abonnement annuel <b>{{ offre.nom }}</b> sera renouvelé automatiquement le <b>{{ date_fr }}</b>, pour 12 mois de plus.</p>
 <p>Montant prélevé ce jour-là, en une seule fois : <b>{{ montant }} € TTC</b>. Vos alertes continuent sans interruption pour :</p>
-<p style="background:#f4f5f7;padding:12px 14px;border-radius:8px;border-left:3px solid #ffb020"><b>{{ criteres }}</b></p>
+<p style="background:#f4f5f7;padding:12px 14px;border-radius:8px;border-left:3px solid #B8F36B"><b>{{ criteres }}</b></p>
 <p>Pour ne pas renouveler, résiliez avant cette date{% if biz.portail_client %} en un clic depuis <a href="{{ lien_compte or biz.portail_client }}">votre espace client</a>{% endif %} : vos alertes continuent jusqu'au {{ date_fr }}, puis s'arrêtent, sans autre prélèvement.</p>
 {% else %}
-<h2 style="color:#0b1b33;font-size:21px;margin:0 0 14px">Le paiement de votre renouvellement n'est pas passé</h2>
+<h2 style="color:#101C2C;font-size:21px;margin:0 0 14px">Le paiement de votre renouvellement n'est pas passé</h2>
 <p>Bonjour,</p>
 <p>Le renouvellement de votre abonnement annuel <b>{{ offre.nom }}</b> ({{ montant }} € TTC) a été refusé par votre banque. Vos alertes continuent pour l'instant et une nouvelle tentative aura lieu automatiquement dans les prochains jours.</p>
 <p>Pour éviter une coupure, vérifiez ou changez votre carte{% if biz.portail_client %} depuis <a href="{{ lien_compte or biz.portail_client }}">votre espace client</a>{% endif %}. Vous ne serez prélevé qu'une seule fois.</p>

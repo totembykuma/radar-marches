@@ -1,9 +1,9 @@
 {% extends "_email.html" %}
 {% block contenu %}
-<h2 style="color:#0b1b33;font-size:21px;margin:0 0 14px">Date limite dans {{ jours }} jour{{ 's' if jours > 1 }}</h2>
+<h2 style="color:#101C2C;font-size:21px;margin:0 0 14px">Date limite dans {{ jours }} jour{{ 's' if jours > 1 }}</h2>
 <p>Bonjour,</p>
 <p>Vous avez mis cet appel d'offres en favori. Pensez à déposer votre réponse avant la date limite :</p>
-<p style="background:#f4f5f7;padding:12px 14px;border-radius:8px;border-left:3px solid #ffb020"><b>{{ a.objet }}</b>{% if a.acheteur %}<br>{{ a.acheteur }}{% endif %}<br>Date limite : {{ a.date_limite[8:10] }}/{{ a.date_limite[5:7] }}/{{ a.date_limite[:4] }}</p>
+<p style="background:#f4f5f7;padding:12px 14px;border-radius:8px;border-left:3px solid #B8F36B"><b>{{ a.objet }}</b>{% if a.acheteur %}<br>{{ a.acheteur }}{% endif %}<br>Date limite : {{ a.date_limite[8:10] }}/{{ a.date_limite[5:7] }}/{{ a.date_limite[:4] }}</p>
 <p>{% if a.url %}<a href="{{ a.url }}">Voir l'avis officiel</a> · {% endif %}<a href="{{ biz.site_url }}/compte/">Mes favoris</a></p>
 <p>Bien cordialement,</p>
 {% endblock %}

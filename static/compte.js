@@ -171,11 +171,11 @@
     requestAnimationFrame(function pas(t) { debut = debut || t; var x = Math.min(1, (t - debut) / 600); e.textContent = Math.round(dep + (v - dep) * (1 - Math.pow(1 - x, 3))); if (x < 1) requestAnimationFrame(pas); });
   }
   function heureParis() { var p = {}; new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Paris", weekday: "short", hour: "2-digit", minute: "2-digit", hour12: false }).formatToParts(new Date()).forEach(function (x) { p[x.type] = x.value; }); return p; }
-  function prochainEnvoi() {   // alertes chaque matin ouvré vers 6 h 30 (heure de Paris)
-    var p = heureParis(), j = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].indexOf(p.weekday), avant = +p.hour * 60 + +p.minute < 6 * 60 + 30;
-    if (j < 5 && avant) return "ce matin vers 6\u00a0h\u00a030";
-    if (j < 4 || j === 6) return "demain matin vers 6\u00a0h\u00a030";
-    return "lundi matin vers 6\u00a0h\u00a030";
+  function prochainEnvoi() {   // alertes chaque matin ouvré vers 6 h 20 (heure de Paris)
+    var p = heureParis(), j = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].indexOf(p.weekday), avant = +p.hour * 60 + +p.minute < 6 * 60 + 20;
+    if (j < 5 && avant) return "ce matin vers 6\u00a0h\u00a020";
+    if (j < 4 || j === 6) return "demain matin vers 6\u00a0h\u00a020";
+    return "lundi matin vers 6\u00a0h\u00a020";
   }
 
   // ---- navigation
