@@ -1,6 +1,6 @@
 {% extends "_email.html" %}
 {% block bandeau %}
-<tr><td style="background:#0b1b33;color:#fff;padding:18px 28px">
+<tr><td style="background:#101C2C;color:#fff;padding:18px 28px">
   <div style="font-size:20px;font-weight:bold">Bilan du lundi</div>
   <div style="font-size:14px;opacity:.85">Qui a gagné les marchés de votre métier cette semaine · {{ items|length }} résultat{{ 's' if items|length > 1 }}</div>
 </td></tr>
@@ -12,8 +12,8 @@
 {% for r in items %}
 <tr><td style="padding:16px 28px;border-bottom:1px solid #eceef2">
   <div style="font-size:12px;color:#5a6478">{{ r.acheteur }}{% if r.departements %} · Dép. {{ r.departements|join(', ') }}{% endif %}</div>
-  <div style="font-size:15px;font-weight:bold;margin:4px 0"><a href="{{ r.url }}" style="color:#0b1b33;text-decoration:none">{{ r.objet }}</a></div>
-  <div style="font-size:14px">🏆 <b>{{ r.titulaires|join(', ') if r.titulaires else 'Titulaire non précisé dans l’avis' }}</b>{% if r.montant %} · <span style="color:#166534">{{ "{:,}".format(r.montant).replace(",", " ") }} € HT</span>{% endif %}</div>
+  <div style="font-size:15px;font-weight:bold;margin:4px 0"><a href="{{ r.url }}" style="color:#101C2C;text-decoration:none">{{ r.objet }}</a></div>
+  <div style="font-size:14px">🏆 <b>{{ r.titulaires|join(', ') if r.titulaires else 'Titulaire non précisé dans l’avis' }}</b>{% if r.montant %} · <span style="color:#17603F">{{ "{:,}".format(r.montant).replace(",", " ") }} € HT</span>{% endif %}</div>
 </td></tr>
 {% endfor %}
 {% endblock %}

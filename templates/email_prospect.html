@@ -5,7 +5,7 @@
 <p style="margin:0 0 14px">Vous venez de remporter le marché « {{ p.marche_gagne|truncate(80) }} ». Bravo !</p>
 <p style="margin:0 0 14px"><b>{{ n }} autres marchés « {{ metier.libelle|lower }} » sont ouverts en ce moment {{ zone }}.</b>{% if ex %} Par exemple : « {{ ex.objet|truncate(80) }} »{% if ex.date_limite_fr %}, réponse avant le {{ ex.date_limite_fr }}{% endif %}.{% endif %}</p>
 <p style="margin:0 0 18px">{{ biz.nom }} vous les envoie chaque matin, triés pour votre métier : vous ne cherchez plus, et vous répondez avant vos concurrents.</p>
-<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 22px"><tr><td style="background:#0b1b33;border-radius:8px">
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 22px"><tr><td style="background:#101C2C;border-radius:8px">
 <a href="{{ lien }}" style="display:inline-block;padding:12px 20px;color:#ffffff;font-weight:bold;text-decoration:none;font-size:15px">Voir les {{ n }} marchés ouverts</a>
 </td></tr></table>
 <p style="margin:0 0 14px">Bonne journée,</p>

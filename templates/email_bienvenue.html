@@ -1,16 +1,16 @@
 {% extends "_email.html" %}
 {% block contenu %}
-<h2 style="color:#0b1b33;font-size:21px;margin:0 0 14px">Votre veille {{ biz.nom }} est active</h2>
+<h2 style="color:#101C2C;font-size:21px;margin:0 0 14px">Votre veille {{ biz.nom }} est active</h2>
 <p>Bonjour,</p>
 <p>Merci pour votre confiance. Dès demain matin (jours ouvrés), vous recevrez les nouveaux appels d'offres publics correspondant à :</p>
-<p style="background:#f4f5f7;padding:12px 14px;border-radius:8px;border-left:3px solid #ffb020"><b>{{ criteres }}</b></p>
-{% if lien_compte %}<p style="margin:18px 0"><a href="{{ lien_compte }}" style="display:inline-block;background:#0b1b33;color:#ffffff;font-weight:bold;padding:11px 18px;border-radius:8px;text-decoration:none">Mon espace client</a><br><span style="font-size:13px;color:#5b6474">Sans mot de passe : votre offre, vos critères, vos factures. Gardez cet e-mail.</span></p>{% endif %}
+<p style="background:#f4f5f7;padding:12px 14px;border-radius:8px;border-left:3px solid #B8F36B"><b>{{ criteres }}</b></p>
+{% if lien_compte %}<p style="margin:18px 0"><a href="{{ lien_compte }}" style="display:inline-block;background:#101C2C;color:#ffffff;font-weight:bold;padding:11px 18px;border-radius:8px;text-decoration:none">Mon espace client</a><br><span style="font-size:13px;color:#5b6474">Sans mot de passe : votre offre, vos critères, vos factures. Gardez cet e-mail.</span></p>{% endif %}
 {% if biz.comptes_actifs %}<p style="margin:0 0 18px;font-size:14px">Nouveau : <a href="{{ biz.site_url }}/compte/inscription/#email={{ sub.email|urlencode }}">créez votre mot de passe</a> avec cette adresse e-mail pour retrouver vos alertes, vos favoris et modifier vos critères en direct.</p>
 {% endif %}<p>Pas d'e-mail un jour donné = aucun nouvel avis pertinent ce jour-là.</p>
 <p><b>Pour changer de métier, de départements ou ajouter des mots-clés</b>, remplissez <a href="{{ biz.site_url }}/criteres/">ce formulaire</a> (1 minute) ou répondez simplement à cet e-mail.</p>
 <p>Conseil : les petits marchés locaux ont souvent 3 à 4 semaines de délai de réponse. Préparez dès maintenant vos pièces administratives (Kbis, attestations URSSAF et fiscale, assurance, références) pour répondre vite.</p>
 {% if sub.filleul %}<p><b>Vous avez été invité par un client : votre premier mois après l'essai est offert.</b> Il est déjà crédité sur votre compte, vous n'avez rien à faire.</p>
 {% endif %}{% if sub.statut == 'trialing' %}<p>Avant la fin de votre essai gratuit, nous vous préviendrons par e-mail 3 jours à l'avance. Vous restez libre d'arrêter à tout moment.</p>{% else %}<p>Vous restez libre d'arrêter à tout moment depuis votre espace client.</p>{% endif %}
-{% if lien %}<p style="background:#f4f5f7;padding:12px 14px;border-radius:8px;border-left:3px solid #ffb020"><b>Parrainage :</b> partagez votre lien personnel <a href="{{ lien }}">{{ lien }}</a> à un confrère. Quand il devient client, vous recevez chacun 1 mois offert.</p>
+{% if lien %}<p style="background:#f4f5f7;padding:12px 14px;border-radius:8px;border-left:3px solid #B8F36B"><b>Parrainage :</b> partagez votre lien personnel <a href="{{ lien }}">{{ lien }}</a> à un confrère. Quand il devient client, vous recevez chacun 1 mois offert.</p>
 {% endif %}<p>Bonne chasse aux marchés,</p>
 {% endblock %}

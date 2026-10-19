@@ -1,6 +1,6 @@
 {% extends "_email.html" %}
 {% block contenu %}
-<h2 style="color:#0b1b33;font-size:21px;margin:0 0 14px">Merci pour votre recommandation</h2>
+<h2 style="color:#101C2C;font-size:21px;margin:0 0 14px">Merci pour votre recommandation</h2>
 <p>Bonjour,</p>
 <p>Une entreprise que vous avez invitée vient de devenir cliente de {{ biz.nom }}. Comme promis, <b>un mois de votre offre {{ offre.nom }} ({{ montant }}) vous est offert</b> : il sera déduit automatiquement de votre prochaine facture. Vous n'avez rien à faire.</p>
 <p>Votre lien reste valable, sans limite : <a href="{{ lien }}">{{ lien }}</a></p>

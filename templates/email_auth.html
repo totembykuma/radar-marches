@@ -2,27 +2,27 @@
 {% extends "_email.html" %}
 {% block contenu %}
 {% if cas == "inscription" %}
-<h2 style="color:#0b1b33;font-size:21px;margin:0 0 14px">Confirmez votre adresse e-mail</h2>
+<h2 style="color:#101C2C;font-size:21px;margin:0 0 14px">Confirmez votre adresse e-mail</h2>
 <p>Bonjour,</p>
 <p>Vous venez de créer votre compte {{ biz.nom }}. Cliquez sur le bouton pour confirmer votre adresse : votre espace client s'ouvre ensuite.</p>
-<p style="margin:22px 0"><a href="{% raw %}{{ .SiteURL }}/compte/confirmation/?token_hash={{ .TokenHash }}&type=signup{% endraw %}" style="background:#ffb020;color:#0b1b33;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:8px;display:inline-block">Confirmer mon adresse</a></p>
+<p style="margin:22px 0"><a href="{% raw %}{{ .SiteURL }}/compte/confirmation/?token_hash={{ .TokenHash }}&type=signup{% endraw %}" style="background:#B8F36B;color:#101C2C;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:8px;display:inline-block">Confirmer mon adresse</a></p>
 {% elif cas == "oubli" %}
-<h2 style="color:#0b1b33;font-size:21px;margin:0 0 14px">Choisir un nouveau mot de passe</h2>
+<h2 style="color:#101C2C;font-size:21px;margin:0 0 14px">Choisir un nouveau mot de passe</h2>
 <p>Bonjour,</p>
 <p>Une demande de nouveau mot de passe a été faite pour votre compte {{ biz.nom }}. Cliquez sur le bouton pour en choisir un.</p>
-<p style="margin:22px 0"><a href="{% raw %}{{ .SiteURL }}/compte/confirmation/?token_hash={{ .TokenHash }}&type=recovery{% endraw %}" style="background:#ffb020;color:#0b1b33;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:8px;display:inline-block">Choisir mon mot de passe</a></p>
+<p style="margin:22px 0"><a href="{% raw %}{{ .SiteURL }}/compte/confirmation/?token_hash={{ .TokenHash }}&type=recovery{% endraw %}" style="background:#B8F36B;color:#101C2C;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:8px;display:inline-block">Choisir mon mot de passe</a></p>
 <p>Vous n'êtes pas à l'origine de cette demande ? Ignorez cet e-mail : votre mot de passe actuel reste valable.</p>
 {% elif cas == "changement" %}
-<h2 style="color:#0b1b33;font-size:21px;margin:0 0 14px">Confirmez le changement d'adresse</h2>
+<h2 style="color:#101C2C;font-size:21px;margin:0 0 14px">Confirmez le changement d'adresse</h2>
 <p>Bonjour,</p>
 <p>Votre compte {{ biz.nom }} va passer de <b>{% raw %}{{ .Email }}{% endraw %}</b> à <b>{% raw %}{{ .NewEmail }}{% endraw %}</b>. Cliquez pour confirmer.</p>
-<p style="margin:22px 0"><a href="{% raw %}{{ .SiteURL }}/compte/confirmation/?token_hash={{ .TokenHash }}&type=email_change{% endraw %}" style="background:#ffb020;color:#0b1b33;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:8px;display:inline-block">Confirmer le changement</a></p>
+<p style="margin:22px 0"><a href="{% raw %}{{ .SiteURL }}/compte/confirmation/?token_hash={{ .TokenHash }}&type=email_change{% endraw %}" style="background:#B8F36B;color:#101C2C;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:8px;display:inline-block">Confirmer le changement</a></p>
 <p>Vous n'êtes pas à l'origine de cette demande ? Ne cliquez pas et répondez à cet e-mail.</p>
 {% else %}
-<h2 style="color:#0b1b33;font-size:21px;margin:0 0 14px">Votre lien de connexion</h2>
+<h2 style="color:#101C2C;font-size:21px;margin:0 0 14px">Votre lien de connexion</h2>
 <p>Bonjour,</p>
-<p style="margin:22px 0"><a href="{% raw %}{{ .SiteURL }}/compte/confirmation/?token_hash={{ .TokenHash }}&type=magiclink{% endraw %}" style="background:#ffb020;color:#0b1b33;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:8px;display:inline-block">Me connecter</a></p>
+<p style="margin:22px 0"><a href="{% raw %}{{ .SiteURL }}/compte/confirmation/?token_hash={{ .TokenHash }}&type=magiclink{% endraw %}" style="background:#B8F36B;color:#101C2C;text-decoration:none;font-weight:bold;padding:12px 20px;border-radius:8px;display:inline-block">Me connecter</a></p>
 {% endif %}
-<p style="color:#7a8394;font-size:13px">Ce lien fonctionne une seule fois et pendant 1 heure.</p>
+<p style="color:#647184;font-size:13px">Ce lien fonctionne une seule fois et pendant 1 heure.</p>
 <p>Bien cordialement,</p>
 {% endblock %}

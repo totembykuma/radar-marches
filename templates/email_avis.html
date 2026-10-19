@@ -1,10 +1,10 @@
 {% extends "_email.html" %}
 {% block contenu %}
-<h2 style="color:#0b1b33;font-size:21px;margin:0 0 14px">Un mois de veille ensemble</h2>
+<h2 style="color:#101C2C;font-size:21px;margin:0 0 14px">Un mois de veille ensemble</h2>
 <p>Bonjour,</p>
 <p>Cela fait un mois que {{ biz.nom }} vous envoie les appels d'offres de votre métier. Votre retour, positif ou non, aide d'autres artisans et PME à se décider, et nous aide à nous améliorer.</p>
-<p style="text-align:center;margin:24px 0"><a href="{{ biz.site_url }}/avis/" style="background:#0b1b33;color:#fff;padding:12px 22px;border-radius:8px;text-decoration:none;font-weight:bold">Donner mon avis (1 minute)</a></p>
+<p style="text-align:center;margin:24px 0"><a href="{{ biz.site_url }}/avis/" style="background:#101C2C;color:#fff;padding:12px 22px;border-radius:8px;text-decoration:none;font-weight:bold">Donner mon avis (1 minute)</a></p>
 <p style="font-size:13px;color:#5a6478">Votre avis est publié sur le site avec le nom que vous choisissez, sans tri : bon ou mauvais, il apparaît tel quel. Il n'y a aucune contrepartie.</p>
-{% if lien %}<p style="background:#f4f5f7;padding:12px 14px;border-radius:8px;border-left:3px solid #ffb020"><b>Un confrère pourrait en profiter ?</b> Partagez votre lien personnel : <a href="{{ lien }}">{{ lien }}</a><br>Quand il devient client, vous recevez chacun <b>1 mois offert</b>.</p>{% endif %}
+{% if lien %}<p style="background:#f4f5f7;padding:12px 14px;border-radius:8px;border-left:3px solid #B8F36B"><b>Un confrère pourrait en profiter ?</b> Partagez votre lien personnel : <a href="{{ lien }}">{{ lien }}</a><br>Quand il devient client, vous recevez chacun <b>1 mois offert</b>.</p>{% endif %}
 <p>Merci,</p>
 {% endblock %}

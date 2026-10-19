@@ -1,10 +1,10 @@
 {# Signature commune à tous les e-mails : « L'équipe Radar Marchés », jamais un nom de personne. #}
 {% macro signature(biz, logo=False) -%}
 <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:6px"><tr>
-{% if logo %}<td style="padding-right:14px;vertical-align:middle"><a href="{{ biz.site_url }}" style="text-decoration:none"><img src="{{ biz.site_url }}/static/logo-email.png" width="163" height="32" alt="{{ biz.nom }}" style="display:block;border:0;font-family:Arial,Helvetica,sans-serif;font-size:18px;font-weight:bold;color:#0b1b33"></a></td>{% endif %}
-<td style="border-left:3px solid #ffb020;padding-left:14px;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.55;color:#5b6679;vertical-align:middle">
-<b style="color:#0b1b33;font-size:14px">L'équipe {{ biz.nom }}</b><br>
+{% if logo %}<td style="padding-right:14px;vertical-align:middle"><a href="{{ biz.site_url }}" style="text-decoration:none"><img src="{{ biz.site_url }}/static/logo-email.png" width="163" height="32" alt="{{ biz.nom }}" style="display:block;border:0;font-family:Arial,Helvetica,sans-serif;font-size:18px;font-weight:bold;color:#101C2C"></a></td>{% endif %}
+<td style="border-left:3px solid #B8F36B;padding-left:14px;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.55;color:#647184;vertical-align:middle">
+<b style="color:#101C2C;font-size:14px">L'équipe {{ biz.nom }}</b><br>
 Les appels d'offres de votre métier, chaque matin<br>
-<a href="{{ biz.site_url }}" style="color:#0b1b33;font-weight:bold;text-decoration:none">{{ biz.site_url|replace('https://', '') }}</a> · <a href="mailto:{{ biz.email_contact }}" style="color:#5b6679;text-decoration:none">{{ biz.email_contact }}</a>
+<a href="{{ biz.site_url }}" style="color:#101C2C;font-weight:bold;text-decoration:none">{{ biz.site_url|replace('https://', '') }}</a> · <a href="mailto:{{ biz.email_contact }}" style="color:#647184;text-decoration:none">{{ biz.email_contact }}</a>
 </td></tr></table>
 {%- endmacro %}
