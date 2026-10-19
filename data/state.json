@@ -43,21 +43,28 @@
   "58cadc2b1d19872f": "2026-W43"
  },
  "reponses_vues": [
-  "bcaf3dc2-4661-4287-b4bf-a7fd6acfcc9d"
+  "bcaf3dc2-4661-4287-b4bf-a7fd6acfcc9d",
+  "9b6bcb54-49b8-4e53-8ca6-60f1672144f3"
  ],
- "reponses_auteurs": {},
+ "reponses_auteurs": {
+  "8f6bebb7e6f521f17e05a969": 1
+ },
  "prospects_refus": [],
  "reponses_journal": [
   {
    "date": "2026-10-19",
    "action": "transmis"
+  },
+  {
+   "date": "2026-10-19",
+   "action": "repondu"
   }
  ],
  "ia_usage": {
   "2026-10": {
-   "entree": 1255,
-   "sortie": 700,
-   "cout_usd": 0.000476
+   "entree": 2536,
+   "sortie": 1744,
+   "cout_usd": 0.001126
   }
  }
 }
