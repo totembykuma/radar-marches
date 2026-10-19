@@ -22,7 +22,8 @@
  "criteres_vus": [
   "403a6cc1-e604-4b34-98f5-ab3e5ab0d465",
   "1968090b-1478-45ad-9a53-fc320b918a43",
-  "bd4462de-854b-4d92-bb75-26ee1bf08507"
+  "bd4462de-854b-4d92-bb75-26ee1bf08507",
+  "91910e3a-8143-47e2-b414-a61a149eae90"
  ],
  "parrainage": [],
  "avis_demandes": [],
@@ -35,5 +36,10 @@
  "invitation_compte": [
   "b813ff5fe254519d"
  ],
- "texte_annuel_jour": "2026-10-19"
+ "texte_annuel_jour": "2026-10-19",
+ "annuel_prevenus": [],
+ "resultats": {
+  "e916360b8962214f": "2026-W43",
+  "58cadc2b1d19872f": "2026-W43"
+ }
 }
