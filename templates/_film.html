@@ -4,7 +4,7 @@
    Styles du film : dans ce fichier (préfixe fm-), pour ne pas dépendre du design des pages. #}
 {% import "_ui.html" as ui %}{% if film %}
 {% set av = film.avis %}{% set fi = film.fiche %}{% set lib = metiers[film.metier].libelle %}
-{# data-o = position de la scène dans film.mp3 (la musique reste calée quand on saute d'un chapitre à l'autre) #}
+{# data-o = position de la scène dans film.mp3 : la musique joue d'une traite et n'est recalée que quand on saute de chapitre, reprend ou active le son (sinon coupure à chaque scène) #}
 {% set ordre = ["intro", "tri", "alerte"] + (["fiche"] if fi else []) + ["offres", "fin"] %}
 {% set ns = namespace(o=0, pos={}) %}{% for k in ordre %}{% set _ = ns.pos.update({k: ns.o}) %}{% set ns.o = ns.o + film.sc[k].ms %}{% endfor %}
 {% macro attrs(id) %}data-t="{{ 0 if id == 'fin' else film.sc[id].ms }}" data-o="{{ ns.pos[id] }}" data-titre="{{ film.sc[id].titre }}" data-cap="{{ film.sc[id].cap }}" style="--dur:{{ film.sc[id].ms or 3000 }}ms"{% endmacro %}
@@ -214,7 +214,7 @@
       box=f.querySelector('.film-segs'),wipe=f.querySelector('.fm-wipe'),capT=f.querySelector('.film-cap b'),capS=f.querySelector('.film-cap span'),
       play=f.querySelector('.film-play'),son=f.querySelector('.film-son'),au=f.querySelector('.film-audio'),sound=false,muted=false,big=f.querySelector('.film-big'),cta=f.querySelector('.film-cta'),
       rm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches,
-      i=0,timer=null,left=0,t0=0,playing=false,auto=false,started=false,segs=[];
+      i=0,timer=null,jump=false,left=0,t0=0,playing=false,auto=false,started=false,segs=[];
   function fit(){stage.style.transform='scale('+(view.clientWidth/800)+')'}
   fit();window.addEventListener('resize',fit);if(window.ResizeObserver)new ResizeObserver(fit).observe(view);
   sc.forEach(function(s,n){var b=document.createElement('button');b.type='button';b.className='film-seg';
@@ -225,11 +225,11 @@
     setTimeout(function step(ts){requestAnimationFrame(function(ts){if(s===null)s=ts;var p=Math.min(1,(ts-s)/1300);
       el.textContent=fmt(n*(1-Math.pow(1-p,3)));if(p<1)step()})},d)}
   function off(n){return +sc[n].dataset.o/1000}
-  function music(){if(!au)return;if(sound&&(playing||i===sc.length-1)){var el=+sc[i].dataset.t?(+sc[i].dataset.t-left-(playing?Date.now()-t0:0))/1000:0;var want=off(i)+Math.max(0,el);if(Math.abs(au.currentTime-want)>.35&&i<sc.length-1)au.currentTime=want;var pr=au.play();pr&&pr.catch(function(){})}else au.pause();son.setAttribute('aria-pressed',sound);f.classList.toggle('son',sound)}
+  function music(){if(!au)return;if(sound&&(playing||i===sc.length-1)){var el=+sc[i].dataset.t?(+sc[i].dataset.t-left-(playing?Date.now()-t0:0))/1000:0;var want=off(i)+Math.max(0,el);if(jump&&Math.abs(au.currentTime-want)>.35&&i<sc.length-1)au.currentTime=want;jump=false;var pr=au.play();pr&&pr.catch(function(){})}else au.pause();son.setAttribute('aria-pressed',sound);f.classList.toggle('son',sound)}
   function state(){f.classList.toggle('playing',playing);f.classList.toggle('started',started);f.classList.toggle('fin',i===sc.length-1);
     play.setAttribute('aria-label',i===sc.length-1?'Revoir':playing?'Pause':'Lecture');cta.hidden=i!==sc.length-1;music()}
-  function arm(ms){clearTimeout(timer);left=ms;t0=Date.now();if(playing&&ms>0)timer=setTimeout(function(){go(i+1,playing)},ms)}
-  function go(n,run){clearTimeout(timer);sc.forEach(function(s){s.classList.remove('on')});void stage.offsetWidth;
+  function arm(ms){clearTimeout(timer);left=ms;t0=Date.now();if(playing&&ms>0)timer=setTimeout(function(){go(i+1,playing,true)},ms)}
+  function go(n,run,suite){clearTimeout(timer);jump=!suite;sc.forEach(function(s){s.classList.remove('on')});void stage.offsetWidth;
     if(wipe&&!rm&&n!==i&&started){wipe.classList.remove('go');void wipe.offsetWidth;wipe.classList.add('go')}
     i=n;var s=sc[i],ms=+s.dataset.t;s.classList.add('on');capT.textContent=(i+1)+'/'+sc.length+' · '+s.dataset.titre;capS.textContent=s.dataset.cap;
     segs.forEach(function(b,k){b.className='film-seg'+(k<i?' s-done':'');b.style.setProperty('--dur',(ms||1)+'ms')});
@@ -238,9 +238,9 @@
     playing=!!run&&ms>0;f.classList.remove('paused');arm(ms);state()}
   function toggle(user){if(user&&!muted)sound=true;if(!started||i===sc.length-1){started=true;if(i===sc.length-1&&au)au.currentTime=0;go(i===sc.length-1?0:i,true);return}
     if(playing){playing=false;clearTimeout(timer);left-=Date.now()-t0;f.classList.add('paused')}
-    else{playing=true;f.classList.remove('paused');arm(left)}auto=false;state()}
+    else{playing=true;jump=true;f.classList.remove('paused');arm(left)}auto=false;state()}
   play.onclick=function(){toggle(true)};big.onclick=function(){started=true;if(!muted)sound=true;go(0,true)};
-  son.onclick=function(){sound=!sound;muted=!sound;if(sound&&!started){started=true;go(0,true)}else state()};
+  son.onclick=function(){sound=!sound;muted=!sound;jump=true;if(sound&&!started){started=true;go(0,true)}else state()};
   go(0,false);f.classList.add('paused');
   if(!rm&&window.IntersectionObserver)new IntersectionObserver(function(e){var v=e[0].isIntersecting;
     if(v&&!started){started=true;go(0,true)}else if(v&&auto){auto=false;toggle()}else if(!v&&playing){toggle();auto=true}},{threshold:.55}).observe(view);
