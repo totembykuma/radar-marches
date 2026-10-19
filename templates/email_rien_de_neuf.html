@@ -1,0 +1,22 @@
+{% extends "_email.html" %}
+{% block contenu %}
+<h2 style="color:#0b1b33;font-size:21px;margin:0 0 14px">Pas de nouvel appel d'offres ce matin</h2>
+<p>Bonjour,</p>
+<p>Nous avons vérifié toutes les publications du BOAMP ce {{ date_fr }} : aucun nouvel appel d'offres ne correspond à vos critères aujourd'hui. Votre alerte fonctionne, et vous serez prévenu dès le prochain.</p>
+<p style="background:#f4f5f7;padding:12px 14px;border-radius:8px;border-left:3px solid #ffb020"><b>{{ criteres }}</b></p>
+{% if avis %}
+<p><b>{{ nb_ouverts }} marché{{ 's' if nb_ouverts > 1 }} de vos critères {{ 'sont' if nb_ouverts > 1 else 'est' }} encore ouvert{{ 's' if nb_ouverts > 1 }}</b>{% if nb_ouverts > avis|length %} (les {{ avis|length }} plus urgents){% endif %} :</p>
+{% for a in avis %}
+<p style="margin:0 0 10px;padding:10px 12px;border:1px solid #eceef2;border-radius:8px">
+  <span style="font-size:12px;color:#5a6478">{{ a.acheteur }}{% if a.departements %} · Dép. {{ a.departements|join(', ') }}{% endif %}</span><br>
+  <a href="{{ a.url }}" style="color:#0b1b33;font-weight:bold;text-decoration:none">{{ a.objet }}</a><br>
+  {% if a.date_limite %}<span style="font-size:12px;color:#5a6478">Réponse avant le <b>{{ a.date_limite_fr }}</b></span>{% endif %}
+</p>
+{% endfor %}
+{% endif %}
+{% if voisins %}
+<p><b>Juste à côté, ces derniers jours :</b> {% for d, n in voisins %}{{ n }} dans le {{ d }}{{ ", " if not loop.last }}{% endfor %}.
+{% if pro %}Votre offre inclut tous les départements : ajoutez-les en un clic depuis <a href="{{ lien_compte or biz.site_url ~ '/compte/' }}">votre espace client</a>.{% else %}Pour les recevoir aussi, changez de département ou passez à l'offre Pro (départements illimités) depuis <a href="{{ lien_compte or biz.site_url ~ '/compte/' }}">votre espace client</a>.{% endif %}</p>
+{% endif %}
+<p>Une question, ou des critères à ajuster ? Répondez simplement à cet e-mail.</p>
+{% endblock %}
