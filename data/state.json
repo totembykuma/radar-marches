@@ -44,10 +44,11 @@
  },
  "reponses_vues": [
   "bcaf3dc2-4661-4287-b4bf-a7fd6acfcc9d",
-  "9b6bcb54-49b8-4e53-8ca6-60f1672144f3"
+  "9b6bcb54-49b8-4e53-8ca6-60f1672144f3",
+  "000bfc39-7983-47ca-bc1c-ec074b320429"
  ],
  "reponses_auteurs": {
-  "8f6bebb7e6f521f17e05a969": 1
+  "8f6bebb7e6f521f17e05a969": 2
  },
  "prospects_refus": [],
  "reponses_journal": [
@@ -58,13 +59,17 @@
   {
    "date": "2026-10-19",
    "action": "repondu"
+  },
+  {
+   "date": "2026-10-19",
+   "action": "repondu"
   }
  ],
  "ia_usage": {
   "2026-10": {
-   "entree": 2536,
-   "sortie": 1744,
-   "cout_usd": 0.001126
+   "entree": 3842,
+   "sortie": 2668,
+   "cout_usd": 0.001719
   }
  }
 }
