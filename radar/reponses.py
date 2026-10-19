@@ -74,9 +74,9 @@ def _faits(biz, metiers):
 
 def _consigne(faits, texte, sujet):
     return ("Tu réponds, au nom de « L'équipe Radar Marchés », à une entreprise qui a répondu à notre e-mail de prospection. "
-            "Règles : français, vouvoiement, 3 à 6 phrases, ton simple et chaleureux, pas de liste à puces. "
+            "Règles : français, vouvoiement, 3 phrases courtes au maximum, simple et direct, sans formule creuse, pas de liste à puces, pas de gras. Réponds seulement à la question posée. "
             "N'affirme RIEN qui ne soit pas dans les faits ci-dessous (pas de remise, pas de promesse de gain, pas de délai, "
-            "pas de nom de personne, pas de numéro de téléphone). Termine par le lien d'abonnement si c'est utile. "
+            "pas de nom de personne, pas de numéro de téléphone). Termine par le lien d'abonnement, une seule fois. "
             "Ne signe pas (la signature est ajoutée). "
             "Si le message demande autre chose qu'une information couverte par les faits (négociation, partenariat, plainte, "
             "colère, demande juridique, devis particulier, rendez-vous, appel téléphonique, question technique précise, "
@@ -165,7 +165,7 @@ def traiter(biz, metiers, state, alert_owner, session=None, ask_fn=None, today=N
                 d = _json((ask_fn or ai.ask)(_consigne(_faits(biz, metiers), texte, sujet),
                                              model=biz["ia"]["modele"], max_tokens=1500, usage=usage))
             reponse = (d.get("reponse") or "").strip()
-            if d.get("action") == "repondre" and 40 <= len(reponse) <= 1500:
+            if d.get("action") == "repondre" and 40 <= len(reponse) <= 700:
                 mailer.send(exp, sujet_re, render("email_reponse_prospect.html", biz=biz, corps=_html(reponse)),
                             conf["expediteur"], reply_to=adresse)
                 auteurs[hx] = auteurs.get(hx, 0) + 1
