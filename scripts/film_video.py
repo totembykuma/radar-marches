@@ -24,14 +24,14 @@ window.__step=dt=>{const end=vt+dt;for(;;){q.sort((a,b)=>a.t-b.t);if(!q.length||
  vt=end;raf.splice(0).forEach(f=>f(vt));
  document.getAnimations().forEach(an=>{if(!seen.has(an))seen.set(an,vt);an.pause();an.currentTime=vt-seen.get(an)})};})();"""
 CSS = """
-html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:radial-gradient(1200px 700px at 85% -10%,#1f4c8f 0%,transparent 60%),linear-gradient(160deg,#0b1b33,#13294b)!important}
+html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:radial-gradient(1200px 700px at 85% -10%,#22344d 0%,transparent 60%),#101C2C!important}
 body>*{display:none!important}body>#film{display:block!important}
 #film{position:fixed;left:160px;top:36px;width:1600px;max-width:none;margin:0}
 #film .film-view{width:1600px;height:900px;border-radius:28px;box-shadow:0 40px 80px -30px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.08)}
 #film .film-ctrl,#film .film-big,#film .film-poster{display:none!important}
-#film .film-cap{margin:30px 0 0;min-height:0;text-align:center;color:#e6edf8;font-size:31px;line-height:1.35}
-#film .film-cap b{color:#ffb020}
-#film .film-cta{font-size:34px;padding:24px 46px;border-radius:20px}
+#film .film-cap{margin:30px 0 0;min-height:0;text-align:center;color:#F5F3ED;font-size:31px;line-height:1.35}
+#film .film-cap b{color:#B8F36B}
+#film .film-cta{font-size:34px;padding:24px 46px;border-radius:20px;background:#B8F36B;color:#101C2C}
 """
 
 
