@@ -328,6 +328,46 @@ def run_veille():
     return {"ok": False, "relance": True}
 
 
+def envoyer_rien_de_neuf(subs, plans, avis_new, avis_open, biz, metiers, matcher, state, run):
+    """Abonné sans nouvel avis ce matin : il reçoit quand même son point du jour (jamais de silence qui fait croire à une panne).
+    On y montre ses marchés encore ouverts et ce qui vient de paraître dans les départements voisins de sa région."""
+    jour = date.today().isoformat()
+    faits = state.setdefault("rien_de_neuf", {})
+    ouverts_tous = avis_open if avis_open else avis_new
+    for s in subs:
+        if not s["metiers"] and not s.get("mots_cles"):
+            continue
+        key = hashlib.sha256(s["email"].lower().encode()).hexdigest()[:16]
+        if key in plans or faits.get(key) == jour:
+            continue
+        ouverts = [dict(a) for a in matcher.for_subscriber(ouverts_tous, s) if (a.get("date_limite") or "")[:10] >= jour]
+        ouverts.sort(key=lambda a: a["date_limite"])
+        for a in ouverts:
+            a["date_limite_fr"] = date_limite_fr(a["date_limite"])
+        voisins = []
+        if s["departements"]:
+            region = {d for x in s["departements"] for d in barometre.REGIONS.get(barometre.REGION_DE.get(x, ""), "").split()}
+            autres = sorted(region - set(s["departements"]))
+            if autres:
+                n = {}
+                for a in matcher.for_subscriber(avis_new, {**s, "departements": autres, "mots_cles": []}):
+                    for d in set(a["departements"]) & set(autres):
+                        n[d] = n.get(d, 0) + 1
+                voisins = sorted(n.items(), key=lambda x: -x[1])[:4]
+        html = render("email_rien_de_neuf.html", biz=biz, avis=ouverts[:5], nb_ouverts=len(ouverts), voisins=voisins,
+                      date_fr=date_fr(), criteres=criteres_txt(s, metiers), pro=s.get("plan") in subscribers.PLANS_PRO,
+                      lien_compte=compte.lien(biz, s, metiers))
+        try:
+            res = mailer.send(s["email"], f"Pas de nouvel appel d'offres ce matin · {len(ouverts)} encore ouvert{'s' if len(ouverts) > 1 else ''} pour vous",
+                              html, biz["email_expediteur"], reply_to=biz.get("email_proprietaire") or biz["email_contact"])
+            if not res.get("simulated") or os.getenv("RADAR_DEMO") == "1":
+                faits[key] = jour
+            run["emails_rien_de_neuf"] = run.get("emails_rien_de_neuf", 0) + 1
+        except Exception as exc:
+            run["erreurs"].append(f"point du jour sans nouveauté non envoyé : {safe(exc)}")
+    state["rien_de_neuf"] = {k: v for k, v in faits.items() if v >= (date.today() - timedelta(days=7)).isoformat()}
+
+
 def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, histo=None):
     biz, metiers = business(), load_metiers()
     matcher = Matcher(metiers)
@@ -527,6 +567,10 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
                 log.warning("IndexNow : %s", safe(exc))
     except Exception as exc:
         run["erreurs"].append(f"site non généré : {safe(exc)}")
+
+    # 6a. Jour ouvré sans nouvel avis pour un abonné : un court e-mail plutôt que le silence (marchés encore ouverts + voisins)
+    if date.today().weekday() < 5 and not collecte_ko:
+        envoyer_rien_de_neuf(subs, plans, avis_new, avis_open, biz, metiers, matcher, state, run)
 
     # 6b. Alerte gratuite limitée : inscriptions / désinscriptions reçues, puis 3 marchés par semaine (dans la limite Resend du jour)
     if avis_open is not None:
@@ -783,7 +827,7 @@ RESEND_JOUR, RESEND_MOIS, MARGE_JOUR, MARGE_MOIS = 100, 3000, 20, 300
 
 
 def _envois(run):
-    return sum(int(run.get(k) or 0) for k in ("emails_envoyes", "emails_gratuits", "bienvenues", "rappels_essai"))
+    return sum(int(run.get(k) or 0) for k in ("emails_envoyes", "emails_rien_de_neuf", "emails_gratuits", "bienvenues", "rappels_essai"))
 
 
 def quota_prospection(par_jour, journal, today=None):

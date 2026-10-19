@@ -1265,3 +1265,29 @@ def test_annuel_rappel_30_jours_et_echec_paiement():
     out = annuel.a_prevenir(subs, set(), now)
     assert [(s["email"], g) for s, g, _ in out] == [("a@x.fr", "rappel"), ("d@x.fr", "echec")]
     assert annuel.a_prevenir(subs, {c for _, _, c in out}, now) == []
+
+
+def test_point_du_jour_sans_nouveaute(monkeypatch, tmp_path):
+    import radar.cli as cli
+    from radar.config import business, metiers as load_metiers
+    from radar.matching import Matcher
+    biz, metiers = business(), load_metiers()
+    envoyes = []
+    monkeypatch.setattr(cli.mailer, "send", lambda to, sujet, html, *a, **k: envoyes.append((to, sujet, html)) or {"id": "x"})
+
+    def avis(i, dep):
+        return {"id": str(i), "objet": f"Nettoyage des locaux lot {i}", "acheteur": "Mairie", "departements": [dep],
+                "descripteurs": ["Nettoyage"], "date_parution": "2099-01-01", "date_limite": f"2099-02-0{i}", "url": "https://x/",
+                "nature": "", "type_marche": "", "texte": "", "pme": "", "metiers": ["nettoyage"]}
+    ouverts, recents = [avis(1, "75"), avis(2, "75")], [avis(3, "92"), avis(4, "93"), avis(5, "92"), avis(6, "33")]
+    subs = [{"email": "a@example.com", "plan": "pro", "metiers": ["nettoyage"], "departements": ["75"], "mots_cles": []},
+            {"email": "b@example.com", "plan": "pro", "metiers": ["nettoyage"], "departements": ["92"], "mots_cles": []}]
+    cle_b = cli.hashlib.sha256(b"b@example.com").hexdigest()[:16]
+    state, run = {}, {"erreurs": []}
+    cli.envoyer_rien_de_neuf(subs, {cle_b: None}, recents, ouverts, biz, metiers, Matcher(metiers), state, run)
+    assert [e[0] for e in envoyes] == ["a@example.com"]           # b a reçu son alerte du jour : rien de plus
+    to, sujet, html = envoyes[0]
+    assert "2 encore ouverts" in sujet and "Nettoyage des locaux lot 1" in html
+    assert "2 dans le 92" in html and "1 dans le 93" in html and "dans le 33" not in html
+    cli.envoyer_rien_de_neuf(subs, {cle_b: None}, recents, ouverts, biz, metiers, Matcher(metiers), state, run)
+    assert len(envoyes) == 1 and run["emails_rien_de_neuf"] == 1  # une seule fois par jour
