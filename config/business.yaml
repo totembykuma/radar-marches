@@ -121,4 +121,7 @@ editeur:
 prospection:
   actif: true
   par_jour: 20        # plafonné automatiquement pour rester dans l'offre gratuite Resend (100/jour, 3 000/mois)
+  par_jour_ensuite: 35          # à partir de ensuite_depuis, seulement si la semaine passée a < 5 % de rebonds/plaintes
+  ensuite_depuis: "2026-10-27"  # une semaine de clics mesurés d'abord
+  reponses_adresse: "reponse@elkaurtel.resend.app"   # les prospects répondent à l'agent IA (radar/reponses.py, bienvenue.yml)
   expediteur: "Radar Marchés <bonjour@radar-marches.fr>"

@@ -99,8 +99,8 @@ def enrich(avis_list, model="claude-haiku-5-5", batch=25, session=None, cache=No
     return stats
 
 
-def ask(prompt, model="claude-haiku-5-5", max_tokens=1500, session=None, timeout=120):
-    """Question libre (rapport hebdo). Renvoie '' si pas de clé ou erreur."""
+def ask(prompt, model="claude-haiku-5-5", max_tokens=1500, session=None, timeout=120, usage=None):
+    """Question libre (rapport hebdo). Renvoie '' si pas de clé ou erreur. usage : dict complété (entree, sortie, cout_usd)."""
     key = (os.getenv("ANTHROPIC_API_KEY") or "").strip()
     if not key:
         return ""
@@ -110,7 +110,14 @@ def ask(prompt, model="claude-haiku-5-5", max_tokens=1500, session=None, timeout
             "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json"},
             json={"model": model, "max_tokens": max_tokens, "messages": [{"role": "user", "content": prompt}]})
         r.raise_for_status()
-        return "".join(b.get("text", "") for b in r.json().get("content", []))
+        data = r.json()
+        if usage is not None:
+            u = data.get("usage") or {}
+            e, s = int(u.get("input_tokens") or 0), int(u.get("output_tokens") or 0)
+            usage["entree"] = usage.get("entree", 0) + e
+            usage["sortie"] = usage.get("sortie", 0) + s
+            usage["cout_usd"] = round(usage.get("cout_usd", 0.0) + cout_usd(model, e, s), 6)
+        return "".join(b.get("text", "") for b in data.get("content", []))
     except Exception as exc:
         log.warning("Appel IA échoué : %s", exc)
         return ""

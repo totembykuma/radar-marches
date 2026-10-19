@@ -1,6 +1,7 @@
 """Génère le site statique : page de vente + pages SEO par métier et département, mises à jour chaque jour."""
 import hashlib
 import json
+import logging
 import re
 import shutil
 from collections import Counter, defaultdict
@@ -16,6 +17,8 @@ from . import comptes, linkedin
 from .config import ROOT
 from .render import date_fr, date_limite_fr, render, render_string
 from .textutil import slugify
+
+log = logging.getLogger(__name__)
 
 
 def _jours_restants(s, today):
@@ -422,8 +425,13 @@ def indexnow(biz, out_dir, session=None):
     base = biz["site_url"].rstrip("/")
     urls = re.findall(r"<loc>([^<]+)</loc>", (Path(out_dir) / "sitemap.xml").read_text(encoding="utf-8"))[:10000]
     cle = indexnow_cle(biz)
-    r = (session or requests).post("https://api.indexnow.org/indexnow", timeout=60, json={
-        "host": base.split("://")[-1], "key": cle, "keyLocation": f"{base}/{cle}.txt", "urlList": urls})
+    corps = {"host": base.split("://")[-1], "key": cle, "keyLocation": f"{base}/{cle}.txt", "urlList": urls}
+    # api.indexnow.org relaie à tous les moteurs ; s'il refuse (403 = clé pas encore vérifiée), Bing en direct.
+    for point in ("https://api.indexnow.org/indexnow", "https://www.bing.com/indexnow"):
+        r = (session or requests).post(point, timeout=60, json=corps)
+        if r.status_code in (200, 202):
+            break
+        log.warning("IndexNow %s : %s %s", point, r.status_code, (r.text or "")[:200])
     return r.status_code, len(urls)
 
 
