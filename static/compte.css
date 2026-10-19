@@ -127,8 +127,8 @@ body.app-on .ra{display:none}body.app-on.ra-on .ra{display:block}
 /* Indicateurs */
 .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:0 0 18px}.kpis[hidden]{display:none}
 .kpi{position:relative;display:flex;flex-direction:column;gap:2px;padding:18px 18px 16px;background:#fff;border:1px solid var(--trait);border-radius:16px;text-decoration:none;color:var(--ink);transition:transform .15s,box-shadow .15s;overflow:hidden}
-.kpi:before{content:"";position:absolute;inset:0 0 auto;height:4px;background:var(--menthe)}
-.kpi-bleu:before{background:var(--bleu)}.kpi-rouge:before{background:var(--rouge)}.kpi-ambre:before{background:var(--accent)}
+/* Indicateurs neutres (système de design 2026-10-19) : seul « à rendre » garde une pastille rouge, signal d'urgence. */
+.kpi-rouge .kpi-lib:before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--rouge);margin-right:7px;vertical-align:middle}
 .kpi:hover{transform:translateY(-2px);box-shadow:0 10px 24px -14px rgba(15,26,46,.35)}
 .kpi-lib{font-size:13.5px;color:var(--muted);font-weight:600}
 .kpi b{font-family:var(--title);font-size:34px;line-height:1.1;font-weight:800;letter-spacing:-.02em}
@@ -138,8 +138,7 @@ body.app-on .ra{display:none}body.app-on.ra-on .ra{display:block}
 .raccourcis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
 .raccourcis a{display:grid;grid-template-columns:auto 1fr;column-gap:12px;align-items:center;padding:14px 16px;background:#fff;border:1px solid var(--trait);border-radius:14px;text-decoration:none;color:var(--ink);transition:border-color .15s,transform .15s}
 .raccourcis a:hover{border-color:var(--accent);transform:translateY(-1px)}
-.raccourcis .ic{grid-row:span 2;width:38px;height:38px;padding:9px;border-radius:11px;background:var(--bleu-doux);color:#2f5bd8}
-.raccourcis a:nth-child(2) .ic{background:var(--ambre-doux);color:#b45309}.raccourcis a:nth-child(3) .ic{background:var(--vert-doux);color:#0d7a55}.raccourcis a:nth-child(5) .ic{background:#fde9f0;color:#c0265b}
+.raccourcis .ic{grid-row:span 2;width:38px;height:38px;padding:9px;border-radius:11px;background:#eef2f8;color:var(--navy2)}
 .raccourcis b{font-size:14.5px}.raccourcis span{font-size:13px;color:var(--muted)}
 .raccourcis a[hidden]{display:none}
 

@@ -2,7 +2,7 @@
 {% set promo = biz.promo if biz.promo and (biz.promo.publie or promo_apercu) and biz.offres[biz.promo.offre].lien_paiement else None %}
 {% set nb_offres = "trois" if biz.cle_actif else "deux" %}
 {% if promo %}<div class="promo-bar" id="promo-bar" hidden data-semaine="{{ promo.semaine }}"><div class="wrap">
-  <b>Cette semaine</b> : l'offre {{ biz.offres[promo.offre].nom }} à <b>{{ promo.prix }} €/mois au lieu de {{ biz.offres[promo.offre].prix_mensuel }} €</b> pendant {{ promo.mois }} mois, puis la baisse habituelle avec l'ancienneté ({{ promo.places_par_jour }} places par jour).
+  <b>Cette semaine</b> : l'offre {{ biz.offres[promo.offre].nom }} à <b>{{ promo.prix }} €/mois au lieu de {{ biz.offres[promo.offre].prix_mensuel }} €</b><span class="hide-sm"> pendant {{ promo.mois }} mois, puis la baisse habituelle avec l'ancienneté ({{ promo.places_par_jour }} places par jour).</span>
   <a href="#tarifs">J'en profite →</a>
 </div></div>{% endif %}
 
@@ -26,7 +26,7 @@
         <div><b>Vos marchés du jour</b><small>{{ biz.nom }} · ce matin, 6&nbsp;h&nbsp;20</small></div>
         {% if exemple %}<span class="a-mail-n">{{ exemple|length }} nouveau{{ "x" if exemple|length > 1 }}</span>{% endif %}
       </div>
-      {% if ex_key %}<div class="a-mail-filtre"><span class="a-pill"><span style="color:{{ ui.couleur(ex_key) }}">{{ ui.icone(ex_key, 15) }}</span>{{ metiers[ex_key].libelle }}</span><span class="a-pill">Vos départements</span></div>{% endif %}
+      {% if ex_key %}<div class="a-mail-filtre"><span class="a-pill"><span>{{ ui.icone(ex_key, 15) }}</span>{{ metiers[ex_key].libelle }}</span><span class="a-pill">Vos départements</span></div>{% endif %}
       <ul class="a-mail-liste">
       {% for a in (exemple or [])[:3] %}
         <li>
@@ -60,8 +60,8 @@
 </section>
 
 <section class="a-fond" id="fiche"><div class="wrap a-bloc">
-  <p class="kicker">Ce que vous recevez</p>
-  <h2>De quoi décider vite si un marché vaut le coup.</h2>
+  <p class="kicker">Ce que vous avez</p>
+  <h2>Trouver les bons marchés. Puis les gagner.</h2>
   <div class="a-bento">
     {% if film and film.fiche %}{% set av = film.avis %}{% set fi = film.fiche %}{% set barres = fi.derniers|selectattr("montant")|list %}{% set lib = metiers[film.metier].libelle|lower %}{% set reel = true %}
     {% else %}{% set av = {"acheteur": "Commune de Saint-Exemple", "departements": ["33"], "objet": "Entretien des espaces verts des écoles et du cimetière", "date_limite_fr": "12/11", "pme": true} %}{% set fi = {"n": 3, "mois": 24, "montant_median": 38000, "offres_median": 4} %}{% set barres = [{"date_fr": "03/2026", "montant": 41200, "offres": 5}, {"date_fr": "09/2025", "montant": 36800, "offres": 3}, {"date_fr": "02/2025", "montant": 34500, "offres": 4}] %}{% set lib = "espaces verts" %}{% set reel = false %}{% endif %}
@@ -78,20 +78,26 @@
         <p class="a-fiche-note">{% if reel %}Exemple réel, mis à jour chaque jour (BOAMP et données officielles de la commande publique).{% else %}Exemple d'affichage avec des données fictives.{% endif %}</p>
       </div>
     </article>
-    <article class="a-carte" style="--c:#4c7dff">
+    <article class="a-carte a-module">
       <span class="a-ic">{{ ui.icone("communication-web", 22) }}</span>
-      <h3>L'alerte du matin</h3>
-      <p>Objet, acheteur, lieu, date limite et lien vers l'avis officiel{% if biz.ia_active %}, avec un résumé en une phrase{% endif %}. Rien quand il n'y a rien de nouveau.</p>
+      <div><p class="a-mod-k">Veille</p><h3>L'alerte du matin</h3>
+      <p>Objet, acheteur, lieu, date limite et lien vers l'avis officiel{% if biz.ia_active %}, avec un résumé en une phrase{% endif %}. Rien quand il n'y a rien de nouveau.</p></div>
     </article>
-    <article class="a-carte" style="--c:#16a37a">
+    <article class="a-carte a-module">
       <span class="a-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span>
-      <h3>Le bilan du lundi <span class="a-tag">Pro</span></h3>
-      <p>Qui a gagné les marchés de votre métier dans votre secteur la semaine passée, et à quel prix quand il est publié.</p>
+      <div><p class="a-mod-k">Concurrence</p><h3>Le bilan du lundi <span class="a-tag">Pro</span></h3>
+      <p>Qui a gagné les marchés de votre métier dans votre secteur la semaine passée, et à quel prix quand il est publié.</p></div>
     </article>
-    <article class="a-carte" style="--c:#e5484d">
-      <span class="a-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg></span>
-      <h3>Votre espace client</h3>
-      <p>Tous vos marchés reçus, vos favoris, les échéances proches avec un rappel 3 jours avant, et votre abonnement.</p>
+    <article class="a-carte a-module">
+      <span class="a-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg></span>
+      <div><p class="a-mod-k">Marchés attribués</p><h3>Qui a gagné quoi</h3>
+      <p>Les marchés attribués des 12 derniers mois, entreprise par entreprise, en accès libre. <a href="entreprises/">Voir les lauréats</a></p></div>
+    </article>
+    <article class="a-carte a-module">
+      <span class="a-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M9 14h6M9 17h4"/></svg></span>
+      <div><p class="a-mod-k">Rédaction</p>{% if biz.dossier_actif %}<h3>Le dossier prêt à signer</h3>
+      <p>Vous envoyez le dossier du marché, vous recevez votre réponse rédigée au format Word{% if biz.cle_actif %} (2 par mois incluses dans Clé en main){% endif %}. <a href="dossier/">En savoir plus</a></p>{% else %}<h3>Les guides pour répondre</h3>
+      <p>DC1, DC2, mémoire technique, prix : les étapes pour répondre quand on est artisan ou petite entreprise. <a href="guides/">Lire les guides</a></p>{% endif %}</div>
     </article>
   </div>
 </div></section>
