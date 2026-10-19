@@ -81,22 +81,10 @@ MOIS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sep
 
 
 def _film_scenes():
-    """Texte (config/film.yaml) et minutage de la voix off (config/film_temps.json, écrit par scripts/film_audio.py)."""
+    """Texte et durée de chaque scène du film de l'accueil (config/film.yaml)."""
     from .config import ROOT
     scenes = yaml.safe_load((ROOT / "config" / "film.yaml").read_text(encoding="utf-8"))["scenes"]
-    p = ROOT / "config" / "film_temps.json"
-    temps = json.loads(p.read_text(encoding="utf-8"))["scenes"] if p.exists() else {}
-    out = {}
-    for s in scenes:
-        t = temps.get(s["id"]) or {"ms": round(1000 * (1.1 + sum(len(x) / 15.5 + .38 for x in s["voix"]))), "marks": []}
-        marks = list(t["marks"])
-        if len(marks) != len(s["voix"]):   # texte changé ou voix pas encore enregistrée : estimation
-            pos, marks = 700, []
-            for x in s["voix"]:
-                marks.append(pos)
-                pos += round(1000 * (len(x) / 15.5 + .38))
-        out[s["id"]] = {"titre": s["titre"], "cap": s["cap"], "ms": t["ms"], "m": [m / 1000 for m in marks]}
-    return out
+    return {s["id"]: {"titre": s["titre"], "cap": s["cap"], "ms": s["ms"]} for s in scenes}
 
 
 def _film(by_metier, histo=None, essais=8):
