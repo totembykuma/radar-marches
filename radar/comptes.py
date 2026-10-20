@@ -337,8 +337,9 @@ def valider_criteres(biz, metiers, plan, c):
     return meta, {"metiers": [c["metier"]], "departements": deps, "mots_cles": mots}
 
 
-def pousser_criteres(supa, subs, biz, metiers, criteres_txt, stripe_update, maintenant=None):
-    """Applique dans Stripe (lu par l'envoi du matin) les critères modifiés dans l'espace client, puis confirme par e-mail."""
+def pousser_criteres(supa, subs, biz, metiers, criteres_txt, stripe_update, maintenant=None, nouveaux=None):
+    """Applique dans Stripe (lu par l'envoi du matin) les critères modifiés dans l'espace client, puis confirme par e-mail.
+    `nouveaux(s)` (facultatif) renvoie les appels d'offres récents des nouveaux critères, déposés dans l'espace et joints à l'e-mail."""
     maintenant = maintenant or datetime.now(timezone.utc)
     comptes = {c["user_id"]: c for c in supa.select("comptes", select="user_id,email,offre,statut,stripe_subscription")}
     par_sub = {s.get("stripe_subscription"): s for s in subs if s.get("stripe_subscription")}
@@ -374,9 +375,18 @@ def pousser_criteres(supa, subs, biz, metiers, criteres_txt, stripe_update, main
                     user_id=f"eq.{c['user_id']}", maj=f"eq.{c['maj']}")
         s.update(appliques)
         faits += 1
+        recents = []
+        if nouveaux:
+            try:
+                recents = nouveaux(s) or []
+                if recents:
+                    enregistrer_alertes(supa, s["email"], recents, aujourd_hui=maintenant.date())
+            except Exception as exc:
+                erreurs.append(f"marchés des nouveaux critères non déposés : {str(exc)[:120]}")
+                recents = []
         try:
-            mailer.send(s["email"], f"{biz['nom']} : vos critères sont à jour",
-                        render("email_criteres.html", biz=biz, ok=True, criteres=criteres_txt(s, metiers), espace=True),
+            mailer.send(s["email"], f"{biz['nom']} : vos critères sont à jour" + (f", {len(recents)} marchés pour vous" if recents else ""),
+                        render("email_criteres.html", biz=biz, ok=True, criteres=criteres_txt(s, metiers), espace=True, recents=recents),
                         biz["email_expediteur"], reply_to=biz["email_contact"])
         except Exception as exc:
             erreurs.append(f"confirmation de critères non envoyée : {str(exc)[:120]}")
@@ -395,6 +405,22 @@ def enregistrer_alertes(supa, email, avis, aujourd_hui=None):
              "url": a.get("url") or None, "resume": (a.get("resume") or "")[:400] or None} for a in avis]
     supa.upsert("alertes", rows, conflit="email,avis_id", ignorer=True)
     return len(rows)
+
+
+def recents_pour(avis, s, matcher, metiers, aujourd_hui, exclus=(), n=3):
+    """Les n appels d'offres les plus récents de la veille de `s`, encore ouverts assez longtemps pour y répondre
+    (date limite à 7 jours ou plus, sinon 3), hors avis `exclus`."""
+    trouves = [dict(a) for a in matcher.for_subscriber(avis, s) if a["id"] not in exclus]
+    for marge in (7, 3):
+        borne = (aujourd_hui + timedelta(days=marge)).isoformat()
+        choix = [a for a in trouves if (a.get("date_limite") or "")[:10] >= borne]
+        if len(choix) >= n:
+            break
+    choix = sorted(choix, key=lambda a: (a.get("date_parution") or "", a["id"]), reverse=True)[:n]
+    for a in choix:
+        m = next((m for m in s.get("metiers") or [] if m in (a.get("metiers") or matcher.metiers_of(a))), None)
+        a["metier_libelle"] = metiers[m]["libelle"].lower() if m in metiers else ""
+    return choix
 
 
 def marches_de_depart(supa, subs, utilisateurs, charger, matcher, metiers, deja, aujourd_hui=None, n=3):
@@ -420,16 +446,7 @@ def marches_de_depart(supa, subs, utilisateurs, charger, matcher, metiers, deja,
         return {}
     avis, faits = charger(), {}
     for email, s in a_faire:
-        trouves = matcher.for_subscriber(avis, s)
-        for marge in (7, 3):
-            borne = (j + timedelta(days=marge)).isoformat()
-            choix = [a for a in trouves if (a.get("date_limite") or "")[:10] >= borne]
-            if len(choix) >= n:
-                break
-        choix = sorted(choix, key=lambda a: (a.get("date_parution") or "", a["id"]), reverse=True)[:n]
-        for a in choix:
-            m = next((m for m in s["metiers"] if m in (a.get("metiers") or matcher.metiers_of(a))), None)
-            a["metier_libelle"] = metiers[m]["libelle"].lower() if m in metiers else ""
+        choix = recents_pour(avis, s, matcher, metiers, j, n=n)
         if choix:
             enregistrer_alertes(supa, email, choix, aujourd_hui=j)
             faits[email] = choix

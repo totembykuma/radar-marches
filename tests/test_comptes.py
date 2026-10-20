@@ -436,3 +436,39 @@ def test_demandes_espace_traitees_des_la_bienvenue(monkeypatch, metiers):
     assert appels[0]["limite"] == 2 and run["demandes_espace"] == 1
     cli.espace_vite({"cle_actif": False}, metiers, [], db, run)
     assert len(appels) == 1
+
+
+def test_criteres_modifies_envoient_3_marches(biz, metiers, monkeypatch):
+    envoyes = []
+    monkeypatch.setattr(comptes.mailer, "send", lambda to, sujet, html, *a, **k: envoyes.append((to, sujet, html)))
+    db = FausseBase([_u("u1", "a@exemple.fr")])
+    subs = [_s("a@exemple.fr", plan="pro", sub="sub_a")]
+    comptes.synchroniser(db, subs, biz, metiers, MAINTENANT)
+    db.update("criteres", {"metier": "peinture", "departements": ["33"], "maj": (MAINTENANT + timedelta(minutes=5)).isoformat()}, user_id="eq.u1")
+    vus = []
+
+    def nouveaux(s):
+        vus.append(list(s["metiers"]))           # appelé avec les critères déjà mis à jour
+        return [{"id": f"26-{i}", "objet": f"Peinture école {i}", "acheteur": "Mairie", "ville": "Bordeaux",
+                 "date_limite": "2026-11-20", "url": f"https://www.boamp.fr/{i}"} for i in (1, 2, 3)]
+    n, errs = comptes.pousser_criteres(db, subs, biz, metiers, cli.criteres_txt, lambda *a: None,
+                                       MAINTENANT + timedelta(minutes=10), nouveaux=nouveaux)
+    assert n == 1 and not errs and vus == [["peinture"]]
+    assert sorted(r["avis_id"] for r in db.t["alertes"]) == ["26-1", "26-2", "26-3"]
+    to, sujet, html = envoyes[-1]
+    assert to == "a@exemple.fr" and "3 marchés" in sujet and "Peinture école 2" in html and "20/11" in html
+
+
+def test_nouveaux_marches_exclut_deja_envoyes(metiers, monkeypatch):
+    def avis(i):
+        return {"id": f"26-{i}", "objet": "Nettoyage des locaux de la mairie", "descripteurs": [], "departements": ["75"],
+                "date_limite": "2099-12-01", "date_parution": f"2026-10-1{i}", "nature": "Avis de marché"}
+    appels = []
+    monkeypatch.setattr(cli.boamp, "fetch_open", lambda days: appels.append(days) or [avis(i) for i in range(1, 6)])
+    state, run = {"sent": {}}, {}
+    pour = cli.nouveaux_marches(metiers, state, run)
+    s = _s("x@exemple.fr")
+    premiers = [a["id"] for a in pour(s)]
+    seconds = [a["id"] for a in pour(s)]
+    assert premiers == ["26-5", "26-4", "26-3"] and seconds == ["26-2", "26-1"] and len(appels) == 1
+    assert run["marches_criteres"] == 5 and len(next(iter(state["sent"].values()))) == 5

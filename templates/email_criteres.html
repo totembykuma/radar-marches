@@ -5,6 +5,15 @@
 <p>Bonjour,</p>
 <p>C'est fait. À partir de la prochaine alerte, vous recevrez les appels d'offres correspondant à :</p>
 <p style="background:#f4f5f7;padding:12px 14px;border-radius:8px;border-left:3px solid #B8F36B"><b>{{ criteres }}</b></p>
+{% if recents %}
+<h3 style="color:#101C2C;font-size:18px;margin:22px 0 10px">{{ recents|length }} appel{{ 's' if recents|length > 1 }} d'offres récent{{ 's' if recents|length > 1 }} pour vous, tout de suite</h3>
+{% for a in recents %}<div style="border:1px solid #E1E5EA;border-left:4px solid #B8F36B;border-radius:10px;padding:12px 14px;margin:0 0 10px">
+  <div style="font-weight:700;color:#101C2C;font-size:15px">{{ a.objet }}</div>
+  <div style="color:#5E6A7C;font-size:13.5px;margin-top:3px">{{ a.acheteur or "" }}{% if a.ville %} · {{ a.ville }}{% endif %}{% if a.date_limite %} · avant le {{ a.date_limite[8:10] }}/{{ a.date_limite[5:7] }}{% endif %}</div>
+  {% if a.url %}<div style="margin-top:8px"><a href="{{ a.url }}" style="color:#101C2C;font-weight:700">Voir l'avis →</a></div>{% endif %}
+</div>{% endfor %}
+{% if espace %}<p>Ils sont aussi dans votre <a href="{{ biz.site_url }}/compte/#marches">espace client</a>, avec les boutons Rapport et Dossier.</p>{% endif %}
+{% endif %}
 {% if espace %}<p>Pour changer à nouveau : <a href="{{ biz.site_url }}/compte/">Mon compte</a>, rubrique « Mes critères ».</p>{% else %}<p>Pour changer à nouveau, utilisez le même <a href="{{ biz.site_url }}/criteres/">formulaire</a>.</p>{% endif %}
 {% else %}
 <h2 style="color:#101C2C;font-size:21px;margin:0 0 14px">Adresse non reconnue</h2>
