@@ -3,11 +3,13 @@
 Le client choisit son métier, ses départements et ses mots-clés dans les champs
 personnalisés du lien de paiement Stripe. On relit ces champs à chaque envoi.
 Un fichier data/abonnes_manuels.yaml permet d'ajouter des comptes test ou offerts.
-Le propriétaire peut avoir un accès offert (acces_proprietaire dans business.yaml, adresse = secret OWNER_EMAIL) :
+Le propriétaire peut avoir un accès offert (acces_proprietaire dans business.yaml, adresse = secret OWNER_EMAIL,
+autres adresses offertes = secret ACCES_OFFERTS) :
 source « interne », jamais compté dans les ventes ni les abonnés.
 """
 import logging
 import os
+import re
 
 import requests
 import yaml
@@ -115,15 +117,19 @@ def from_file():
 
 
 def from_proprietaire(biz):
-    """Accès offert au propriétaire pour tester (rien de personnel dans le dépôt : l'adresse vient du secret)."""
+    """Accès offerts (rien de personnel dans le dépôt : les adresses viennent des secrets OWNER_EMAIL
+    et ACCES_OFFERTS, ce dernier = adresses séparées par des virgules), mêmes réglages acces_proprietaire."""
     acces = biz.get("acces_proprietaire") or {}
-    email = (os.getenv("OWNER_EMAIL") or "").strip()
-    if not acces or "@" not in email:
+    emails = [(os.getenv("OWNER_EMAIL") or "").strip()]
+    emails += [e.strip() for e in re.split(r"[,;\s]+", os.getenv("ACCES_OFFERTS") or "")]
+    emails = [e for e in emails if "@" in e]
+    if not acces or not emails:
         return []
     plan = acces.get("plan") if acces.get("plan") in biz["offres"] else "cle"
     return [{"email": email, "plan": plan, "statut": "active", "metiers": list(acces.get("metiers") or []),
              "departements": parse_departements(",".join(map(str, acces.get("departements") or []))),
-             "mots_cles": list(acces.get("mots_cles") or []) if plan in PLANS_PRO else [], "source": "interne"}]
+             "mots_cles": list(acces.get("mots_cles") or []) if plan in PLANS_PRO else [], "source": "interne"}
+            for email in emails]
 
 
 def load_all(biz, metiers, session=None):

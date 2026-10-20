@@ -18,6 +18,7 @@ jobs:
       - env:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           OWNER_EMAIL: ${{ secrets.OWNER_EMAIL }}
+          ACCES_OFFERTS: ${{ secrets.ACCES_OFFERTS }}
         run: python -m radar.cli veille
       - name: Relancer l'envoi quotidien s'il n'a pas tourné
         env: { GH_TOKEN: "${{ github.token }}" }

@@ -382,3 +382,14 @@ def test_affichage_abonnement_seulement_si_base_a_jour(biz, metiers):
     comptes.synchroniser(db, [s], biz, metiers, MAINTENANT)
     c = db.t["comptes"][0]
     assert c["prix_cents"] == 4900 and c["periode"] == "mois" and c["renouvellement"].startswith("2026-10-26") and c["resilie"] is False
+
+
+def test_acces_offerts_par_secret(biz, monkeypatch):
+    from radar import subscribers
+    monkeypatch.delenv("OWNER_EMAIL", raising=False)
+    monkeypatch.setenv("ACCES_OFFERTS", " Client@Exemple.fr, autre@exemple.fr ;pas-une-adresse")
+    subs = subscribers.from_proprietaire(biz)
+    assert [s["email"] for s in subs] == ["Client@Exemple.fr", "autre@exemple.fr"]
+    assert all(s["plan"] == "cle" and s["source"] == "interne" and "stripe_subscription" not in s for s in subs)
+    monkeypatch.setenv("OWNER_EMAIL", "patron@exemple.fr")
+    assert len(subscribers.from_proprietaire(biz)) == 3

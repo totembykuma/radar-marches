@@ -26,6 +26,7 @@ jobs:
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           OWNER_EMAIL: ${{ secrets.OWNER_EMAIL }}
+          ACCES_OFFERTS: ${{ secrets.ACCES_OFFERTS }}
         run: python -m radar.cli comptes-setup
       - name: Déployer le webhook Stripe (outil officiel Supabase)
         env:
