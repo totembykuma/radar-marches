@@ -8,6 +8,10 @@ on:
         description: "Envoyer un apercu au proprietaire (aucun envoi au prospect)"
         type: boolean
         default: true
+      bilan:
+        description: "Renvoyer le recapitulatif du dernier envoi au proprietaire (aucun envoi au prospect)"
+        type: boolean
+        default: false
 permissions:
   contents: write
 concurrency: { group: radar-prospection, cancel-in-progress: false }
@@ -26,7 +30,7 @@ jobs:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           RESEND_INBOUND_KEY: ${{ secrets.RESEND_INBOUND_KEY }}
           OWNER_EMAIL: ${{ secrets.OWNER_EMAIL }}
-        run: python -m radar.cli prospection ${{ inputs.apercu && '--apercu' || '' }}
+        run: python -m radar.cli prospection ${{ inputs.bilan && '--bilan' || (inputs.apercu && '--apercu' || '') }}
       - name: Memoriser les entreprises contactees
         if: always()
         run: |
