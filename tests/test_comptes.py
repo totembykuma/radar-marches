@@ -393,3 +393,33 @@ def test_acces_offerts_par_secret(biz, monkeypatch):
     assert all(s["plan"] == "cle" and s["source"] == "interne" and "stripe_subscription" not in s for s in subs)
     monkeypatch.setenv("OWNER_EMAIL", "patron@exemple.fr")
     assert len(subscribers.from_proprietaire(biz)) == 3
+
+
+def test_marches_de_depart_nouvel_espace(metiers):
+    from radar.matching import Matcher
+    db = FausseBase(users=[{"id": "u1", "email": "Neuf@exemple.fr", "email_confirmed_at": "x"},
+                           {"id": "u2", "email": "ancien@exemple.fr", "email_confirmed_at": "x"},
+                           {"id": "u3", "email": "pasconfirme@exemple.fr", "email_confirmed_at": None}])
+    comptes.enregistrer_alertes(db, "ancien@exemple.fr", [{"id": "26-9", "objet": "Ménage"}], date(2026, 10, 1))
+    subs = [_s("neuf@exemple.fr"), _s("ancien@exemple.fr", sub="sub_2"), _s("pasconfirme@exemple.fr", sub="sub_3")]
+
+    def avis(i, dl, parution, dep="75", objet="Nettoyage des locaux de la mairie"):
+        return {"id": f"26-{i}", "objet": objet, "descripteurs": [], "departements": [dep], "date_limite": dl,
+                "date_parution": parution, "nature": "Avis de marché", "acheteur": "Mairie", "ville": "Paris"}
+    liste = [avis(1, "2026-11-20", "2026-10-15"), avis(2, "2026-11-10", "2026-10-19"), avis(3, "2026-10-22", "2026-10-20"),
+             avis(4, "2026-11-05", "2026-10-18"), avis(5, "2026-11-30", "2026-10-17"), avis(6, "2026-11-30", "2026-10-20", dep="33"),
+             avis(7, "2026-11-30", "2026-10-20", objet="Travaux de voirie")]
+    appels, deja = [], set()
+
+    def charger():
+        appels.append(1)
+        return liste
+    faits = comptes.marches_de_depart(db, subs, db.utilisateurs(), charger, Matcher(metiers), metiers, deja, date(2026, 10, 20))
+    # Les 3 plus récents de sa veille, avec au moins 7 jours pour répondre (26-3 trop proche, 33 et voirie hors veille)
+    assert [a["id"] for a in faits["neuf@exemple.fr"]] == ["26-2", "26-4", "26-5"] and list(faits) == ["neuf@exemple.fr"]
+    neuf = [r for r in db.t["alertes"] if r["email"] == "neuf@exemple.fr"]
+    assert len(neuf) == 3 and neuf[0]["recu"] == "2026-10-20" and neuf[0]["metier"]
+    assert len(deja) == 2 and not any("@" in d for d in deja)          # empreintes seulement (state.json public)
+    # Deuxième passage : rien à refaire, et pas d'appel BOAMP
+    assert comptes.marches_de_depart(db, subs, db.utilisateurs(), charger, Matcher(metiers), metiers, deja, date(2026, 10, 20)) == {}
+    assert len(appels) == 1

@@ -13,6 +13,7 @@ l'ancien espace par lien (radar/compte.py) reste alors seul en service.
 Clé du robot : secrets SUPABASE_URL + SUPABASE_SERVICE_KEY, ou à défaut un seul secret SUPABASE_ACCESS_TOKEN
 (jeton du compte Supabase) avec lequel on lit la clé du projet au démarrage.
 """
+import hashlib
 import json
 import logging
 import os
@@ -394,6 +395,50 @@ def enregistrer_alertes(supa, email, avis, aujourd_hui=None):
              "url": a.get("url") or None, "resume": (a.get("resume") or "")[:400] or None} for a in avis]
     supa.upsert("alertes", rows, conflit="email,avis_id", ignorer=True)
     return len(rows)
+
+
+def marches_de_depart(supa, subs, utilisateurs, charger, matcher, metiers, deja, aujourd_hui=None, n=3):
+    """Nouvel espace client encore vide : y dépose 3 appels d'offres récents de sa veille, encore ouverts assez longtemps
+    pour y répondre (date limite à 7 jours ou plus, sinon 3). `charger()` n'est appelé (BOAMP) que s'il y a un compte à remplir.
+    `deja` = empreintes des adresses déjà traitées (modifié sur place, jamais d'adresse en clair : state.json est public).
+    Renvoie {email: [avis déposés]}."""
+    j = aujourd_hui or date.today()
+    par_email = _meilleur(subs)
+    a_faire = []
+    for u in utilisateurs:
+        email = (u.get("email") or "").lower()
+        s = par_email.get(email)
+        if not email or not u.get("email_confirmed_at") or _empreinte(email) in deja or not s or s.get("statut") not in STATUTS_ACTIFS:
+            continue
+        if not s.get("metiers") and not s.get("mots_cles"):
+            continue
+        if supa.select("alertes", select="id", email=f"eq.{email}", limit="1"):
+            deja.add(_empreinte(email))                # espace déjà rempli par les alertes du matin
+            continue
+        a_faire.append((email, s))
+    if not a_faire:
+        return {}
+    avis, faits = charger(), {}
+    for email, s in a_faire:
+        trouves = matcher.for_subscriber(avis, s)
+        for marge in (7, 3):
+            borne = (j + timedelta(days=marge)).isoformat()
+            choix = [a for a in trouves if (a.get("date_limite") or "")[:10] >= borne]
+            if len(choix) >= n:
+                break
+        choix = sorted(choix, key=lambda a: (a.get("date_parution") or "", a["id"]), reverse=True)[:n]
+        for a in choix:
+            m = next((m for m in s["metiers"] if m in (a.get("metiers") or matcher.metiers_of(a))), None)
+            a["metier_libelle"] = metiers[m]["libelle"].lower() if m in metiers else ""
+        if choix:
+            enregistrer_alertes(supa, email, choix, aujourd_hui=j)
+            faits[email] = choix
+        deja.add(_empreinte(email))                    # une seule tentative : pas d'appel BOAMP toutes les 10 min
+    return faits
+
+
+def _empreinte(email):
+    return hashlib.sha256(email.lower().encode()).hexdigest()[:16]
 
 
 def rappels_favoris(supa, biz, subs, aujourd_hui=None):

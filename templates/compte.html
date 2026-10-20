@@ -275,19 +275,26 @@
 
         {# ===== Rapports et dossiers ===== #}
         <section class="page" id="p-demandes" data-titre="Rapports et dossiers" hidden>
+          <ol class="parcours" id="d-parcours" hidden>
+            <li><span class="parcours-n">1</span><b>Choisissez un marché</b><span>Dans « Nouveaux marchés » ou ci-dessous : boutons <em>Rapport</em> et <em>Dossier</em> sur chaque appel d'offres.</span></li>
+            <li><span class="parcours-n">2</span><b>Envoyez la demande</b><span>Le marché est déjà rempli. Pour un dossier, ajoutez les pièces de la consultation.</span></li>
+            <li><span class="parcours-n">3</span><b>Téléchargez</b><span>Le document arrive dans « Mes demandes » en bas de page. Vous êtes prévenu par e-mail.</span></li>
+          </ol>
           <div class="quotas" id="d-quotas" hidden></div>
           <div class="grille-2" id="d-cle" hidden>
             <form class="carte form" id="f-rapport" novalidate>
               <h2>Rapport « comment gagner »</h2>
               <p class="muted">Critères, pièces, pièges, prix de repère publiés et plan d'action pour un marché. Prêt en général dans l'heure (jours ouvrés, 7 h - 21 h).</p>
-              <p><label for="r-ref">Référence ou lien de l'avis (ex. 26-123456)</label><input id="r-ref" required autocomplete="off"></p>
+              <p><label for="r-choix">Appel d'offres</label><select id="r-choix" data-saisie="r-ref-p"></select></p>
+              <p id="r-ref-p" hidden><label for="r-ref">Référence de l'avis (ex. 26-123456, écrite « Réf. » sous chaque marché)</label><input id="r-ref" autocomplete="off"></p>
               <p class="msg" id="m-rapport" role="status" hidden></p>
               <button class="btn" type="submit">Demander le rapport</button>
             </form>
             <form class="carte form" id="f-dossier" novalidate>
               <h2>Dossier de candidature (inclus)</h2>
               <p class="muted">Word modifiable : mémoire technique, lettre de candidature, DUME, pièces à fournir. À relire, chiffrer, signer et déposer vous-même. Les passages à compléter sont signalés.</p>
-              <p><label for="dd-ref">Référence de l'avis</label><input id="dd-ref" required autocomplete="off"></p>
+              <p><label for="dd-choix">Appel d'offres</label><select id="dd-choix" data-saisie="dd-ref-p"></select></p>
+              <p id="dd-ref-p" hidden><label for="dd-ref">Référence de l'avis (ex. 26-123456, écrite « Réf. » sous chaque marché)</label><input id="dd-ref" autocomplete="off"></p>
               <p><label for="dd-infos">Votre entreprise (activité, effectif, références, certifications…)</label><textarea id="dd-infos" rows="4" maxlength="4000"></textarea></p>
               <p><label for="dd-fichiers">Dossier de consultation (PDF, Word ou ZIP, 20 Mo max par fichier)</label><input id="dd-fichiers" type="file" multiple accept=".pdf,.doc,.docx,.odt,.zip,.txt"></p>
               <p class="msg" id="m-dossier" role="status" hidden></p>

@@ -348,9 +348,11 @@
     pied.appendChild(el("span", "Réf. " + a.avis_id));
     if (a.favori && a.rappel_envoye) pied.appendChild(el("span", "Rappel envoyé le " + dateFr(a.rappel_envoye)));
     if (!court && ouvert(a) && !$("d-cle").hidden) {
-      var b = el("button", "Rapport « comment gagner »"); b.type = "button";
-      b.addEventListener("click", function () { $("r-ref").value = a.avis_id; location.hash = "#demandes"; setTimeout(function () { $("r-ref").focus(); }, 50); });
-      pied.appendChild(b);
+      [["Rapport « comment gagner »", "r"], ["Dossier de candidature", "dd"]].forEach(function (x) {
+        var b = el("button", x[0]); b.type = "button";
+        b.addEventListener("click", function () { choisir(x[1], a.avis_id); });
+        pied.appendChild(b);
+      });
     }
     if (!court) corps.appendChild(pied);
     li.appendChild(corps);
@@ -488,11 +490,37 @@
   }
 
   // ---- rapports et dossiers : inclus (Clé en main) ou achat d'un dossier à l'unité
+  // Choix du marché dans les formulaires : la référence est remplie toute seule, la saisie reste possible (« Autre marché »).
+  function remplirChoix(p) {
+    var sel = $(p + "-choix"), garde = sel.value, ouverts = ALERTES.filter(function (a) { return a.date_limite && ouvert(a); });
+    sel.textContent = "";
+    var o0 = el("option", ouverts.length ? "Choisissez un appel d'offres…" : "Aucun marché ouvert dans vos alertes"); o0.value = "-"; sel.appendChild(o0);
+    ouverts.sort(function (x, y) { return x.recu < y.recu ? 1 : x.recu > y.recu ? -1 : 0; }).forEach(function (a) {
+      var t = a.objet.length > 70 ? a.objet.slice(0, 68) + "…" : a.objet, o = el("option", t + " · avant le " + dateFr(a.date_limite));
+      o.value = a.avis_id; sel.appendChild(o);
+    });
+    var autre = el("option", "Autre marché : saisir la référence"); autre.value = ""; sel.appendChild(autre);
+    sel.value = garde && sel.querySelector('option[value="' + garde.replace(/"/g, "") + '"]') ? garde : "-";
+    $(p + "-ref-p").hidden = sel.value !== "";
+  }
+  function refChoisie(p) { var v = $(p + "-choix").value; return v === "" ? $(p + "-ref").value.trim() : v === "-" ? "" : v; }
+  function choisir(p, ref) {
+    var sel = $(p + "-choix");
+    if (sel.querySelector('option[value="' + ref.replace(/"/g, "") + '"]')) sel.value = ref; else { sel.value = ""; $(p + "-ref").value = ref; }
+    $(p + "-ref-p").hidden = sel.value !== "";
+    location.hash = "#demandes";
+    setTimeout(function () { var f = $(p === "r" ? "f-rapport" : "f-dossier"); f.scrollIntoView({ behavior: "smooth", block: "center" }); f.classList.add("eclair"); setTimeout(function () { f.classList.remove("eclair"); }, 1600); (p === "r" ? f.querySelector("button[type=submit]") : $("dd-infos")).focus({ preventScroll: true }); }, 80);
+  }
+  ["r", "dd"].forEach(function (p) {
+    $(p + "-choix").addEventListener("change", function () { $(p + "-ref-p").hidden = this.value !== ""; if (!this.value) $(p + "-ref").focus(); });
+  });
+
   function afficherDemandes() {
     var d = E.droits || {}, actif = d.veille, q = E.quotas || {}, cle = (d.rapports_mois || 0) + (d.dossiers_mois || 0) > 0 || E.offre === "cle";
     var visible = cle || (actif && !!C.dossier) || DEMANDES.length > 0;
     $("nav-demandes").hidden = !visible;
-    $("d-cle").hidden = !cle;
+    $("d-cle").hidden = !cle; $("d-parcours").hidden = !cle;
+    if (cle) { remplirChoix("r"); remplirChoix("dd"); }
     var qb = vider("d-quotas"); qb.hidden = !cle;
     function quota(t, u, m, note) {
       var c = el("div", null, "quota"); c.appendChild(el("span", t)); var b = el("div"); b.appendChild(el("b", u + " / " + m)); c.appendChild(b);
@@ -521,7 +549,8 @@
     DEMANDES.forEach(function (x) {
       var li = el("li", null, "demande"), haut = el("div");
       haut.appendChild(el("span", ETATS[x.statut] || x.statut, "badge badge-" + x.statut));
-      haut.appendChild(el("b", (x.type === "rapport" ? "Rapport" : "Dossier") + " · avis " + x.avis_ref));
+      var av = ALERTES.filter(function (a) { return a.avis_id === x.avis_ref; })[0];
+      haut.appendChild(el("b", (x.type === "rapport" ? "Rapport" : "Dossier") + " · " + (av ? av.objet.slice(0, 80) + " (réf. " + x.avis_ref + ")" : "avis " + x.avis_ref)));
       li.appendChild(haut);
       var act = el("div", null, "demande-act");
       if (x.statut === "terminee" && x.fichier) {
@@ -583,8 +612,8 @@
 
   $("f-rapport").addEventListener("submit", function (ev) {
     ev.preventDefault();
-    var f = this, ref = $("r-ref").value.trim();
-    if (!/\d{2}-\d{3,7}/.test(ref)) return msg("m-rapport", "Indiquez la référence de l'avis, par ex. 26-123456 (elle figure dans vos alertes).");
+    var f = this, ref = refChoisie("r");
+    if (!/\d{2}-\d{3,7}/.test(ref)) return msg("m-rapport", "Choisissez l'appel d'offres dans la liste (ou saisissez sa référence, par ex. 26-123456).");
     f.dataset.cle = f.dataset.cle || cleUnique();   // même clé si double clic : une seule demande
     attente(f, true);
     sb.rpc("demander", { p_type: "rapport", p_avis_ref: ref, p_infos: "", p_cle: f.dataset.cle }).then(function (r) {
@@ -598,8 +627,8 @@
 
   $("f-dossier").addEventListener("submit", function (ev) {
     ev.preventDefault();
-    var f = this, ref = $("dd-ref").value.trim(), fichiers = Array.prototype.slice.call($("dd-fichiers").files || []);
-    if (!/\d{2}-\d{3,7}/.test(ref)) return msg("m-dossier", "Indiquez la référence de l'avis, par ex. 26-123456.");
+    var f = this, ref = refChoisie("dd"), fichiers = Array.prototype.slice.call($("dd-fichiers").files || []);
+    if (!/\d{2}-\d{3,7}/.test(ref)) return msg("m-dossier", "Choisissez l'appel d'offres dans la liste (ou saisissez sa référence, par ex. 26-123456).");
     if (!fichiers.length) return msg("m-dossier", "Ajoutez le dossier de consultation (règlement, cahier des charges…).");
     var mauvais = fichiers.filter(function (x) { return x.size > C.max_octets || !/\.(pdf|docx?|odt|zip|txt)$/i.test(x.name); });
     if (mauvais.length) return msg("m-dossier", "Fichier refusé : " + mauvais[0].name + " (PDF, Word, ODT, ZIP ou TXT, 20 Mo maximum).");
