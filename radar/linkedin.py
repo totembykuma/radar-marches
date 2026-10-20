@@ -91,6 +91,17 @@ def flux_rss(data, biz, today=None):
         titre = p["texte"].split("\n", 1)[0]
         items.append(f"<item><title>{escape(titre)}</title><link>{base}/</link><guid isPermaLink=\"false\">radar-linkedin-{jour}</guid>"
                      f"<pubDate>{pub}</pubDate><description>{escape(p['texte'])}</description></item>")
+    for a in biz.get("linkedin_annonces") or []:   # annonces ponctuelles (vidéo, nouveauté) : 1 publication chacune, guid propre
+        jour = str(a["date"])[:10]
+        if jour > today:
+            continue
+        d = date.fromisoformat(jour)
+        pub = f"{['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][d.weekday()]}, {d.day:02d} {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.month - 1]} {d.year} 12:00:00 +0000"
+        lien = base + a["lien"]
+        texte = a["texte"].strip().replace("{lien}", lien + "?utm_source=linkedin") + f"\n\n{TAGS}"
+        items.insert(0, f"<item><title>{escape(texte.split(chr(10), 1)[0])}</title><link>{escape(lien)}</link>"
+                        f"<guid isPermaLink=\"false\">radar-linkedin-{escape(a['id'])}</guid><pubDate>{pub}</pubDate>"
+                        f"<description>{escape(texte)}</description></item>")
     return ('<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel>'
             f"<title>{escape(biz['nom'])} · posts LinkedIn</title><link>{base}/</link><description>Posts du jour</description>"
             + "".join(items) + "</channel></rss>")

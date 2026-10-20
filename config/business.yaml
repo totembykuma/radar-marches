@@ -125,3 +125,17 @@ prospection:
   ensuite_depuis: "2026-10-27"  # une semaine de clics mesurés d'abord
   reponses_adresse: "reponse@elkaurtel.resend.app"   # les prospects répondent à l'agent IA (radar/reponses.py, bienvenue.yml)
   expediteur: "Radar Marchés <bonjour@radar-marches.fr>"
+
+# Annonces LinkedIn ponctuelles : ajoutées au flux /linkedin/flux.xml (Zapier les publie une fois, id unique)
+linkedin_annonces:
+  - id: video-dossier-2026-10
+    date: "2026-10-20"
+    lien: /videos/
+    texte: |
+      🎬 Votre dossier de candidature à un appel d'offres, en 3 étapes et 30 secondes.
+
+      1. Choisissez le marché
+      2. Présentez votre entreprise et ajoutez les pièces
+      3. Recevez votre dossier Word : relisez, chiffrez, signez
+
+      La vidéo : {lien}

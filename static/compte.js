@@ -648,7 +648,7 @@
       }).then(function (r2) {
         attente(f, false);
         if (r2.error) throw r2.error;
-        delete f.dataset.cle; f.reset();
+        delete f.dataset.cle; f.reset(); msg("m-dossier", "");
         toast("Dossier reçu : préparation dans les prochaines heures (jours ouvrés).");
         ouvrirEspace();
       });

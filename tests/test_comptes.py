@@ -423,3 +423,16 @@ def test_marches_de_depart_nouvel_espace(metiers):
     # Deuxième passage : rien à refaire, et pas d'appel BOAMP
     assert comptes.marches_de_depart(db, subs, db.utilisateurs(), charger, Matcher(metiers), metiers, deja, date(2026, 10, 20)) == {}
     assert len(appels) == 1
+
+
+def test_demandes_espace_traitees_des_la_bienvenue(monkeypatch, metiers):
+    db, appels = FausseBase(), []
+    monkeypatch.setattr(cli, "demandes_espace", lambda *a, **k: appels.append(k) or (1, []))
+    run, biz = {"erreurs": []}, {"cle_actif": True}
+    cli.espace_vite(biz, metiers, [_s("a@exemple.fr", plan="cle")], db, run)
+    assert not appels                                        # rien en attente : pas de travail
+    db.t["demandes"].append({"id": "d1", "statut": "recue"})
+    cli.espace_vite(biz, metiers, [_s("a@exemple.fr", plan="cle")], db, run)
+    assert appels[0]["limite"] == 2 and run["demandes_espace"] == 1
+    cli.espace_vite({"cle_actif": False}, metiers, [], db, run)
+    assert len(appels) == 1

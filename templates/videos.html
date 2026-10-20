@@ -1,0 +1,30 @@
+{% extends "base.html" %}{% block main %}
+<style>
+.vd{max-width:980px}
+.vd-lecteur{border-radius:18px;overflow:hidden;background:#101C2C;box-shadow:0 18px 50px -20px rgba(16,28,44,.45);margin:22px 0 26px}
+.vd-lecteur video{display:block;width:100%;height:auto;aspect-ratio:16/9}
+.vd-etapes{list-style:none;padding:0;margin:0 0 26px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.vd-etapes li{background:#fff;border:1px solid #E1E5EA;border-radius:16px;padding:16px 18px}
+.vd-etapes b{display:flex;align-items:center;gap:10px;font-size:17px;margin-bottom:4px}
+.vd-etapes b span{width:30px;height:30px;border-radius:50%;background:#B8F36B;color:#101C2C;display:grid;place-items:center;font-weight:800;flex:none}
+.vd-etapes p{margin:0;color:#5E6A7C;font-size:15px}
+@media (max-width:760px){.vd-etapes{grid-template-columns:1fr}}
+</style>
+<section class="wrap vd">
+  <p class="kicker">En vidéo</p>
+  <h1>Votre dossier de candidature en 3 étapes</h1>
+  <p class="lead">30 secondes pour voir comment Radar Marchés prépare votre réponse à un appel d'offres.</p>
+  <div class="vd-lecteur">
+    <video controls playsinline preload="metadata" poster="{{ root }}static/videos/creer-un-dossier-affiche.jpg">
+      <source src="{{ root }}static/videos/creer-un-dossier.mp4" type="video/mp4">
+    </video>
+  </div>
+  <ol class="vd-etapes">
+    <li><b><span>1</span>Choisissez un marché</b><p>Cliquez « Dossier de candidature » sous l'appel d'offres.</p></li>
+    <li><b><span>2</span>Présentez-vous</b><p>Quelques lignes sur votre entreprise et les pièces de la consultation.</p></li>
+    <li><b><span>3</span>Recevez le Word</b><p>Relisez, chiffrez, signez et déposez votre offre.</p></li>
+  </ol>
+  <p><a class="btn btn-lg" href="{{ root }}#tarifs">Essayer Radar Marchés</a></p>
+  <p class="muted">Dossiers inclus avec l'offre Clé en main{% if biz.dossier_actif %}, ou à l'unité : <a href="{{ root }}dossier/">dossier prêt à signer</a>{% endif %}. Aide à la rédaction préparée par intelligence artificielle : vous relisez et restez seul responsable de votre offre.</p>
+</section>
+{% endblock %}
