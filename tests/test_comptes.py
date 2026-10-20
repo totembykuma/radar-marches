@@ -254,22 +254,32 @@ def test_demandes_espace_bout_en_bout(biz, metiers, monkeypatch):
     _cle(db)
     r = _demande(db, "u1", "rapport")
     dos = _demande(db, "u1", "dossier", ref="26-222222")
-    court = _demande(db, "u1", "dossier", ref="26-333333")
+    court = _demande(db, "u1", "dossier", ref="26-333333")      # sans dossier de consultation : part de l'avis officiel
+    perdu = _demande(db, "u1", "dossier", ref="26-444444")      # avis introuvable
     db.fichiers[f"u1/{dos['id']}/dce/rc.txt"] = ("Règlement de consultation. " * 200).encode()
-    db.fichiers[f"u1/{court['id']}/dce/rc.txt"] = b"trop court"
+    db.fichiers[f"u1/{court['id']}/dce/piece-kbis-kbis.txt"] = b"SARL Test, capital 10 000 euros"
     avis = {"id": "26-123456", "objet": "Nettoyage des écoles", "acheteur": "Ville", "metiers": ["nettoyage"], "texte": ""}
     faux_rapport = {"en_bref": "x", "chances": "bonnes", "pourquoi_chances": "y", "criteres": [], "prix": {}, "pieces": [],
                     "pieges": [], "plan": [], "questions": []}
     faux_dossier = {"objet": "Nettoyage", "date_limite": (date.today() + timedelta(days=20)).isoformat(), "memoire": [],
                     "criteres": [], "pieces": [], "vigilance": [], "lettre": "", "dume": [], "references": []}
     cles = [_s("cle@exemple.fr", plan="cle")]
+    vus = {}
+
+    def gen(dce, infos):
+        vus[infos.split("Avis BOAMP : ")[1][:9]] = (dce, infos)
+        return faux_dossier
     n, errs = cli.demandes_espace(biz, metiers, cles, None, supa=db, avis_fn=lambda ref: avis,
-                                  generer_rapport=lambda *a: faux_rapport, generer_dossier=lambda dce, infos: faux_dossier)
+                                  generer_rapport=lambda *a: faux_rapport, generer_dossier=gen,
+                                  avis_complet=lambda ref: "" if ref == "26-444444" else "objet : Nettoyage des écoles\n" * 40)
     assert not errs, errs
     assert r["statut"] == "terminee" and b"<!doctype html>" in db.fichiers[r["fichier"]][:50]
     assert dos["statut"] == "terminee" and dos["fichier"].endswith(".docx") and db.fichiers[dos["fichier"]][:2] == b"PK"
     assert f"u1/{dos['id']}/dce/rc.txt" not in db.fichiers                  # pièces du client effacées après usage
-    assert court["statut"] == "echec" and "Non décompté" in court["message"]
+    assert court["statut"] == "terminee" and "AVIS OFFICIEL SEUL" in vus["26-333333"][0]
+    assert "Extrait Kbis : fournie" in vus["26-333333"][1] and "capital 10 000" in vus["26-333333"][1]
+    assert "AVIS OFFICIEL" not in vus["26-222222"][0]                      # dossier de consultation fourni : utilisé tel quel
+    assert perdu["statut"] == "echec" and "Non décompté" in perdu["message"]
 
 
 def test_config_auth_securisee(biz):

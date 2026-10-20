@@ -44,6 +44,9 @@ Règles absolues :
 - Suis le plan et les critères de notation du règlement de consultation : le mémoire technique répond point par point
   à ce que l'acheteur note, avec des engagements concrets et vérifiables, dans un français professionnel et simple.
 - Si le DCE est incomplet ou illisible, dis-le dans « vigilance » et fais au mieux.
+- Si seul l'avis officiel est fourni (« AVIS OFFICIEL SEUL »), appuie-toi dessus et sur les usages de ce type de marché,
+  écris « [À VÉRIFIER DANS LE RÈGLEMENT] » à chaque point incertain et rappelle en tête de « vigilance » de relire le règlement.
+- Les pièces déjà fournies par l'entreprise (Kbis, attestations…) sont listées : marque-les « fournie » dans « pieces ».
 
 Réponds uniquement par un objet JSON, sans texte autour :
 {{

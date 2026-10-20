@@ -273,9 +273,7 @@ begin
   select * into r from public.demandes where id = p_id and user_id = auth.uid() for update;
   if not found then raise exception 'Demande introuvable.' using errcode = '42501'; end if;
   if r.statut <> 'action_requise' then return r; end if;
-  if not exists (select 1 from storage.objects o where o.bucket_id = 'documents'
-                 and o.name like auth.uid()::text || '/' || p_id::text || '/dce/%') then
-    raise exception 'Ajoutez au moins une pièce du dossier de consultation.' using errcode = '22023'; end if;
+  -- pièces facultatives : sans dossier de consultation, le robot part de l'avis officiel
   update public.demandes set statut = 'recue', message = null, maj = now() where id = p_id returning * into r;
   return r;
 end $$;

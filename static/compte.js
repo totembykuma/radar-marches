@@ -662,23 +662,33 @@
   }
   function alerteDe(ref) { return ALERTES.filter(function (a) { return a.avis_id === ref; })[0]; }
   function majMarche() {
-    var ref = refChoisie("dd"), a = alerteDe(ref), box = $("dd-marche"), lien = $("dd-lien-avis");
+    var ref = refChoisie("dd"), a = alerteDe(ref), box = $("dd-marche");
     box.textContent = ""; box.hidden = !a;
-    lien.hidden = !(a && a.url) && !/\d{2}-\d{3,7}/.test(ref);
-    lien.href = a && a.url ? a.url : "https://www.boamp.fr/pages/avis/?q=idweb:" + encodeURIComponent(ref);
     if (!a) return;
     box.appendChild(el("b", a.objet));
     box.appendChild(el("span", [a.acheteur, a.lieu].filter(Boolean).join(" · ")));
     box.appendChild(el("span", "Date limite : " + dateFr(a.date_limite) + " · Réf. " + a.avis_id));
   }
-  function nomsFichiers() { return Array.prototype.slice.call($("dd-fichiers").files || []); }
-  function majFichiers() {
-    var fs = nomsFichiers(), noms = fs.map(function (x) { return x.name.toLowerCase(); }).join(" | "), zip = /\.zip\b/.test(noms), ul = $("dd-liste");
-    ul.textContent = "";
-    fs.forEach(function (x) { ul.appendChild(el("li", x.name + " · " + Math.max(1, Math.round(x.size / 1024)) + " Ko")); });
-    Array.prototype.forEach.call($("dd-attendus").children, function (li) {
-      li.classList.toggle("ok", zip || new RegExp(li.dataset.motif, "i").test(noms));
+  // pièces du client (par type) + dossier de consultation facultatif
+  function piecesClient() {
+    var out = [];
+    Array.prototype.forEach.call($("dd-miennes").children, function (li) {
+      Array.prototype.forEach.call(li.querySelector("input").files || [], function (f) { out.push({ type: li.dataset.type, f: f }); });
     });
+    return out;
+  }
+  function nomsFichiers() {
+    return piecesClient().map(function (p) { return p.f; }).concat(Array.prototype.slice.call($("dd-fichiers").files || []));
+  }
+  function majFichiers() {
+    Array.prototype.forEach.call($("dd-miennes").children, function (li) {
+      var fs = li.querySelector("input").files || [], ok = fs.length > 0;
+      li.classList.toggle("ok", ok);
+      li.querySelector(".ass-bouton").firstChild.textContent = ok ? (fs.length > 1 ? fs.length + " fichiers ✓" : "Ajouté ✓") : "Ajouter";
+    });
+    var ul = $("dd-liste"), dce = Array.prototype.slice.call($("dd-fichiers").files || []);
+    ul.textContent = "";
+    dce.forEach(function (x) { ul.appendChild(el("li", x.name + " · " + Math.max(1, Math.round(x.size / 1024)) + " Ko")); });
   }
   function infosDossier() {
     var lignes = [];
@@ -694,9 +704,8 @@
     }
     if (n === 3) {
       var fs = nomsFichiers();
-      if (!fs.length) return "Ajoutez le dossier de consultation (au minimum le règlement de la consultation).";
-      var mauvais = fs.filter(function (x) { return x.size > C.max_octets || !/\.(pdf|docx?|odt|zip|txt)$/i.test(x.name); });
-      if (mauvais.length) return "Fichier refusé : " + mauvais[0].name + " (PDF, Word, ODT, ZIP ou TXT, 20 Mo maximum).";
+      var mauvais = fs.filter(function (x) { return x.size > C.max_octets || !/\.(pdf|docx?|odt|zip|txt|jpe?g|png)$/i.test(x.name); });
+      if (mauvais.length) return "Fichier refusé : " + mauvais[0].name + " (PDF, Word, ODT, ZIP, JPG ou PNG, 20 Mo maximum).";
       if (fs.length > 15) return "15 fichiers au maximum : regroupez-les dans un ZIP.";
     }
     return "";
@@ -708,14 +717,17 @@
     Array.prototype.forEach.call(f.querySelectorAll(".ass-etapes li"), function (li) { var k = +li.dataset.n; li.className = k < n ? "fait" : k === n ? "actif" : ""; });
     $("dd-retour").hidden = n === 1; $("dd-suite").hidden = n === 4; $("dd-envoyer").hidden = n !== 4;
     if (n === 2) memoEntreprise(false);
-    if (n === 3) majMarche();
     if (n === 4) {
-      var a = alerteDe(refChoisie("dd")), dl = $("dd-recap"), fs = nomsFichiers(), manque = Array.prototype.filter.call($("dd-attendus").children, function (li) { return !li.classList.contains("ok"); });
-      dl.textContent = "";
+      var a = alerteDe(refChoisie("dd")), dl = $("dd-recap"), mes = piecesClient(), dce = ($("dd-fichiers").files || []).length,
+          manque = Array.prototype.filter.call($("dd-miennes").children, function (li) { return !li.classList.contains("ok"); }), reste = $("dd-reste");
+      dl.textContent = ""; reste.textContent = "";
+      manque.forEach(function (li) { reste.appendChild(el("li", li.querySelector("b").textContent)); });
+      ["Votre prix dans le bordereau de prix", "La signature, puis le dépôt sur la plateforme de l'acheteur"].forEach(function (t) { reste.appendChild(el("li", t)); });
       [["Marché", a ? a.objet + " (réf. " + a.avis_id + ")" : "Réf. " + refChoisie("dd")],
        ["Entreprise", $("dd-nom").value.trim() + " · SIRET " + $("dd-siret").value.trim() + " · " + $("dd-effectif").value.trim()],
        ["Signataire", $("dd-dirigeant").value.trim()],
-       ["Documents", fs.length + " fichier" + (fs.length > 1 ? "s" : "") + (manque.length ? " · non repéré : " + manque.map(function (li) { return li.querySelector("b").textContent; }).join(", ") + (manque.length > 1 ? " (envoyez-les s'ils existent)" : " (envoyez-le s'il existe)") : " · tout est repéré")]
+       ["Vos pièces", mes.length ? mes.length + " fichier" + (mes.length > 1 ? "s" : "") : "aucune (elles seront à joindre au dépôt)"],
+       ["Dossier de consultation", dce ? dce + " fichier" + (dce > 1 ? "s" : "") + " ajouté" + (dce > 1 ? "s" : "") : "récupéré par nos soins"]
       ].forEach(function (x) { dl.appendChild(el("dt", x[0])); dl.appendChild(el("dd", x[1])); });
     }
     msg("m-dossier", "");
@@ -728,6 +740,7 @@
   });
   $("dd-retour").addEventListener("click", function () { pasDossier(PAS - 1); });
   $("dd-fichiers").addEventListener("change", majFichiers);
+  Array.prototype.forEach.call($("dd-miennes").querySelectorAll("input"), function (i) { i.addEventListener("change", majFichiers); });
   $("f-dossier").addEventListener("input", function () { if (!$("m-dossier").hidden && !$("m-dossier").classList.contains("msg-ok")) msg("m-dossier", ""); });
   $("f-dossier").addEventListener("submit", function (ev) {
     ev.preventDefault();
@@ -739,8 +752,10 @@
     sb.rpc("demander", { p_type: "dossier", p_avis_ref: ref, p_infos: infosDossier(), p_cle: f.dataset.cle }).then(function (r) {
       if (r.error) { attente(f, false); return msg("m-dossier", erreurServeur(r.error)); }
       var dem = r.data, base = E_uid + "/" + dem.id + "/dce/";
-      return Promise.all(fichiers.map(function (x) {
-        var nom = x.name.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^A-Za-z0-9._-]+/g, "-").slice(-80);
+      var envois = piecesClient().map(function (p) { return { f: p.f, pre: "piece-" + p.type + "-" }; })
+        .concat(Array.prototype.map.call($("dd-fichiers").files || [], function (f) { return { f: f, pre: "" }; }));
+      return Promise.all(envois.map(function (e) {
+        var x = e.f, nom = e.pre + x.name.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^A-Za-z0-9._-]+/g, "-").slice(-70);
         return sb.storage.from("documents").upload(base + nom, x, { upsert: true, contentType: x.type || "application/octet-stream" });
       })).then(function (res) {
         var ko = res.filter(function (x) { return x.error; });
