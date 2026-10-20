@@ -19,6 +19,19 @@ from .render import render
 
 MAX_DCE = 150_000   # caractères du DCE transmis (≈ 40 000 mots) : le rapport n'a pas besoin de tout
 
+def pour_page(r):
+    """Rapport prêt pour la page visuelle de l'espace client : poids des critères en % (barres)."""
+    r = dict(r or {})
+    crit = []
+    for c in r.get("criteres") or []:
+        c = dict(c)
+        m = re.search(r"(\d{1,3})\s*%", str(c.get("poids") or ""))
+        c["pct"] = min(100, int(m.group(1))) if m else None
+        crit.append(c)
+    r["criteres"] = crit
+    return r
+
+
 PROMPT = """Tu es consultant expert en marchés publics français. Une TPE/PME du métier « {metier} » envisage de répondre
 à l'appel d'offres ci-dessous. Rédige pour son dirigeant un rapport clair et concret pour maximiser ses chances de gagner.
 
@@ -27,13 +40,14 @@ Règles :
   si une information manque (critères, pièces…), dis ce qui est habituel pour ce type de marché et précise « à vérifier dans le règlement ».
 - Prix : donne un repère chiffré seulement s'il s'appuie sur l'historique (montants des marchés précédents) ou sur un montant cité
   dans l'avis ou le DCE, et explique d'où il vient. Sinon, explique comment fixer son prix (sans inventer de montant).
-- Français simple, phrases courtes, aucune formule creuse.
+- Français simple, aucune formule creuse. Le rapport se lit sur téléphone, en un coup d'œil : chaque élément tient
+  en une ligne (15 mots maximum), « en_bref » en une phrase, pas de paragraphe.
 
 Réponds uniquement par un objet JSON, sans texte autour :
 {{
- "en_bref": "3 lignes : ce que veut l'acheteur, où, combien de temps, pour qui ce marché est fait",
+ "en_bref": "1 phrase : ce que veut l'acheteur, où, combien de temps, pour qui ce marché est fait",
  "chances": "bonnes | moyennes | faibles",
- "pourquoi_chances": "2 phrases : taille, concurrence attendue, exigences",
+ "pourquoi_chances": "1 phrase : taille, concurrence attendue, exigences",
  "criteres": [{{"critere": "...", "poids": "ex. 60 % ou « non précisé »", "comment_gagner_des_points": "conseil concret"}}],
  "prix": {{"repere": "ex. 40 000 à 55 000 € HT sur la durée, ou vide", "source": "d'où vient ce repère", "conseil": "comment se placer : ni trop haut, ni anormalement bas"}},
  "pieces": [{{"piece": "...", "ou_la_trouver": "ex. Kbis sur infogreffe.fr", "obligatoire": true}}],

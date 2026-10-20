@@ -1169,7 +1169,8 @@ def demandes_espace(biz, metiers, cles, histo, supa=None, generer_rapport=None, 
         kw = dict(r=r, avis=avis, fiche=fiche, avec_dce=False,
                   lien_dossier=f"{biz['site_url'].rstrip('/')}/compte/#demandes")
         chemin = f"{dem['user_id']}/{dem['id']}/resultat/{comptes.nom_fichier('rapport ' + avis['objet'], '.html')}"
-        supa.deposer(chemin, render("email_rapport.html", biz=biz, cas="rapport", **kw).encode(), "text/html")
+        page = render("rapport_page.html", biz=biz, jours=jours_restants(avis.get("date_limite")), **{**kw, "r": rapport.pour_page(r)})
+        supa.deposer(chemin, page.encode(), "text/html")
         rapport._envoyer(biz, c["email"], f"comment gagner « {avis['objet'][:60]} »", "rapport", **kw)
         return chemin, None
 

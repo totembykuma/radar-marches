@@ -1,0 +1,107 @@
+{# Rapport « comment gagner » ouvert depuis l'espace client : page visuelle (cartes, jauges, cases à cocher, frise),
+   sans script (affichée avec scripts interdits). Les cases à cocher marchent en CSS seul. #}
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Comment gagner : {{ avis.objet[:70] }}</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#F1F3F5;color:#101C2C;font:16px/1.45 Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.w{max-width:860px;margin:0 auto;padding:0 16px 40px}
+.hero{background:#101C2C;color:#F5F3ED;padding:22px 0 26px}
+.hero .w{padding-bottom:0}
+.marque{display:flex;align-items:center;gap:8px;font-weight:800;font-size:15px;color:#F5F3ED;text-decoration:none;margin-bottom:16px}
+.marque i{width:22px;height:22px;border-radius:7px;background:#B8F36B;display:inline-block}
+.kick{color:#B8F36B;font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase;margin:0 0 6px}
+h1{font-size:25px;line-height:1.2;margin:0 0 8px}
+.meta{color:#C9D1DC;font-size:14px;margin:0}.meta a{color:#B8F36B}
+.tuiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:18px}
+.tuile{background:rgba(255,255,255,.07);border-radius:16px;padding:14px 16px}
+.tuile small{display:block;color:#C9D1DC;font-size:12.5px;text-transform:uppercase;letter-spacing:.05em}
+.tuile b{display:block;font-size:26px;margin-top:2px}
+.jauge{display:flex;gap:5px;margin-top:8px}.jauge span{flex:1;height:8px;border-radius:9px;background:rgba(255,255,255,.18)}
+.ch-faibles .jauge span:nth-child(-n+1),.ch-moyennes .jauge span:nth-child(-n+2),.ch-bonnes .jauge span{background:#B8F36B}
+.ch-faibles b{color:#ff8f98}.ch-bonnes b{color:#B8F36B}
+.bref{background:#fff;border-radius:18px;padding:16px 18px;margin:-14px 0 0;position:relative;box-shadow:0 10px 30px -18px rgba(16,28,44,.4);display:flex;gap:12px}
+.bref .ic{font-size:24px;line-height:1}
+.bref p{margin:0}.bref p+p{margin-top:6px;color:#5E6A7C;font-size:14.5px}
+h2{font-size:19px;margin:28px 0 12px;display:flex;align-items:center;gap:10px}
+h2 .ic{width:34px;height:34px;border-radius:11px;background:#B8F36B;display:grid;place-items:center;font-size:17px;flex:none}
+.carte{background:#fff;border:1px solid #E1E5EA;border-radius:16px;padding:14px 16px}
+.crit{display:grid;gap:10px}
+.crit .carte b{display:flex;justify-content:space-between;gap:10px}
+.crit .carte b em{font-style:normal;color:#5E6A7C;font-weight:600;white-space:nowrap}
+.barre{height:9px;border-radius:9px;background:#EDF0F3;margin:8px 0;overflow:hidden}.barre i{display:block;height:100%;background:#101C2C;border-radius:9px}
+.astuce{margin:0;font-size:14.5px;color:#33404F}.astuce::before{content:"💡 "}
+.prix{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:12px}
+.repere{background:#101C2C;color:#F5F3ED;border-radius:16px;padding:16px}
+.repere small{color:#C9D1DC;font-size:12.5px;text-transform:uppercase;letter-spacing:.05em}.repere b{display:block;font-size:22px;color:#B8F36B;margin:4px 0}
+.repere p{margin:0;font-size:13.5px;color:#C9D1DC}
+.histo p{margin:0 0 8px;font-size:14.5px}
+.histo ul{list-style:none;padding:0;margin:0;display:grid;gap:7px}
+.histo li{font-size:13px;color:#5E6A7C}.histo li .barre{margin:3px 0 0}.histo li .barre i{background:#B8F36B}
+.coches{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.coches label{display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid #E1E5EA;border-radius:14px;padding:12px 14px;cursor:pointer}
+.coches input{width:22px;height:22px;accent-color:#21845B;flex:none;margin:0}
+.coches input:checked+span{text-decoration:line-through;color:#8A94A3}
+.coches small{display:block;color:#5E6A7C;font-size:13px}
+.tag{display:inline-block;font-size:11.5px;font-weight:700;border-radius:20px;padding:1px 8px;background:#F1F3F5;color:#5E6A7C;margin-left:6px;vertical-align:1px}
+.pieges{display:grid;gap:8px;list-style:none;padding:0;margin:0}
+.pieges li{background:#FBEBEC;border-radius:14px;padding:11px 14px 11px 44px;position:relative;font-size:14.5px}
+.pieges li::before{content:"!";position:absolute;left:12px;top:11px;width:22px;height:22px;border-radius:50%;background:#C83C48;color:#fff;font-weight:800;display:grid;place-items:center;font-size:13px}
+.frise{list-style:none;padding:0 0 0 26px;margin:0;position:relative}
+.frise::before{content:"";position:absolute;left:8px;top:6px;bottom:6px;width:2px;background:#E1E5EA}
+.frise li{position:relative;margin:0 0 12px}
+.frise li::before{content:"";position:absolute;left:-24px;top:4px;width:14px;height:14px;border-radius:50%;background:#B8F36B;border:2px solid #101C2C}
+.frise b{display:inline-block;background:#101C2C;color:#F5F3ED;border-radius:8px;padding:1px 8px;font-size:12.5px;margin-bottom:4px}
+.frise p{margin:0;font-size:14.5px}
+.bulles{display:grid;gap:8px}
+.bulles p{margin:0;background:#fff;border:1px solid #E1E5EA;border-radius:16px 16px 16px 4px;padding:10px 14px;font-size:14.5px}
+.cta{display:block;text-align:center;background:#B8F36B;color:#101C2C;font-weight:800;text-decoration:none;border-radius:14px;padding:15px;margin:30px 0 12px;font-size:17px}
+.note{font-size:12.5px;color:#5E6A7C;margin:0}
+@media (max-width:640px){.tuiles{grid-template-columns:1fr 1fr}.tuiles .tuile:first-child{grid-column:1/-1}.prix{grid-template-columns:1fr}h1{font-size:21px}}
+@media print{body{background:#fff}.cta{display:none}.hero{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style></head><body>
+<header class="hero"><div class="w">
+  <a class="marque" href="{{ biz.site_url }}"><i></i>{{ biz.nom }}</a>
+  <p class="kick">Comment gagner ce marché</p>
+  <h1>{{ avis.objet }}</h1>
+  <p class="meta">{{ avis.acheteur }}{% if avis.ville %} · {{ avis.ville }}{% endif %}{% if avis.url %} · <a href="{{ avis.url }}">voir l'avis</a>{% endif %}</p>
+  <div class="tuiles">
+    <div class="tuile ch-{{ r.chances }}"><small>Vos chances</small><b>{{ (r.chances or "?")|capitalize }}</b><div class="jauge"><span></span><span></span><span></span></div></div>
+    <div class="tuile"><small>Date limite</small><b>{% if avis.date_limite %}{{ avis.date_limite[8:10] }}/{{ avis.date_limite[5:7] }}{% else %}?{% endif %}</b></div>
+    <div class="tuile"><small>Temps restant</small><b>{% if jours is not none %}{% if jours >= 0 %}{{ jours }} j{% else %}clos{% endif %}{% else %}?{% endif %}</b></div>
+  </div>
+</div></header>
+<main class="w">
+  <div class="bref"><span class="ic">🎯</span><div><p>{{ r.en_bref }}</p>{% if r.pourquoi_chances %}<p>{{ r.pourquoi_chances }}</p>{% endif %}</div></div>
+
+  {% if r.criteres %}<h2><span class="ic">⚖️</span>Ce qui sera noté</h2>
+  <div class="crit">{% for c in r.criteres %}<div class="carte"><b>{{ c.critere }}{% if c.poids %}<em>{{ c.poids }}</em>{% endif %}</b>
+    {% if c.pct %}<div class="barre"><i style="width:{{ c.pct }}%"></i></div>{% endif %}
+    <p class="astuce">{{ c.comment_gagner_des_points }}</p></div>{% endfor %}</div>{% endif %}
+
+  {% if r.prix %}<h2><span class="ic">€</span>Votre prix</h2>
+  <div class="prix">
+    <div class="repere"><small>Repère</small><b>{{ r.prix.repere or "À construire" }}</b>{% if r.prix.source %}<p>{{ r.prix.source }}</p>{% endif %}</div>
+    <div class="carte histo"><p>{{ r.prix.conseil }}</p>
+      {% if fiche and fiche.derniers %}{% set mx = fiche.derniers|map(attribute="montant")|select|max|default(0) %}<ul>{% for x in fiche.derniers %}<li>{{ x.date|date_courte }} · {% if x.gagnant %}{{ x.gagnant }}{% else %}titulaire non publié{% endif %}{% if x.montant %} · <b>{{ x.montant|euros }}</b>{% endif %}{% if x.offres %} · {{ x.offres }} offre{{ 's' if x.offres > 1 }}{% endif %}
+        {% if x.montant and mx %}<div class="barre"><i style="width:{{ (100 * x.montant / mx)|round|int }}%"></i></div>{% endif %}</li>{% endfor %}</ul>{% endif %}
+    </div>
+  </div>{% endif %}
+
+  {% if r.pieces %}<h2><span class="ic">✅</span>Vos pièces, à cocher</h2>
+  <ul class="coches">{% for p in r.pieces %}<li><label><input type="checkbox"><span>{{ p.piece }}{% if not p.obligatoire %}<span class="tag">si demandé</span>{% endif %}{% if p.ou_la_trouver %}<small>{{ p.ou_la_trouver }}</small>{% endif %}</span></label></li>{% endfor %}</ul>{% endif %}
+
+  {% if r.pieges %}<h2><span class="ic">⚠️</span>Les pièges à éviter</h2>
+  <ul class="pieges">{% for p in r.pieges %}<li>{{ p }}</li>{% endfor %}</ul>{% endif %}
+
+  {% if r.plan %}<h2><span class="ic">🗓️</span>Votre plan</h2>
+  <ol class="frise">{% for p in r.plan %}<li><b>{{ p.quand }}</b><p>{{ p.action }}</p></li>{% endfor %}</ol>{% endif %}
+
+  {% if r.a_demander %}<h2><span class="ic">💬</span>À demander à l'acheteur</h2>
+  <div class="bulles">{% for q in r.a_demander %}<p>{{ q }}</p>{% endfor %}</div>{% endif %}
+
+  <a class="cta" href="{{ lien_dossier }}">Préparer mon dossier (inclus)</a>
+  <p class="note">{% if not avec_dce %}Établi à partir de l'avis et de l'historique de l'acheteur. {% endif %}Préparé avec l'aide d'une intelligence artificielle : vérifiez toujours le règlement de la consultation. Aucune attribution n'est garantie.</p>
+</main>
+</body></html>
