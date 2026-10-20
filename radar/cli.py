@@ -796,7 +796,7 @@ def run_prospection(apercu=False):
         mailer.activer_suivi_clics(conf["expediteur"].split("@")[-1].strip(" >"))
     except Exception as exc:
         log.warning("Suivi des clics non activé : %s", safe(exc))
-    envoyes, ids, suivi = 0, [], {}
+    envoyes, ids, suivi, lignes = 0, [], {}, []
     par_jour = int(conf.get("par_jour") or 20)
     if conf.get("par_jour_ensuite") and date.today().isoformat() >= str(conf.get("ensuite_depuis") or "9999"):
         # Plus d'envois seulement si la semaine passée est propre (rebonds et plaintes lus chez Resend).
@@ -827,6 +827,8 @@ def run_prospection(apercu=False):
         if c.get("dom_key"):
             state["contactes"].append(prospects.h(c["dom_key"]))
         envoyes += 1
+        lignes.append({"nom": c.get("nom") or c["email"].split("@")[-1], "email": c["email"],
+                       "metier": metiers[c["metier"]]["libelle"], "dep": c["dep"], "marche": c.get("marche_gagne") or ""})
         if res.get("id"):
             ids.append(res["id"])
             suivi[res["id"]] = [c["metier"], c["dep"]]
@@ -835,7 +837,50 @@ def run_prospection(apercu=False):
     state["journal"] = state["journal"][-120:]
     _save_json(state_path, state)
     resume["envoyes"] = envoyes
+    if envoyes or nb_relances:
+        bilan_prospection(biz, lignes, nb_relances)
     return resume
+
+
+def bilan_prospection(biz, lignes, relances=0):
+    """Récap au propriétaire après chaque envoi : à qui, pour quel métier, quoi. Jamais dans les journaux publics."""
+    esc = lambda x: Markup.escape(str(x or ""))
+    rangs = "".join(
+        f"<tr><td style='padding:6px 8px;border-bottom:1px solid #E1E5EA'><b>{esc(l['nom'])}</b><br>"
+        f"<span style='color:#647184;font-size:13px'>{esc(l['email'])}</span></td>"
+        f"<td style='padding:6px 8px;border-bottom:1px solid #E1E5EA'>{esc(l['metier'])} · {esc(l['dep'])}"
+        + (f"<br><span style='color:#647184;font-size:13px'>{esc(l.get('statut'))}</span>" if l.get("statut") else "")
+        + "</td></tr>" for l in lignes)
+    rel = f" et {relances} relance{'s' if relances > 1 else ''}" if relances else ""
+    alert_owner(biz, f"Prospection : {len(lignes)} e-mail{'s' if len(lignes) > 1 else ''} envoyé{'s' if len(lignes) > 1 else ''}{rel}",
+                f"<p><b>{len(lignes)} entreprises contactées aujourd'hui{rel}.</b> Elles viennent de gagner un marché public "
+                "dans leur métier. Si l'une répond, l'agent lui répond ou te la transmet.</p>"
+                f"<table role='presentation' cellpadding='0' cellspacing='0' style='width:100%;font-size:14px'>{rangs}</table>")
+
+
+STATUTS = {"delivered": "reçu", "opened": "ouvert", "clicked": "a cliqué", "bounced": "adresse invalide",
+           "complained": "signalé comme indésirable", "sent": "envoyé"}
+
+
+def renvoyer_bilan_prospection():
+    """Renvoie le récap du dernier envoi (lu chez Resend, avec le statut de chaque e-mail)."""
+    biz = business()
+    journal = _load_json(DATA / "prospection.json", {}).get("journal", [])
+    if not journal:
+        return {"lignes": 0}
+    j, metiers, lignes = journal[-1], load_metiers(), []
+    for i, (m, dep) in (j.get("suivi") or {i: ["", ""] for i in j.get("ids", [])}).items():
+        try:
+            e = mailer.lire_email(i)
+        except Exception as exc:
+            log.warning("Récap : e-mail non lu (%s)", safe(exc))
+            continue
+        to = ((e.get("to") or [""])[0] or "")
+        lignes.append({"nom": to.split("@")[-1], "email": to, "metier": (metiers.get(m) or {}).get("libelle", ""),
+                       "dep": dep, "statut": STATUTS.get(e.get("last_event"), e.get("last_event") or "")})
+        time.sleep(0.6)  # limite Resend : 2 requêtes/seconde
+    bilan_prospection(biz, lignes, j.get("relances") or 0)
+    return {"date": j.get("date"), "lignes": len(lignes)}
 
 
 # Offre gratuite Resend : 100 e-mails/jour et 3 000/mois, tous envois confondus.
@@ -1159,6 +1204,7 @@ def main(argv=None):
     p.add_argument("--mois", help="baromètre : mois AAAA-MM (par défaut le mois écoulé)")
     p.add_argument("--budget", type=int, default=6000, help="entreprises : nombre maximum d'appels à l'annuaire")
     p.add_argument("--apercu", action="store_true", help="prospection : envoie un aperçu au propriétaire")
+    p.add_argument("--bilan", action="store_true", help="prospection : renvoie le récap du dernier envoi au propriétaire")
     args = p.parse_args(argv)
     try:
         if args.cmd == "daily":
@@ -1182,7 +1228,8 @@ def main(argv=None):
         elif args.cmd == "essai":
             print(json.dumps(run_essai(), ensure_ascii=False, indent=1))
         elif args.cmd == "prospection":
-            print(json.dumps(run_prospection(apercu=args.apercu), ensure_ascii=False, indent=1))
+            print(json.dumps(renvoyer_bilan_prospection() if args.bilan else run_prospection(apercu=args.apercu),
+                             ensure_ascii=False, indent=1))
         elif args.cmd == "audit":
             print(json.dumps(run_audit(), ensure_ascii=False, indent=1))
         elif args.cmd == "apercu-emails":

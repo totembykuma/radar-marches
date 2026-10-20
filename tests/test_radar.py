@@ -1341,3 +1341,14 @@ def test_prospection_plus_d_envois_si_semaine_propre(monkeypatch):
         raise RuntimeError("401")
     monkeypatch.setattr(cli.mailer, "dernier_evenement", illisible)
     assert cli.sante_envois(journal) is None
+
+
+def test_bilan_prospection_au_proprietaire(monkeypatch):
+    from radar import cli
+    envoyes = []
+    monkeypatch.setattr(cli, "alert_owner", lambda biz, sujet, html: envoyes.append((sujet, html)))
+    cli.bilan_prospection(business(), [{"nom": "Peintures <Dupont>", "email": "a@dupont.fr", "metier": "Peinture",
+                                        "dep": "33", "marche": "Ravalement"}], relances=2)
+    sujet, html = envoyes[0]
+    assert sujet == "Prospection : 1 e-mail envoyé et 2 relances"
+    assert "Peintures &lt;Dupont&gt;" in html and "a@dupont.fr" in html and "Peinture · 33" in html
