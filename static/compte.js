@@ -509,10 +509,10 @@
     if (sel.querySelector('option[value="' + ref.replace(/"/g, "") + '"]')) sel.value = ref; else { sel.value = ""; $(p + "-ref").value = ref; }
     $(p + "-ref-p").hidden = sel.value !== "";
     location.hash = "#demandes";
-    setTimeout(function () { var f = $(p === "r" ? "f-rapport" : "f-dossier"); f.scrollIntoView({ behavior: "smooth", block: "center" }); f.classList.add("eclair"); setTimeout(function () { f.classList.remove("eclair"); }, 1600); (p === "r" ? f.querySelector("button[type=submit]") : $("dd-infos")).focus({ preventScroll: true }); }, 80);
+    setTimeout(function () { var f = $(p === "r" ? "f-rapport" : "f-dossier"); f.scrollIntoView({ behavior: "smooth", block: "center" }); f.classList.add("eclair"); setTimeout(function () { f.classList.remove("eclair"); }, 1600); if (p === "dd") { pasDossier(1); majMarche(); } (p === "r" ? f.querySelector("button[type=submit]") : $("dd-suite")).focus({ preventScroll: true }); }, 80);
   }
   ["r", "dd"].forEach(function (p) {
-    $(p + "-choix").addEventListener("change", function () { $(p + "-ref-p").hidden = this.value !== ""; if (!this.value) $(p + "-ref").focus(); });
+    $(p + "-choix").addEventListener("change", function () { $(p + "-ref-p").hidden = this.value !== ""; if (!this.value) $(p + "-ref").focus(); if (p === "dd") majMarche(); });
   });
 
   // Rapport (page HTML) : affiché comme une page lisible dans un nouvel onglet. Le stockage le sert en texte brut
@@ -645,17 +645,92 @@
     });
   });
 
+  // ---- dossier : assistant en 4 étapes (marché, entreprise, documents, vérification)
+  var PAS = 1, CHAMPS_ENT = ["dd-nom", "dd-siret", "dd-adresse", "dd-dirigeant", "dd-effectif", "dd-ca", "dd-activite", "dd-refs", "dd-certifs", "dd-moyens"];
+  function memoEntreprise(ecrire) {
+    try {
+      if (ecrire) { var o = {}; CHAMPS_ENT.forEach(function (i) { o[i] = $(i).value; }); localStorage.setItem("radar_entreprise", JSON.stringify(o)); return; }
+      var m = JSON.parse(localStorage.getItem("radar_entreprise") || "{}");
+      CHAMPS_ENT.forEach(function (i) { if (m[i] && !$(i).value) $(i).value = m[i]; });
+    } catch (e) { /* stockage indisponible : rien à garder */ }
+  }
+  function alerteDe(ref) { return ALERTES.filter(function (a) { return a.avis_id === ref; })[0]; }
+  function majMarche() {
+    var ref = refChoisie("dd"), a = alerteDe(ref), box = $("dd-marche"), lien = $("dd-lien-avis");
+    box.textContent = ""; box.hidden = !a;
+    lien.hidden = !(a && a.url) && !/\d{2}-\d{3,7}/.test(ref);
+    lien.href = a && a.url ? a.url : "https://www.boamp.fr/pages/avis/?q=idweb:" + encodeURIComponent(ref);
+    if (!a) return;
+    box.appendChild(el("b", a.objet));
+    box.appendChild(el("span", [a.acheteur, a.lieu].filter(Boolean).join(" · ")));
+    box.appendChild(el("span", "Date limite : " + dateFr(a.date_limite) + " · Réf. " + a.avis_id));
+  }
+  function nomsFichiers() { return Array.prototype.slice.call($("dd-fichiers").files || []); }
+  function majFichiers() {
+    var fs = nomsFichiers(), noms = fs.map(function (x) { return x.name.toLowerCase(); }).join(" | "), zip = /\.zip\b/.test(noms), ul = $("dd-liste");
+    ul.textContent = "";
+    fs.forEach(function (x) { ul.appendChild(el("li", x.name + " · " + Math.max(1, Math.round(x.size / 1024)) + " Ko")); });
+    Array.prototype.forEach.call($("dd-attendus").children, function (li) {
+      li.classList.toggle("ok", zip || new RegExp(li.dataset.motif, "i").test(noms));
+    });
+  }
+  function infosDossier() {
+    var lignes = [];
+    Array.prototype.forEach.call($("f-dossier").querySelectorAll("[data-infos]"), function (c) { var v = c.value.trim(); if (v) lignes.push(c.dataset.infos + " : " + v); });
+    return lignes.join("\n");
+  }
+  function erreurPas(n) {
+    if (n === 1 && !/\d{2}-\d{3,7}/.test(refChoisie("dd"))) return "Choisissez l'appel d'offres dans la liste (ou saisissez sa référence, par ex. 26-123456).";
+    if (n === 2) {
+      var manque = ["dd-nom", "dd-siret", "dd-dirigeant", "dd-effectif", "dd-activite"].filter(function (i) { return !$(i).value.trim(); });
+      if (manque.length) { $(manque[0]).focus(); return "Complétez les champs marqués * : ils sont obligatoires dans le dossier."; }
+      if ($("dd-siret").value.replace(/\D/g, "").length !== 14) { $("dd-siret").focus(); return "Le SIRET compte 14 chiffres (sur votre Kbis ou sur annuaire-entreprises.data.gouv.fr)."; }
+    }
+    if (n === 3) {
+      var fs = nomsFichiers();
+      if (!fs.length) return "Ajoutez le dossier de consultation (au minimum le règlement de la consultation).";
+      var mauvais = fs.filter(function (x) { return x.size > C.max_octets || !/\.(pdf|docx?|odt|zip|txt)$/i.test(x.name); });
+      if (mauvais.length) return "Fichier refusé : " + mauvais[0].name + " (PDF, Word, ODT, ZIP ou TXT, 20 Mo maximum).";
+      if (fs.length > 15) return "15 fichiers au maximum : regroupez-les dans un ZIP.";
+    }
+    return "";
+  }
+  function pasDossier(n) {
+    PAS = n;
+    var f = $("f-dossier");
+    Array.prototype.forEach.call(f.querySelectorAll(".ass-pas"), function (fs) { fs.hidden = +fs.dataset.pas !== n; });
+    Array.prototype.forEach.call(f.querySelectorAll(".ass-etapes li"), function (li) { var k = +li.dataset.n; li.className = k < n ? "fait" : k === n ? "actif" : ""; });
+    $("dd-retour").hidden = n === 1; $("dd-suite").hidden = n === 4; $("dd-envoyer").hidden = n !== 4;
+    if (n === 2) memoEntreprise(false);
+    if (n === 3) majMarche();
+    if (n === 4) {
+      var a = alerteDe(refChoisie("dd")), dl = $("dd-recap"), fs = nomsFichiers(), manque = Array.prototype.filter.call($("dd-attendus").children, function (li) { return !li.classList.contains("ok"); });
+      dl.textContent = "";
+      [["Marché", a ? a.objet + " (réf. " + a.avis_id + ")" : "Réf. " + refChoisie("dd")],
+       ["Entreprise", $("dd-nom").value.trim() + " · SIRET " + $("dd-siret").value.trim() + " · " + $("dd-effectif").value.trim()],
+       ["Signataire", $("dd-dirigeant").value.trim()],
+       ["Documents", fs.length + " fichier" + (fs.length > 1 ? "s" : "") + (manque.length ? " · non repéré : " + manque.map(function (li) { return li.querySelector("b").textContent; }).join(", ") + (manque.length > 1 ? " (envoyez-les s'ils existent)" : " (envoyez-le s'il existe)") : " · tout est repéré")]
+      ].forEach(function (x) { dl.appendChild(el("dt", x[0])); dl.appendChild(el("dd", x[1])); });
+    }
+    msg("m-dossier", "");
+  }
+  $("dd-suite").addEventListener("click", function () {
+    var e = erreurPas(PAS); if (e) return msg("m-dossier", e);
+    if (PAS === 2) memoEntreprise(true);
+    pasDossier(PAS + 1);
+    $("f-dossier").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  $("dd-retour").addEventListener("click", function () { pasDossier(PAS - 1); });
+  $("dd-fichiers").addEventListener("change", majFichiers);
+  $("f-dossier").addEventListener("input", function () { if (!$("m-dossier").hidden && !$("m-dossier").classList.contains("msg-ok")) msg("m-dossier", ""); });
   $("f-dossier").addEventListener("submit", function (ev) {
     ev.preventDefault();
-    var f = this, ref = refChoisie("dd"), fichiers = Array.prototype.slice.call($("dd-fichiers").files || []);
-    if (!/\d{2}-\d{3,7}/.test(ref)) return msg("m-dossier", "Choisissez l'appel d'offres dans la liste (ou saisissez sa référence, par ex. 26-123456).");
-    if (!fichiers.length) return msg("m-dossier", "Ajoutez le dossier de consultation (règlement, cahier des charges…).");
-    var mauvais = fichiers.filter(function (x) { return x.size > C.max_octets || !/\.(pdf|docx?|odt|zip|txt)$/i.test(x.name); });
-    if (mauvais.length) return msg("m-dossier", "Fichier refusé : " + mauvais[0].name + " (PDF, Word, ODT, ZIP ou TXT, 20 Mo maximum).");
-    if (fichiers.length > 15) return msg("m-dossier", "15 fichiers au maximum : regroupez-les dans un ZIP.");
+    if (PAS !== 4) { $("dd-suite").click(); return; }
+    var f = this, ref = refChoisie("dd"), fichiers = nomsFichiers();
+    for (var k = 1; k <= 3; k++) { var e = erreurPas(k); if (e) { pasDossier(k); return msg("m-dossier", e); } }
     f.dataset.cle = f.dataset.cle || cleUnique();
     attente(f, true); msg("m-dossier", "Envoi en cours…", true);
-    sb.rpc("demander", { p_type: "dossier", p_avis_ref: ref, p_infos: $("dd-infos").value, p_cle: f.dataset.cle }).then(function (r) {
+    sb.rpc("demander", { p_type: "dossier", p_avis_ref: ref, p_infos: infosDossier(), p_cle: f.dataset.cle }).then(function (r) {
       if (r.error) { attente(f, false); return msg("m-dossier", erreurServeur(r.error)); }
       var dem = r.data, base = E_uid + "/" + dem.id + "/dce/";
       return Promise.all(fichiers.map(function (x) {
@@ -668,7 +743,7 @@
       }).then(function (r2) {
         attente(f, false);
         if (r2.error) throw r2.error;
-        delete f.dataset.cle; f.reset(); msg("m-dossier", "");
+        delete f.dataset.cle; f.reset(); majFichiers(); pasDossier(1); majMarche(); msg("m-dossier", "");
         toast("Dossier reçu : préparation dans les prochaines heures (jours ouvrés).");
         ouvrirEspace();
       });

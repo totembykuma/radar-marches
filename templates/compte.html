@@ -280,7 +280,7 @@
             <li><span class="parcours-n">2</span><b>Envoyez la demande</b><span>Le marché est déjà rempli. Pour un dossier, ajoutez les pièces de la consultation.</span></li>
             <li><span class="parcours-n">3</span><b>Téléchargez</b><span>Le document arrive dans « Mes demandes » en bas de page. Vous êtes prévenu par e-mail.</span></li>
           </ol>
-          <details class="video-aide"><summary>▶ Voir la vidéo (30 s) : créer un dossier</summary>
+          <details class="video-aide"><summary>Voir la vidéo (30 s) : créer un dossier</summary>
             <video controls playsinline preload="none" poster="{{ root }}static/videos/creer-un-dossier-affiche.jpg"><source src="{{ root }}static/videos/creer-un-dossier.mp4" type="video/mp4"></video>
           </details>
           <div class="quotas" id="d-quotas" hidden></div>
@@ -293,15 +293,71 @@
               <p class="msg" id="m-rapport" role="status" hidden></p>
               <button class="btn" type="submit">Demander le rapport</button>
             </form>
-            <form class="carte form" id="f-dossier" novalidate>
+            <form class="carte form assistant" id="f-dossier" novalidate>
               <h2>Dossier de candidature (inclus)</h2>
-              <p class="muted">Word modifiable : mémoire technique, lettre de candidature, DUME, pièces à fournir. À relire, chiffrer, signer et déposer vous-même. Les passages à compléter sont signalés.</p>
-              <p><label for="dd-choix">Appel d'offres</label><select id="dd-choix" data-saisie="dd-ref-p"></select></p>
-              <p id="dd-ref-p" hidden><label for="dd-ref">Référence de l'avis (ex. 26-123456, écrite « Réf. » sous chaque marché)</label><input id="dd-ref" autocomplete="off"></p>
-              <p><label for="dd-infos">Votre entreprise (activité, effectif, références, certifications…)</label><textarea id="dd-infos" rows="4" maxlength="4000"></textarea></p>
-              <p><label for="dd-fichiers">Dossier de consultation (PDF, Word ou ZIP, 20 Mo max par fichier)</label><input id="dd-fichiers" type="file" multiple accept=".pdf,.doc,.docx,.odt,.zip,.txt"></p>
+              <p class="muted">On vous guide en 4 étapes. Vous recevez un Word prêt à relire : lettre de candidature, DUME, mémoire technique et liste des pièces.</p>
+              <ol class="ass-etapes" aria-hidden="true"><li data-n="1">Le marché</li><li data-n="2">Votre entreprise</li><li data-n="3">Les documents</li><li data-n="4">Vérifier et envoyer</li></ol>
+
+              <fieldset class="ass-pas" data-pas="1">
+                <legend><span class="ass-num">1</span> Pour quel appel d'offres ?</legend>
+                <p><label for="dd-choix">Choisissez le marché dans vos alertes</label><select id="dd-choix" data-saisie="dd-ref-p"></select></p>
+                <p id="dd-ref-p" hidden><label for="dd-ref">Référence de l'avis (ex. 26-123456, écrite « Réf. » sous chaque marché)</label><input id="dd-ref" autocomplete="off"></p>
+                <div class="ass-marche" id="dd-marche" hidden></div>
+              </fieldset>
+
+              <fieldset class="ass-pas" data-pas="2" hidden>
+                <legend><span class="ass-num">2</span> Présentez votre entreprise</legend>
+                <p class="ass-aide">Ces réponses remplissent la lettre, le DUME et le mémoire. Elles sont gardées sur cet appareil pour vos prochains dossiers.</p>
+                <div class="ass-grille">
+                  <p><label for="dd-nom">Nom de l'entreprise *</label><input id="dd-nom" data-infos="Entreprise" autocomplete="organization"></p>
+                  <p><label for="dd-siret">SIRET *</label><input id="dd-siret" data-infos="SIRET" inputmode="numeric" placeholder="14 chiffres"></p>
+                  <p><label for="dd-adresse">Adresse du siège</label><input id="dd-adresse" data-infos="Adresse" autocomplete="street-address"></p>
+                  <p><label for="dd-dirigeant">Signataire (nom et fonction) *</label><input id="dd-dirigeant" data-infos="Signataire" placeholder="ex. M. Dupont, gérant"></p>
+                  <p><label for="dd-effectif">Effectif *</label><input id="dd-effectif" data-infos="Effectif" inputmode="numeric" placeholder="ex. 12 salariés"></p>
+                  <p><label for="dd-ca">Chiffre d'affaires (dernier exercice)</label><input id="dd-ca" data-infos="Chiffre d'affaires" placeholder="ex. 850 000 €"></p>
+                </div>
+                <p><label for="dd-activite">Votre activité en une ou deux phrases *</label><textarea id="dd-activite" data-infos="Activité" rows="2" maxlength="600" placeholder="ex. Nettoyage de bureaux et de locaux publics en Gironde depuis 2012."></textarea></p>
+                <p><label for="dd-refs">Vos références : 3 chantiers ou contrats proches (client, objet, année, montant)</label><textarea id="dd-refs" data-infos="Références" rows="3" maxlength="1200" placeholder="ex. Mairie de Talence, nettoyage école, 2025, 40 000 €/an"></textarea></p>
+                <div class="ass-grille">
+                  <p><label for="dd-certifs">Certifications, qualifications, labels</label><input id="dd-certifs" data-infos="Certifications" placeholder="ex. Qualipropre, ISO 9001, RGE"></p>
+                  <p><label for="dd-moyens">Moyens matériels clés</label><input id="dd-moyens" data-infos="Moyens" placeholder="ex. 4 véhicules, autolaveuses"></p>
+                </div>
+                <p><label for="dd-plus">Autre chose à savoir ? (facultatif)</label><textarea id="dd-plus" data-infos="Précisions" rows="2" maxlength="600" placeholder="ex. Nous voulons répondre seulement au lot 2."></textarea></p>
+              </fieldset>
+
+              <fieldset class="ass-pas" data-pas="3" hidden>
+                <legend><span class="ass-num">3</span> Ajoutez le dossier de consultation</legend>
+                <p class="ass-aide">Ce sont les documents publiés par l'acheteur. Ouvrez l'avis, puis « Accéder au dossier de consultation » (profil acheteur, inscription gratuite) et téléchargez tout. Un ZIP complet suffit.</p>
+                <p><a class="btn btn-clair btn-sm" id="dd-lien-avis" href="#" target="_blank" rel="noopener" hidden>Ouvrir l'avis du marché ↗</a></p>
+                <ul class="ass-pieces" id="dd-attendus">
+                  <li data-motif="r[eè]glement|\brc\b"><b>Règlement de la consultation (RC)</b><span>Indispensable : les règles, les critères, la date limite</span></li>
+                  <li data-motif="cctp|technique|clauses techniques"><b>CCTP</b><span>Ce qu'il faut faire, en détail</span></li>
+                  <li data-motif="ccap|administrati"><b>CCAP</b><span>Paiement, pénalités, durée</span></li>
+                  <li data-motif="bpu|dpgf|dqe|prix|devis"><b>Bordereau de prix (BPU, DPGF ou DQE)</b><span>À chiffrer par vous ensuite</span></li>
+                  <li data-motif="\bae\b|engagement|attri1"><b>Acte d'engagement (AE ou ATTRI1)</b><span>Si l'acheteur le fournit</span></li>
+                </ul>
+                <label class="ass-depot" for="dd-fichiers"><span class="ass-depot-ico" aria-hidden="true">⬆</span><b>Choisir les fichiers</b><span>PDF, Word ou ZIP, 20 Mo max par fichier, 15 fichiers max</span><input id="dd-fichiers" type="file" multiple accept=".pdf,.doc,.docx,.odt,.zip,.txt"></label>
+                <ul class="ass-fichiers" id="dd-liste"></ul>
+                <p class="ass-aide petit">Pas sûr du nom des fichiers ? Envoyez tout : les pièces reconnues se cochent seules, un ZIP coche tout.</p>
+              </fieldset>
+
+              <fieldset class="ass-pas" data-pas="4" hidden>
+                <legend><span class="ass-num">4</span> Vérifiez puis envoyez</legend>
+                <dl class="ass-recap" id="dd-recap"></dl>
+                <div class="ass-apres">
+                  <h3>Ce que vous recevrez</h3>
+                  <ul><li>Lettre de candidature et DUME pré-remplis</li><li>Mémoire technique rédigé pour ce marché</li><li>Liste des pièces à joindre et des points à surveiller</li></ul>
+                  <h3>À préparer de votre côté pour le dépôt</h3>
+                  <ul class="ass-coche"><li>Kbis de moins de 3 mois</li><li>Attestation de vigilance URSSAF (moins de 6 mois)</li><li>Attestation de régularité fiscale</li><li>Attestation d'assurance responsabilité civile pro</li><li>RIB de l'entreprise</li><li>Votre prix dans le bordereau (BPU/DPGF)</li><li>Signature électronique si le règlement l'exige</li></ul>
+                </div>
+              </fieldset>
+
               <p class="msg" id="m-dossier" role="status" hidden></p>
-              <button class="btn" type="submit">Envoyer pour préparation</button>
+              <div class="ass-nav">
+                <button class="btn btn-clair" type="button" id="dd-retour" hidden>← Retour</button>
+                <button class="btn" type="button" id="dd-suite">Continuer →</button>
+                <button class="btn" type="submit" id="dd-envoyer" hidden>Envoyer pour préparation</button>
+              </div>
             </form>
           </div>
           <div class="carte carte-achat" id="d-achat" hidden><div><h2>Dossier prêt à signer</h2><p id="d-achat-txt"></p></div><p><a class="btn" id="d-achat-lien" href="#">Commander un dossier</a></p></div>
