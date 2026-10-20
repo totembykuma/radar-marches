@@ -32,6 +32,8 @@ await page.route("https://abcdefgh.supabase.co/**", async (route) => {
   if (p === "/rest/v1/alertes") return json(200, alertes);
   if (p === "/rest/v1/demandes") return json(200, demandes);
   if (p === "/rest/v1/rpc/demander") return json(200, { id: "22222222-bbbb", statut: "recue" });
+  if (p === "/rest/v1/rpc/soumettre_dossier") return json(200, { id: "22222222-bbbb", statut: "recue" });
+  if (p.startsWith("/storage/v1/object/documents/")) return json(200, { Key: p });
   return json(404, {});
 });
 await page.goto(`${BASE}/compte/?connexion`);
@@ -53,6 +55,32 @@ await page.click("#l-marches li:nth-child(1) .marche-pied button:has-text('Dossi
 await page.waitForSelector("#p-demandes:not([hidden])"); await page.waitForTimeout(700);
 verifier((await page.inputValue("#dd-choix")) === alertes[0].avis_id, "dossier prérempli : " + await page.inputValue("#dd-choix"));
 await page.screenshot({ path: `${process.env.S || "/tmp"}/dossier-prerempli-${nom}.png` });
+// assistant dossier : 4 étapes, champs obligatoires, pièces repérées, envoi
+const S = process.env.S || "/tmp";
+verifier(await page.isVisible("#dd-marche"), "marché choisi affiché");
+await page.click("#dd-suite");
+verifier(await page.isVisible("fieldset[data-pas='2']"), "étape 2 entreprise");
+await page.click("#dd-suite");
+verifier(await page.isVisible("#m-dossier") && await page.isVisible("fieldset[data-pas='2']"), "champs obligatoires bloquent");
+await page.fill("#dd-nom", "Net Pro SARL"); await page.fill("#dd-siret", "123 456 789 00012"); await page.fill("#dd-dirigeant", "M. Martin, gérant");
+await page.fill("#dd-effectif", "12 salariés"); await page.fill("#dd-activite", "Nettoyage de locaux publics en Gironde.");
+await page.fill("#dd-refs", "Mairie de Talence, nettoyage école, 2025, 40 000 €/an");
+await page.screenshot({ path: `${S}/dossier-etape2-${nom}.png`, fullPage: true });
+await page.click("#dd-suite");
+verifier(await page.isVisible("fieldset[data-pas='3']"), "étape 3 documents");
+await page.setInputFiles("#dd-fichiers", [{ name: "RC_reglement_consultation.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4") }, { name: "CCTP.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4") }]);
+verifier((await page.$$("#dd-attendus li.ok")).length === 2, "RC et CCTP repérés");
+await page.screenshot({ path: `${S}/dossier-etape3-${nom}.png`, fullPage: true });
+await page.click("#dd-suite");
+verifier((await page.textContent("#dd-recap")).includes("Net Pro SARL"), "récapitulatif");
+await page.screenshot({ path: `${S}/dossier-etape4-${nom}.png`, fullPage: true });
+await page.click("#dd-envoyer");
+await page.waitForFunction(() => document.querySelector("#toast") && !document.querySelector("#toast").hidden);
+verifier(log.some((l) => l.includes("/rpc/demander") && l.includes("SIRET : 123 456 789 00012")), "infos structurées envoyées");
+verifier(log.some((l) => l.includes("/rpc/soumettre_dossier")), "dossier soumis");
+await page.waitForSelector("#p-demandes:not([hidden])"); await page.waitForTimeout(500);
+verifier(await page.isVisible("fieldset[data-pas='1']"), "retour à l'étape 1");
+await page.evaluate(() => { document.querySelector("#toast").hidden = true; });
 // rapport via la liste
 await page.selectOption("#r-choix", "26-102961");
 await page.click("#f-rapport button[type=submit]");
