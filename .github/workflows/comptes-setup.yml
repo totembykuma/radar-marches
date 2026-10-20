@@ -5,7 +5,7 @@ on:
   workflow_dispatch: {}
   push:   # base mise à jour toute seule quand supabase/schema.sql change sur main
     branches: [main]
-    paths: [supabase/schema.sql]
+    paths: [supabase/schema.sql, radar/comptes_setup.py]
 permissions: { contents: write, actions: write }
 concurrency: { group: radar-daily, cancel-in-progress: false }
 jobs:

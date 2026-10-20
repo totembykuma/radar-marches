@@ -26,7 +26,8 @@ from .render import render
 TYPES_MIME = ["application/pdf", "application/zip", "application/x-zip-compressed", "application/msword",
               "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
               "application/vnd.oasis.opendocument.text", "text/plain",
-              "text/html"]   # text/html : rapports « comment gagner » déposés par le robot
+              "text/html", "application/json",   # rapports « comment gagner » (page + données) déposés par le robot
+              "image/jpeg", "image/png"]          # pièces du client photographiées (Kbis, attestations…)
 EVENEMENTS_STRIPE = ["checkout.session.completed", "customer.subscription.created", "customer.subscription.updated",
                      "customer.subscription.deleted", "customer.subscription.trial_will_end", "invoice.paid",
                      "invoice.payment_failed", "charge.refunded"]
