@@ -266,3 +266,6 @@ a.marche-titre .ic{display:inline-block;width:14px;height:14px;margin-left:4px;v
 /* Contraste AA sur le fond gris de l'espace client */
 .compte{--muted:#5E6A7C}
 .compte form.eclair{box-shadow:0 0 0 4px #B8F36B;transition:box-shadow .3s}
+.video-aide{margin:0 0 18px;background:#101C2C;border-radius:12px;padding:12px 16px;color:#F5F3ED}
+.video-aide summary{cursor:pointer;font-weight:600;color:#B8F36B}
+.video-aide video{display:block;width:100%;max-width:720px;margin-top:12px;border-radius:10px}
