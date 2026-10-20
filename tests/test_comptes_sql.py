@@ -168,8 +168,6 @@ def test_demandes_quotas_et_double_clic(pg):
 def test_dossier_pieces_privees(pg):
     d = pg.q("select id from public.demander('dossier', '26-777777', 'SARL Test', 'cle-dossier-1')", uid=U["cle"])
     assert pg.q(f"select statut from public.demandes where id = '{d}'") == "action_requise"
-    with pytest.raises(RuntimeError, match="Ajoutez au moins une pièce"):
-        pg.q(f"select statut from public.soumettre_dossier('{d}')", uid=U["cle"])
     with pytest.raises(RuntimeError, match="row-level security"):               # dépôt dans le dossier d'un autre client
         pg.q(f"insert into storage.objects (bucket_id, name) values ('documents', '{U['cle']}/{d}/dce/rc.pdf')", uid=U["pro"])
     with pytest.raises(RuntimeError, match="row-level security"):               # hors du sous-dossier dce/

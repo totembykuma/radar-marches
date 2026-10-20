@@ -277,7 +277,7 @@
         <section class="page" id="p-demandes" data-titre="Rapports et dossiers" hidden>
           <ol class="parcours" id="d-parcours" hidden>
             <li><span class="parcours-n">1</span><b>Choisissez un marché</b><span>Dans « Nouveaux marchés » ou ci-dessous : boutons <em>Rapport</em> et <em>Dossier</em> sur chaque appel d'offres.</span></li>
-            <li><span class="parcours-n">2</span><b>Envoyez la demande</b><span>Le marché est déjà rempli. Pour un dossier, ajoutez les pièces de la consultation.</span></li>
+            <li><span class="parcours-n">2</span><b>Envoyez la demande</b><span>Le marché est déjà rempli. Pour un dossier, ajoutez vos pièces d'entreprise si vous les avez.</span></li>
             <li><span class="parcours-n">3</span><b>Téléchargez</b><span>Le document arrive dans « Mes demandes » en bas de page. Vous êtes prévenu par e-mail.</span></li>
           </ol>
           <details class="video-aide"><summary>Voir la vidéo (30 s) : créer un dossier</summary>
@@ -296,7 +296,7 @@
             <form class="carte form assistant" id="f-dossier" novalidate>
               <h2>Dossier de candidature (inclus)</h2>
               <p class="muted">On vous guide en 4 étapes. Vous recevez un Word prêt à relire : lettre de candidature, DUME, mémoire technique et liste des pièces.</p>
-              <ol class="ass-etapes" aria-hidden="true"><li data-n="1">Le marché</li><li data-n="2">Votre entreprise</li><li data-n="3">Les documents</li><li data-n="4">Vérifier et envoyer</li></ol>
+              <ol class="ass-etapes" aria-hidden="true"><li data-n="1">Le marché</li><li data-n="2">Votre entreprise</li><li data-n="3">Vos pièces</li><li data-n="4">Vérifier et envoyer</li></ol>
 
               <fieldset class="ass-pas" data-pas="1">
                 <legend><span class="ass-num">1</span> Pour quel appel d'offres ?</legend>
@@ -326,19 +326,22 @@
               </fieldset>
 
               <fieldset class="ass-pas" data-pas="3" hidden>
-                <legend><span class="ass-num">3</span> Ajoutez le dossier de consultation</legend>
-                <p class="ass-aide">Ce sont les documents publiés par l'acheteur. Ouvrez l'avis, puis « Accéder au dossier de consultation » (profil acheteur, inscription gratuite) et téléchargez tout. Un ZIP complet suffit.</p>
-                <p><a class="btn btn-clair btn-sm" id="dd-lien-avis" href="#" target="_blank" rel="noopener" hidden>Ouvrir l'avis du marché ↗</a></p>
-                <ul class="ass-pieces" id="dd-attendus">
-                  <li data-motif="r[eè]glement|\brc\b"><b>Règlement de la consultation (RC)</b><span>Indispensable : les règles, les critères, la date limite</span></li>
-                  <li data-motif="cctp|technique|clauses techniques"><b>CCTP</b><span>Ce qu'il faut faire, en détail</span></li>
-                  <li data-motif="ccap|administrati"><b>CCAP</b><span>Paiement, pénalités, durée</span></li>
-                  <li data-motif="bpu|dpgf|dqe|prix|devis"><b>Bordereau de prix (BPU, DPGF ou DQE)</b><span>À chiffrer par vous ensuite</span></li>
-                  <li data-motif="\bae\b|engagement|attri1"><b>Acte d'engagement (AE ou ATTRI1)</b><span>Si l'acheteur le fournit</span></li>
+                <legend><span class="ass-num">3</span> Vos pièces d'entreprise</legend>
+                <p class="ass-aide">Le dossier de consultation de l'acheteur, on s'en occupe. Ajoutez seulement vos documents : ils seront cités et listés dans votre dossier. Rien n'est obligatoire, mais plus vous en mettez, moins il restera à compléter.</p>
+                <ul class="ass-pieces ass-miennes" id="dd-miennes">
+                  <li data-type="kbis"><b>Extrait Kbis (moins de 3 mois)</b><span>Sur infogreffe.fr ou monidenum.fr</span><label class="ass-bouton">Ajouter<input type="file" accept=".pdf,.jpg,.jpeg,.png,.docx,.odt"></label></li>
+                  <li data-type="urssaf"><b>Attestation de vigilance URSSAF</b><span>Sur votre espace urssaf.fr</span><label class="ass-bouton">Ajouter<input type="file" accept=".pdf,.jpg,.jpeg,.png,.docx,.odt"></label></li>
+                  <li data-type="fiscale"><b>Attestation de régularité fiscale</b><span>Sur impots.gouv.fr, espace professionnel</span><label class="ass-bouton">Ajouter<input type="file" accept=".pdf,.jpg,.jpeg,.png,.docx,.odt"></label></li>
+                  <li data-type="assurance"><b>Attestation d'assurance RC pro</b><span>Demandez-la à votre assureur</span><label class="ass-bouton">Ajouter<input type="file" accept=".pdf,.jpg,.jpeg,.png,.docx,.odt"></label></li>
+                  <li data-type="references"><b>Références ou attestations de bonne exécution</b><span>Lettres de clients, liste de chantiers</span><label class="ass-bouton">Ajouter<input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.docx,.odt"></label></li>
+                  <li data-type="certifs"><b>Certifications, qualifications, CV</b><span>Qualibat, Qualipropre, ISO…</span><label class="ass-bouton">Ajouter<input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.docx,.odt"></label></li>
+                  <li data-type="rib"><b>RIB de l'entreprise</b><span>Pour l'acte d'engagement</span><label class="ass-bouton">Ajouter<input type="file" accept=".pdf,.jpg,.jpeg,.png"></label></li>
                 </ul>
-                <label class="ass-depot" for="dd-fichiers"><span class="ass-depot-ico" aria-hidden="true">⬆</span><b>Choisir les fichiers</b><span>PDF, Word ou ZIP, 20 Mo max par fichier, 15 fichiers max</span><input id="dd-fichiers" type="file" multiple accept=".pdf,.doc,.docx,.odt,.zip,.txt"></label>
+                <details class="ass-dce"><summary>Vous avez déjà le dossier de consultation ? Ajoutez-le (facultatif)</summary>
+                  <p class="ass-aide petit">Sinon, on le récupère pour vous quand l'acheteur le publie en accès libre, ou on travaille à partir de l'avis officiel.</p>
+                  <input id="dd-fichiers" type="file" multiple accept=".pdf,.doc,.docx,.odt,.zip,.txt">
+                </details>
                 <ul class="ass-fichiers" id="dd-liste"></ul>
-                <p class="ass-aide petit">Pas sûr du nom des fichiers ? Envoyez tout : les pièces reconnues se cochent seules, un ZIP coche tout.</p>
               </fieldset>
 
               <fieldset class="ass-pas" data-pas="4" hidden>
@@ -347,8 +350,8 @@
                 <div class="ass-apres">
                   <h3>Ce que vous recevrez</h3>
                   <ul><li>Lettre de candidature et DUME pré-remplis</li><li>Mémoire technique rédigé pour ce marché</li><li>Liste des pièces à joindre et des points à surveiller</li></ul>
-                  <h3>À préparer de votre côté pour le dépôt</h3>
-                  <ul class="ass-coche"><li>Kbis de moins de 3 mois</li><li>Attestation de vigilance URSSAF (moins de 6 mois)</li><li>Attestation de régularité fiscale</li><li>Attestation d'assurance responsabilité civile pro</li><li>RIB de l'entreprise</li><li>Votre prix dans le bordereau (BPU/DPGF)</li><li>Signature électronique si le règlement l'exige</li></ul>
+                  <h3>Il vous restera seulement</h3>
+                  <ul class="ass-coche" id="dd-reste"></ul>
                 </div>
               </fieldset>
 

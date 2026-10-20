@@ -305,3 +305,35 @@ def fetch_one(avis_id, session=None):
     r.raise_for_status()
     rows = r.json().get("results") or []
     return normalize(rows[0]) if rows else None
+
+
+def texte_complet(avis_id, session=None, maximum=60_000):
+    """Tout le texte utile d'un avis (objet, lots, critères, conditions…), à plat : sert de base au dossier
+    quand le client n'a pas le dossier de consultation. Chaîne vide si l'avis est introuvable."""
+    if not re.fullmatch(r"\d{2}-\d{3,7}", avis_id or ""):
+        return ""
+    r = (session or requests).get(f"{API}/records", params={"where": f'idweb = "{avis_id}"', "limit": 1}, timeout=60)
+    r.raise_for_status()
+    rows = r.json().get("results") or []
+    if not rows:
+        return ""
+    rec, lignes = rows[0], []
+    for k in ("objet", "nomacheteur", "datelimitereponse", "type_marche", "procedure_libelle", "descripteur_libelle"):
+        if rec.get(k):
+            lignes.append(f"{k} : {rec[k]}")
+
+    def parcourir(o, chemin):
+        if isinstance(o, dict):
+            for k, v in o.items():
+                parcourir(v, f"{chemin}/{k}" if chemin else k)
+        elif isinstance(o, list):
+            for v in o:
+                parcourir(v, chemin)
+        elif o not in (None, "", True, False):
+            lignes.append(f"{re.sub(r'^.*?/', '', chemin)[-80:]} : {o}")
+    try:
+        d = rec.get("donnees")
+        parcourir(json.loads(d) if isinstance(d, str) else (d or {}), "")
+    except ValueError:
+        pass
+    return "\n".join(lignes)[:maximum]

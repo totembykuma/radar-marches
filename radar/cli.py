@@ -1159,7 +1159,13 @@ def run_dossiers():
     return {"actif": True, "livres": livres, "rapports": rapports, "demandes_espace": espace, "erreurs": len(erreurs)}
 
 
-def demandes_espace(biz, metiers, cles, histo, supa=None, generer_rapport=None, generer_dossier=None, avis_fn=None, limite=5):
+PIECES_CLIENT = {"kbis": "Extrait Kbis", "urssaf": "Attestation de vigilance URSSAF", "fiscale": "Attestation de régularité fiscale",
+                 "assurance": "Attestation d'assurance RC pro", "references": "Références / attestations de bonne exécution",
+                 "certifs": "Certifications, qualifications, CV", "rib": "RIB"}
+
+
+def demandes_espace(biz, metiers, cles, histo, supa=None, generer_rapport=None, generer_dossier=None, avis_fn=None, limite=5,
+                    avis_complet=None):
     """Rapports et dossiers inclus demandés depuis l'espace client (offre Clé en main) : résultat déposé dans le
     stockage privé du client + e-mail. Les demandes par e-mail (rapport.traiter / dossier.traiter) restent possibles."""
     if not biz.get("cle_actif"):
@@ -1172,6 +1178,7 @@ def demandes_espace(biz, metiers, cles, histo, supa=None, generer_rapport=None, 
     generer_rapport = generer_rapport or (lambda avis, fiche, metier: rapport.generer(avis, fiche, metier, "", modele))
     generer_dossier = generer_dossier or (lambda dce, infos: dossier.generer(dce, infos, modele))
     avis_fn = avis_fn or boamp.fetch_one
+    avis_complet = avis_complet or boamp.texte_complet
     par_email = {s["email"].lower(): s for s in cles}
 
     def metier_de(c, avis):
@@ -1199,14 +1206,28 @@ def demandes_espace(biz, metiers, cles, histo, supa=None, generer_rapport=None, 
         return chemin, None
 
     def faire_dossier(dem, c, pieces):
-        textes = []
+        # pièces du client (« piece-<type>-… ») d'un côté, dossier de consultation (facultatif) de l'autre
+        miennes = [p for p in pieces if p.rsplit("/", 1)[-1].startswith("piece-")]
+        textes, ent = [], []
         for p in pieces:
-            if p.lower().endswith(comptes.DCE_TYPES):
-                textes += dossier.extraire_texte(p.rsplit("/", 1)[-1], supa.lire(p))
+            if p in miennes or not p.lower().endswith(comptes.DCE_TYPES):
+                continue
+            textes += dossier.extraire_texte(p.rsplit("/", 1)[-1], supa.lire(p))
+        for p in miennes:
+            nom = p.rsplit("/", 1)[-1]
+            ent.append(f"- {PIECES_CLIENT.get(nom.split('-')[1], nom.split('-')[1])} : fournie ({nom})")
+            if nom.lower().endswith((".pdf", ".docx", ".odt", ".txt")):
+                ent += [t[:3000] for _, t in dossier.extraire_texte(nom, supa.lire(p))]
         dce = dossier.assembler(textes)
-        if len(dce) < 2000:
-            return None, "Pièces illisibles ou incomplètes : ajoutez le règlement et le cahier des charges (PDF ou Word). Non décompté."
-        doc = generer_dossier(dce, (dem.get("infos") or "") + f"\nAvis BOAMP : {dem['avis_ref']}")
+        if len(dce) < 2000:                           # pas de dossier de consultation : on part de l'avis officiel complet
+            avis_txt = avis_complet(dem["avis_ref"])
+            if len(avis_txt) < 300:
+                return None, f"Avis {dem['avis_ref']} introuvable au BOAMP : vérifiez la référence. Non décompté."
+            dce = "===== AVIS OFFICIEL SEUL (dossier de consultation non fourni) =====\n" + avis_txt + ("\n\n" + dce if dce else "")
+        infos = (dem.get("infos") or "") + f"\nAvis BOAMP : {dem['avis_ref']}"
+        if ent:
+            infos += "\n\nPIÈCES DÉJÀ FOURNIES PAR L'ENTREPRISE :\n" + "\n".join(ent)[:12_000]
+        doc = generer_dossier(dce, infos)
         reste = dossier.jours_avant(doc.get("date_limite"))
         if reste is not None and reste < int(d.get("delai_min_jours") or 5):
             return None, f"Date limite trop proche ({max(reste, 0)} jour(s)) pour préparer un dossier sérieux. Non décompté."
