@@ -1,49 +1,43 @@
 {% extends "_email.html" %}
-{% block bandeau %}
-<tr><td style="background:#101C2C;color:#fff;padding:18px 28px">
-  <div style="font-size:20px;font-weight:bold">Vos nouveaux appels d'offres</div>
-  <div style="font-size:14px;opacity:.85">{{ avis|length }} appel{{ 's' if avis|length > 1 }} d'offres pour vous · {{ date_fr }}</div>
+{# Alerte du matin, version épurée : par marché, le titre, 3 repères (lieu, temps restant, montant) et un bouton. Au-delà de 5 marchés, une liste courte. #}
+{% block preheader %}{% set n = avis|length %}<div style="display:none;max-height:0;overflow:hidden;opacity:0">{{ n }} marché{{ 's' if n > 1 }} pour vous ce matin</div>{% endblock %}
+{% block bandeau %}{% set n = avis|length %}
+<tr><td style="background:#101C2C;color:#ffffff;padding:22px 28px">
+  <div style="font-size:24px;font-weight:bold;line-height:1.25">{{ n }} marché{{ 's' if n > 1 }} pour vous</div>
+  <div style="font-size:13px;color:#c9d1dc;margin-top:6px">{{ date_fr }}</div>
 </td></tr>
 {% endblock %}
-{% block lignes %}
-<tr><td style="padding:8px 28px 0 28px;font-size:13px;color:#5a6478">
-  Vos critères : {{ criteres }}
-</td></tr>
-{% for a in avis %}
-<tr><td style="padding:16px 28px;border-bottom:1px solid #eceef2">
-  {% if a.pme %}<div style="margin-bottom:6px"><span style="display:inline-block;background:#e7f6ec;color:#11703a;font-size:12px;font-weight:bold;padding:3px 8px;border-radius:10px">✔ Accessible PME</span> <span style="font-size:12px;color:#5a6478">{{ a.pme }}</span></div>{% endif %}
-  <div style="font-size:12px;color:#5a6478">{{ a.acheteur }}{% if a.departements %} · Dép. {{ a.departements|join(', ') }}{% endif %}</div>
-  <div style="font-size:16px;font-weight:bold;margin:4px 0"><a href="{{ a.url }}" style="color:#101C2C;text-decoration:none">{{ a.objet }}</a></div>
-  {% if a.resume %}<div style="font-size:14px;line-height:1.45">{{ a.resume }}</div>{% endif %}
-  {% if a.a_verifier %}<div style="font-size:13px;line-height:1.45;color:#101C2C;margin-top:4px">À vérifier : {{ a.a_verifier|join(' · ') }}</div>{% endif %}
-  <div style="font-size:12px;color:#5a6478;margin-top:6px">
-    {% if a.date_limite %}Réponse avant le <b>{{ a.date_limite_fr }}</b>{% endif %}
-    {% if a.score %} · Accessibilité TPE : {{ '★' * a.score }}{{ '☆' * (5 - a.score) }}{% endif %}
+{% block lignes %}{% set autres = avis[5:] %}
+{% for a in avis[:5] %}
+{% set urgent = a.jours is defined and a.jours is not none and a.jours <= 7 %}
+<tr><td style="padding:22px 28px;border-bottom:1px solid #E1E5EA">
+  <div style="font-size:18px;font-weight:bold;line-height:1.35;color:#101C2C">{{ a.objet }}</div>
+  {% if a.resume %}<div style="font-size:14px;line-height:1.45;margin-top:6px;color:#5E6A7C">{{ a.resume }}</div>{% endif %}
+  <div style="font-size:14px;line-height:1.9;margin-top:8px;color:#1d2433">
+    📍 {{ a.ville or a.acheteur }}{% if a.departements %} ({{ a.departements|join(', ') }}){% endif %}<br>
+    {% if a.date_limite_fr %}<span style="color:{{ '#C83C48' if urgent else '#1d2433' }}">⏰ {% if a.jours is defined and a.jours is not none and a.jours >= 0 %}{{ 'Dernier jour' if a.jours == 0 else 'Plus que ' ~ a.jours ~ ' jour' ~ ('s' if a.jours > 1 else '') }} · {% endif %}avant le {{ a.date_limite_fr }}</span><br>{% endif %}
+    {% if a.montant_estime %}💶 Environ {{ a.montant_estime|euros }}<br>{% endif %}
+    {% if a.fiche and a.fiche_complete and a.fiche.derniers and a.fiche.derniers[0].gagnant %}{% set d = a.fiche.derniers[0] %}🏆 Dernier gagnant : {{ d.gagnant }}{% if d.montant %}, {{ d.montant|euros }}{% endif %}<br>{% endif %}
   </div>
-  {% if a.date_limite %}<div style="margin-top:10px"><a href="{{ biz.site_url }}/rappel/?o={{ a.objet|truncate(140)|urlencode }}&amp;a={{ a.acheteur|truncate(80)|urlencode }}&amp;d={{ a.date_limite[:16]|urlencode }}&amp;u={{ a.url|urlencode }}" style="display:inline-block;background:#B8F36B;color:#101C2C;font-size:13px;font-weight:bold;padding:8px 14px;border-radius:8px;text-decoration:none">Ça m'intéresse : me rappeler 3 jours avant</a>{% if lien_dossier and lien_dossier.inclus %} <a href="mailto:{{ lien_dossier.rapport }}?subject={{ ('Rapport ' ~ a.id)|urlencode }}&amp;body={{ ('Bonjour,
-
-Merci de m\'envoyer le rapport « comment gagner » pour l\'appel d\'offres ' ~ a.id ~ ' : ' ~ a.objet|truncate(120) ~ '
-
-(Facultatif : joignez le dossier de consultation pour un rapport encore plus précis.)
-')|urlencode }}" style="display:inline-block;background:#101C2C;color:#ffffff;font-size:13px;font-weight:bold;padding:8px 14px;border-radius:8px;text-decoration:none">Rapport : comment gagner</a> <a href="{{ lien_dossier.url }}?avis={{ a.id|urlencode }}" style="display:inline-block;background:#101C2C;color:#ffffff;font-size:13px;font-weight:bold;padding:8px 14px;border-radius:8px;text-decoration:none">Préparer ma réponse (inclus)</a>{% elif lien_dossier %} <a href="{{ lien_dossier.url }}?prefilled_email={{ lien_dossier.email|urlencode }}&amp;client_reference_id={{ a.id|urlencode }}" style="display:inline-block;background:#101C2C;color:#ffffff;font-size:13px;font-weight:bold;padding:8px 14px;border-radius:8px;text-decoration:none">Préparer ma réponse ({{ lien_dossier.prix }} €)</a>{% endif %}</div>{% endif %}
-  {% if a.fiche %}{% set f = a.fiche %}
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:10px;background:#F5F3ED;border-left:3px solid #B8F36B;border-radius:6px"><tr><td style="padding:10px 12px;font-size:13px;line-height:1.5;color:#1d2433">
-    <b>Avant de répondre</b> · cet acheteur a attribué <b>{{ f.n }} marché{{ 's' if f.n > 1 }} « {{ a.metier_libelle }} »</b> en {{ f.mois // 12 }} ans.
-    {% if a.fiche_complete %}
-      {% if f.montant_median %}<br>Montant habituel : <b>{{ f.montant_median|euros }}</b> HT{% endif %}{% if f.offres_median %} · en général <b>{{ f.offres_median }} offre{{ 's' if f.offres_median > 1 }}</b> reçue{{ 's' if f.offres_median > 1 }}{% endif %}
-      {% for d in f.derniers %}<br>· {{ d.date|date_courte }} : {% if d.gagnant %}<b>{{ d.gagnant }}</b>{% else %}titulaire non publié{% endif %}{% if d.montant %}, {{ d.montant|euros }}{% endif %}{% if d.offres %} ({{ d.offres }} offre{{ 's' if d.offres > 1 }}){% endif %}{% endfor %}
-    {% else %}
-      <br><span style="color:#5a6478">Les montants payés, le nombre de concurrents et les gagnants sont réservés à l'offre Pro.</span>
-    {% endif %}
-  </td></tr></table>
-  {% endif %}
+  <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:14px"><tr>
+    <td style="background:#B8F36B;border-radius:8px"><a href="{{ a.url }}" style="display:inline-block;white-space:nowrap;padding:12px 22px;font-size:15px;font-weight:bold;color:#101C2C;text-decoration:none">Voir le marché</a></td>
+  </tr></table>
+  {% if a.date_limite %}<div style="margin-top:10px;font-size:12px;color:#5E6A7C"><a href="{{ biz.site_url }}/rappel/?o={{ a.objet|truncate(140)|urlencode }}&amp;a={{ a.acheteur|truncate(80)|urlencode }}&amp;d={{ a.date_limite[:16]|urlencode }}&amp;u={{ a.url|urlencode }}" style="color:#5E6A7C">Me le rappeler</a>{% if lien_dossier %} · {% if lien_dossier.inclus %}<a href="{{ lien_dossier.url }}?avis={{ a.id|urlencode }}" style="color:#5E6A7C">Préparer ma réponse (inclus)</a>{% else %}<a href="{{ lien_dossier.url }}?prefilled_email={{ lien_dossier.email|urlencode }}&amp;client_reference_id={{ a.id|urlencode }}" style="color:#5E6A7C">Préparer ma réponse ({{ lien_dossier.prix }} €)</a>{% endif %}{% endif %}</div>{% endif %}
 </td></tr>
 {% endfor %}
+{% if autres %}
+<tr><td style="padding:20px 28px 6px 28px;font-size:15px;font-weight:bold;color:#101C2C">Et aussi</td></tr>
+{% for a in autres %}
+<tr><td style="padding:8px 28px;border-bottom:1px solid #E1E5EA;font-size:14px;line-height:1.4">
+  <a href="{{ a.url }}" style="color:#101C2C;font-weight:bold;text-decoration:none">{{ a.objet }}</a><br>
+  <span style="font-size:12px;color:#647184">{{ a.ville or a.acheteur }}{% if a.date_limite_fr %} · avant le {{ a.date_limite_fr }}{% endif %}</span>
+</td></tr>
+{% endfor %}
+{% endif %}
+<tr><td style="padding:18px 28px 0 28px;font-size:14px;line-height:1.5;color:#1d2433">Une question ? Répondez simplement à cet e-mail.</td></tr>
 {% endblock %}
 {% block pied %}
-  {% if lien_compte %}<a href="{{ lien_compte }}">Mon espace client</a> (offre, critères, factures, sans mot de passe).<br>{% endif %}
-  Pour modifier vos critères : <a href="{{ biz.site_url }}/criteres/">ce formulaire</a> ou répondez à cet e-mail.<br>
-  {% if lien_parrainage %}Parrainage : un confrère s'abonne avec <a href="{{ lien_parrainage }}">votre lien</a>, vous recevez chacun 1 mois offert.<br>{% endif %}
-  {% if biz.ia_active %}Résumés générés automatiquement par IA à partir des avis officiels du BOAMP : vérifiez{% else %}Sélection automatique à partir des avis officiels du BOAMP : vérifiez{% endif %} toujours l'avis complet avant de répondre. Fiches « avant de répondre » : données essentielles de la commande publique (marchés notifiés depuis 2 ans).<br>
+  {% if lien_compte %}<a href="{{ lien_compte }}">Mon espace client</a> · {% endif %}<a href="{{ biz.site_url }}/criteres/">Modifier mes critères</a>{% if criteres %} ({{ criteres }}){% endif %}{% if lien_parrainage %} · <a href="{{ lien_parrainage }}">Parrainer un confrère</a>{% endif %}<br>
+  {% if biz.ia_active %}Résumés écrits par IA{% else %}Sélection automatique{% endif %} à partir des avis officiels du BOAMP : lisez toujours l'avis complet avant de répondre.<br>
   Pour vous désabonner, répondez « STOP » ou résiliez {% if biz.portail_client %}<a href="{{ biz.portail_client }}">depuis votre espace client</a>{% else %}depuis votre espace client{% endif %}.<br><br>
 {% endblock %}
