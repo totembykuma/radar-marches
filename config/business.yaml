@@ -5,7 +5,7 @@ site_url: "https://www.radar-marches.fr"
 email_contact: "contact@radar-marches.fr"     # adresse de support (Resend / boîte mail)
 email_expediteur: "Radar Marchés <alertes@radar-marches.fr>"
 email_proprietaire: ""                        # ton e-mail perso pour les rapports (secret OWNER_EMAIL prioritaire)
-acces_proprietaire:                           # accès offert au propriétaire (adresse = secret OWNER_EMAIL), hors stats ; critères modifiables dans l'espace
+acces_proprietaire:                           # accès offerts (adresses = secrets OWNER_EMAIL et ACCES_OFFERTS), hors stats ; critères modifiables dans l'espace
   plan: "cle"
   metiers: ["nettoyage"]
   departements: [75]

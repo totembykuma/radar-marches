@@ -19,6 +19,7 @@ jobs:
           RESEND_INBOUND_KEY: ${{ secrets.RESEND_INBOUND_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           OWNER_EMAIL: ${{ secrets.OWNER_EMAIL }}
+          ACCES_OFFERTS: ${{ secrets.ACCES_OFFERTS }}
         run: python -m radar.cli weekly
       - if: always()
         run: |
