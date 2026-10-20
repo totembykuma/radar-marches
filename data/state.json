@@ -22,7 +22,8 @@
  "known": [
   "3b107d6223b9201a",
   "e916360b8962214f",
-  "58cadc2b1d19872f"
+  "58cadc2b1d19872f",
+  "b20529fc413962df"
  ],
  "rappel_essai": [],
  "criteres_vus": [
@@ -35,12 +36,14 @@
  "avis_demandes": [],
  "avis_vus": [],
  "compte_lien_envoye": [
-  "58cadc2b1d19872f"
+  "58cadc2b1d19872f",
+  "b20529fc413962df"
  ],
  "compte_vus": [],
  "premier_client_payant": "2026-10-16",
  "invitation_compte": [
-  "b813ff5fe254519d"
+  "b813ff5fe254519d",
+  "ee71558cd895c868"
  ],
  "texte_annuel_jour": "2026-10-20",
  "annuel_prevenus": [],
