@@ -121,6 +121,14 @@ def lien_dossier(biz, sub):
             "email": sub.get("email") or ""}
 
 
+def jours_restants(date_limite):
+    """Nombre de jours avant la date limite (None si inconnue), affiché dans l'alerte du matin."""
+    try:
+        return (date.fromisoformat((date_limite or "")[:10]) - date.today()).days
+    except ValueError:
+        return None
+
+
 def criteres_txt(sub, metiers):
     m = ", ".join(metiers[k]["libelle"] for k in sub["metiers"] if k in metiers) or "—"
     d = ", ".join(sub["departements"]) if sub["departements"] else "toute la France"
@@ -514,6 +522,7 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
         sel.sort(key=lambda a: (-(a.get("score") or 0), not a.get("pme"), a["date_limite"] or "9999"))
         for a in sel:
             a["date_limite_fr"] = date_limite_fr(a["date_limite"])
+            a["jours"] = jours_restants(a["date_limite"])
             m = next((m for m in s["metiers"] if m in (a.get("metiers") or [])), None)
             a["fiche"] = histo.fiche(a.get("acheteur_siret"), m) if m and a.get("acheteur_siret") else None
             a["fiche_complete"] = s.get("plan") in subscribers.PLANS_PRO
@@ -1048,9 +1057,22 @@ def run_apercu_emails():
     a = {"objet": "Exemple : nettoyage des locaux de la mairie", "acheteur": "Commune fictive", "departements": ["33"],
          "url": biz["site_url"], "date_limite": "", "date_limite_fr": "12 novembre 2026"}
     crit = "Nettoyage · Gironde (33)"
+    j = lambda n: (date.today() + timedelta(days=n)).isoformat()
+    exemples = [
+        {**a, "id": "EX-1", "ville": "Bordeaux", "pme": True, "date_limite": j(5), "jours": 5, "montant_estime": 48000,
+         "resume": "Nettoyage quotidien de 3 bâtiments municipaux (2 400 m²), contrat d'un an renouvelable.",
+         "fiche": {"n": 4, "mois": 24, "montant_median": 52000, "offres_median": 6,
+                   "derniers": [{"date": j(-200), "gagnant": "Entreprise Exemple", "montant": 50000, "offres": 5}]},
+         "fiche_complete": True, "metier_libelle": "nettoyage"},
+        {**a, "id": "EX-2", "objet": "Exemple : entretien des vitres du collège", "acheteur": "Département fictif",
+         "ville": "Mérignac", "date_limite": j(18), "jours": 18, "resume": "Lavage des vitres 4 fois par an."},
+    ]
+    for e in exemples:
+        e["date_limite_fr"] = date_limite_fr(e["date_limite"])
     mails = {
         "Bienvenue": render("email_bienvenue.html", biz=biz, criteres=crit, sub={}, lien=biz["site_url"] + "/?ami=EXEMPLE"),
-        "Alerte du matin": render("email_digest.html", biz=biz, avis=[a], date_fr=date_fr(), criteres=crit),
+        "Alerte du matin": render("email_digest.html", biz=biz, avis=exemples, date_fr=date_fr(), criteres=crit,
+                                  lien_compte=biz["site_url"] + "/compte/"),
         "Prospection": render("email_prospect.html", p={"marche_gagne": "Exemple de marché"}, n=7, zone="en Gironde",
                               ex=a, lien=biz["site_url"], metier={"libelle": "Nettoyage"}, biz=biz),
     }
