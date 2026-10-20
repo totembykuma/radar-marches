@@ -270,6 +270,21 @@ def prevenir_annuels(subs, biz, metiers, state, run):
     state["annuel_prevenus"] = deja[-500:]
 
 
+def espace_vite(biz, metiers, subs, supa, run):
+    """Rapports et dossiers demandés dans l'espace client : traités dès ce passage (toutes les 10 min) plutôt qu'à
+    l'heure suivante de dossier.yml. La prise en charge est atomique en base : jamais traités deux fois."""
+    if not supa or not biz.get("cle_actif"):
+        return
+    try:
+        if not supa.select("demandes", select="id", statut="eq.recue", limit="1"):
+            return
+        cles = [s for s in subs if s.get("plan") == "cle"]
+        n, errs = demandes_espace(biz, metiers, cles, historique.Historique(metiers), supa=supa, limite=2)
+        run["demandes_espace"], run["erreurs"] = n, run["erreurs"] + errs
+    except Exception as exc:
+        run["erreurs"].append(f"demandes de l'espace client non traitées : {safe(exc)}")
+
+
 def run_bienvenue():
     """Passage rapide (toutes les 10 min) : bienvenue aux nouveaux abonnés sans attendre le lendemain matin."""
     biz, metiers = business(), load_metiers()
@@ -286,12 +301,13 @@ def run_bienvenue():
     run["erreurs"] += errs
     rp = reponses.traiter(biz, metiers, state, alert_owner)   # réponses des prospects : l'agent IA répond ou transmet
     run["erreurs"] += rp.pop("erreurs")
-    comptes_espace(biz, metiers, subs, run, state)
+    supa = comptes_espace(biz, metiers, subs, run, state)
+    espace_vite(biz, metiers, subs, supa, run)
     if run.get("bienvenues") or n or any(rp.values()) or run.get("depart_vus") or state.get("reponses_vues") or state.get("compte_vus") or run.get("invitations_compte") or run.get("textes_annuels") is not None:
         _save_json(DATA / "state.json", state)
     return {"bienvenues": run.get("bienvenues", 0), "liens_espace_client": n, "comptes": run.get("comptes"),
             "abonnements_remplaces": len(run.get("remplaces") or []),
-            "criteres_espace": run.get("criteres_espace", 0), "marches_de_depart": run.get("marches_de_depart", 0), "paliers": run.get("paliers", 0),
+            "criteres_espace": run.get("criteres_espace", 0), "marches_de_depart": run.get("marches_de_depart", 0), "demandes_espace": run.get("demandes_espace", 0), "paliers": run.get("paliers", 0),
             "essais_refuses": run.get("essais_refuses", 0), "reponses_prospects": rp, "erreurs": run["erreurs"]}
 
 
@@ -1124,7 +1140,7 @@ def run_dossiers():
     return {"actif": True, "livres": livres, "rapports": rapports, "demandes_espace": espace, "erreurs": len(erreurs)}
 
 
-def demandes_espace(biz, metiers, cles, histo, supa=None, generer_rapport=None, generer_dossier=None, avis_fn=None):
+def demandes_espace(biz, metiers, cles, histo, supa=None, generer_rapport=None, generer_dossier=None, avis_fn=None, limite=5):
     """Rapports et dossiers inclus demandés depuis l'espace client (offre Clé en main) : résultat déposé dans le
     stockage privé du client + e-mail. Les demandes par e-mail (rapport.traiter / dossier.traiter) restent possibles."""
     if not biz.get("cle_actif"):
@@ -1178,7 +1194,7 @@ def demandes_espace(biz, metiers, cles, histo, supa=None, generer_rapport=None, 
                          inclus=True, pj=[{"filename": nom, "content": base64.b64encode(fichier).decode()}])
         return chemin, None
 
-    return comptes.traiter_demandes(supa, biz, metiers, faire_rapport, faire_dossier)
+    return comptes.traiter_demandes(supa, biz, metiers, faire_rapport, faire_dossier, limite=limite)
 
 
 def run_comptes(installer=False):
