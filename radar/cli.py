@@ -98,6 +98,7 @@ def comptes_espace(biz, metiers, subs, run, state=None):
             if state is not None:   # clients d'avant les mots de passe : 1 invitation chacun
                 n, errs = comptes.inviter(subs, biz, utilisateurs, state)
                 run["invitations_compte"], run["erreurs"] = n, run["erreurs"] + errs
+                marches_de_depart(supa, subs, utilisateurs, metiers, state, run)
         n, errs = comptes.pousser_criteres(supa, subs, biz, metiers, criteres_txt, criteres._stripe_update)
         if n:
             run["criteres_espace"] = n
@@ -105,6 +106,27 @@ def comptes_espace(biz, metiers, subs, run, state=None):
     except Exception as exc:
         run["erreurs"].append(f"comptes clients non synchronisés : {safe(exc)}")
     return supa
+
+
+def marches_de_depart(supa, subs, utilisateurs, metiers, state, run):
+    """Nouvel espace client : 3 appels d'offres récents de sa veille, auxquels il peut encore répondre, dès l'ouverture."""
+    deja = set(state.setdefault("depart_espace", []))
+    matcher = Matcher(metiers)
+    try:
+        faits = comptes.marches_de_depart(supa, subs, utilisateurs,
+                                          lambda: [a for a in boamp.fetch_open(days=21) if not matcher.is_award_notice(a)],
+                                          matcher, metiers, deja)
+    except Exception as exc:
+        run["erreurs"].append(f"marchés de départ non déposés : {safe(exc)}")
+        return
+    if len(deja) != len(state["depart_espace"]):
+        state["depart_espace"] = sorted(deja)[-2000:]
+        run["depart_vus"] = True
+    sent = state.setdefault("sent", {})
+    for email, avis in faits.items():   # déjà dans l'espace : l'alerte du matin ne les renvoie pas
+        key = hashlib.sha256(email.encode()).hexdigest()[:16]
+        sent[key] = (sent.get(key, []) + [a["id"] for a in avis])[-500:]
+    run["marches_de_depart"] = sum(len(v) for v in faits.values())
 
 
 def lien_dossier(biz, sub):
@@ -265,11 +287,11 @@ def run_bienvenue():
     rp = reponses.traiter(biz, metiers, state, alert_owner)   # réponses des prospects : l'agent IA répond ou transmet
     run["erreurs"] += rp.pop("erreurs")
     comptes_espace(biz, metiers, subs, run, state)
-    if run.get("bienvenues") or n or any(rp.values()) or state.get("reponses_vues") or state.get("compte_vus") or run.get("invitations_compte") or run.get("textes_annuels") is not None:
+    if run.get("bienvenues") or n or any(rp.values()) or run.get("depart_vus") or state.get("reponses_vues") or state.get("compte_vus") or run.get("invitations_compte") or run.get("textes_annuels") is not None:
         _save_json(DATA / "state.json", state)
     return {"bienvenues": run.get("bienvenues", 0), "liens_espace_client": n, "comptes": run.get("comptes"),
             "abonnements_remplaces": len(run.get("remplaces") or []),
-            "criteres_espace": run.get("criteres_espace", 0), "paliers": run.get("paliers", 0),
+            "criteres_espace": run.get("criteres_espace", 0), "marches_de_depart": run.get("marches_de_depart", 0), "paliers": run.get("paliers", 0),
             "essais_refuses": run.get("essais_refuses", 0), "reponses_prospects": rp, "erreurs": run["erreurs"]}
 
 
