@@ -285,9 +285,9 @@ def test_fiche_avant_de_repondre(tmp_path, monkeypatch):
     assert f["n"] == 2 and f["offres_median"] == 8 and f["derniers"][0]["gagnant"] == "PROPRE ET NET"
     a = {**by_id(101001), "fiche": f, "fiche_complete": True, "metier_libelle": "nettoyage", "date_limite_fr": ""}
     html = render.render("email_digest.html", biz=business(), avis=[a], date_fr="", criteres="")
-    assert "Avant de répondre" in html and "PROPRE ET NET" in html and "55 000 €" in html
+    assert "Dernier gagnant" in html and "PROPRE ET NET" in html and "55 000 €" in html
     html = render.render("email_digest.html", biz=business(), avis=[{**a, "fiche_complete": False}], date_fr="", criteres="")
-    assert "réservés à l'offre Pro" in html and "PROPRE ET NET" not in html
+    assert "PROPRE ET NET" not in html
     assert render.euros(1250000) == "1,25 M€"
 
 
