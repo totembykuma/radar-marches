@@ -344,3 +344,11 @@ a.marche-titre .ic{display:inline-block;width:14px;height:14px;margin-left:4px;v
 .ass-dce summary{cursor:pointer;font-weight:600;color:#33404F;font-size:14.5px}
 .ass-dce input{margin-top:8px;max-width:100%}
 @media (max-width:640px){.ass-miennes li{grid-template-columns:26px minmax(0,1fr)}.compte .assistant .ass-bouton{grid-column:2;grid-row:auto;justify-self:start;margin-top:6px!important}}
+/* Minuteur des demandes en cours */
+.minuteur{display:flex;align-items:center;gap:12px;margin-top:12px;background:#101C2C;color:#F5F3ED;border-radius:14px;padding:10px 14px}
+.minuteur-anneau{--p:0;flex:none;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#B8F36B calc(var(--p)*1%),rgba(255,255,255,.14) 0);transition:background .5s}
+.minuteur-anneau b{width:40px;height:40px;border-radius:50%;background:#101C2C;display:grid;place-items:center;font-size:12.5px;font-variant-numeric:tabular-nums;color:#B8F36B}
+.minuteur-txt{font-size:14px;font-weight:600}
+.minuteur.depasse .minuteur-anneau{animation:min-pulse 1.4s ease-in-out infinite}
+@keyframes min-pulse{50%{transform:scale(1.08)}}
+@media (prefers-reduced-motion:reduce){.minuteur.depasse .minuteur-anneau{animation:none}}

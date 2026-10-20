@@ -533,6 +533,43 @@
     }, function () { fini(); if (w) w.close(); toast("Service momentanément indisponible. Réessayez dans un instant."); });
   }
 
+  // ---- minuteur des demandes en cours : compte à rebours vers l'heure estimée, puis rafraîchissement tout seul
+  var DUREE_MIN = { rapport: 20, dossier: 40 }, TIC = null, SONDE = null;
+  function minuteur(x, rap) {
+    var debut = Date.parse(x.cree), fin = debut + DUREE_MIN[rap ? "rapport" : "dossier"] * 60000;
+    var m = el("div", null, "minuteur"), anneau = el("span", null, "minuteur-anneau"), txt = el("span", null, "minuteur-txt");
+    m.dataset.debut = debut; m.dataset.fin = fin;
+    anneau.appendChild(el("b", "")); m.appendChild(anneau); m.appendChild(txt);
+    return m;
+  }
+  function tic() {
+    var maint = Date.now(), restants = document.querySelectorAll(".minuteur");
+    Array.prototype.forEach.call(restants, function (m) {
+      var debut = +m.dataset.debut, fin = +m.dataset.fin, reste = Math.max(0, fin - maint), part = Math.min(1, (maint - debut) / (fin - debut));
+      var mn = Math.floor(reste / 60000), sc = Math.floor(reste % 60000 / 1000);
+      m.querySelector(".minuteur-anneau").style.setProperty("--p", Math.round(part * 100));
+      m.querySelector(".minuteur-anneau b").textContent = reste ? mn + ":" + (sc < 10 ? "0" : "") + sc : "✓";
+      m.querySelector(".minuteur-txt").textContent = reste ? "Prêt dans environ " + (mn ? mn + " min " : "") + sc + " s" : "Presque prêt : encore quelques minutes, vous serez prévenu par e-mail.";
+      m.classList.toggle("depasse", !reste);
+    });
+    if (!restants.length) { clearInterval(TIC); TIC = null; clearInterval(SONDE); SONDE = null; }
+  }
+  function lancerMinuteurs() {
+    if (!document.querySelector(".minuteur")) return;
+    tic();
+    if (!TIC) TIC = setInterval(tic, 1000);
+    if (!SONDE) SONDE = setInterval(function () {      // l'état change en base : on relit la liste chaque minute
+      sb.from("demandes").select("id,type,avis_ref,statut,message,cree,termine,fichier").order("cree", { ascending: false }).limit(60).then(function (r) {
+        if (r.error || !r.data) return;
+        var avant = DEMANDES.map(function (d) { return d.id + d.statut; }).join(), apres = r.data.map(function (d) { return d.id + d.statut; }).join();
+        if (avant === apres) return;
+        var pret = r.data.some(function (d) { return d.statut === "terminee" && DEMANDES.some(function (o) { return o.id === d.id && o.statut !== "terminee"; }); });
+        DEMANDES = r.data; afficherDemandes();
+        if (pret) toast("C'est prêt : votre document vous attend dans « Mes demandes ».");
+      });
+    }, 60000);
+  }
+
   function afficherDemandes() {
     var d = E.droits || {}, actif = d.veille, q = E.quotas || {}, cle = (d.rapports_mois || 0) + (d.dossiers_mois || 0) > 0 || E.offre === "cle";
     var visible = cle || (actif && !!C.dossier) || DEMANDES.length > 0;
@@ -575,6 +612,7 @@
       if (rang) ["Reçue", "En préparation", "Prêt"].forEach(function (t, i) { suivi.appendChild(el("li", t, i + 1 < rang ? "fait" : i + 1 === rang ? "actif" : "")); });
       else suivi.appendChild(el("li", ETATS[x.statut] || x.statut, "alerte"));
       haut.appendChild(suivi);
+      if (x.statut === "recue" || x.statut === "en_traitement") haut.appendChild(minuteur(x, rap));
       li.appendChild(haut);
       var act = el("div", null, "demande-act");
       if (x.statut === "terminee" && x.fichier) {
@@ -601,6 +639,7 @@
       if (x.message) li.appendChild(el("p", x.message));
       ul.appendChild(li);
     });
+    lancerMinuteurs();
   }
 
   // ---- parrainage

@@ -14,7 +14,8 @@ const alertes = [
  { id: 1, avis_id: "26-104512", recu: "2026-10-20", objet: "Nettoyage des locaux de la mairie et de l'école élémentaire", acheteur: "Commune de Pessac", lieu: "Pessac", date_limite: "2026-11-11", metier: "nettoyage", url: "https://www.boamp.fr/x", resume: "Ménage quotidien de 2 400 m² de locaux, marché de 3 ans.", favori: false },
  { id: 2, avis_id: "26-103877", recu: "2026-10-20", objet: "Entretien et vitrerie des bâtiments communautaires", acheteur: "Bordeaux Métropole", lieu: "Bordeaux", date_limite: "2026-11-04", metier: "nettoyage", url: "https://www.boamp.fr/y", resume: "Vitrerie semestrielle et entretien courant de 12 sites.", favori: false },
  { id: 3, avis_id: "26-102961", recu: "2026-10-20", objet: "Nettoyage des locaux du centre hospitalier", acheteur: "CH d'Arcachon", lieu: "Arcachon", date_limite: "2026-11-18", metier: "nettoyage", url: "https://www.boamp.fr/z", resume: "Bionettoyage des services administratifs.", favori: false }];
-const demandes = [{ id: "11111111-aaaa", type: "rapport", avis_ref: "26-103877", statut: "terminee", message: null, cree: "2026-10-20T08:00:00Z", termine: "2026-10-20T09:00:00Z", fichier: "u1/d/resultat/r.html" }];
+const demandes = [{ id: "11111111-aaaa", type: "rapport", avis_ref: "26-103877", statut: "terminee", message: null, cree: "2026-10-20T08:00:00Z", termine: "2026-10-20T09:00:00Z", fichier: "u1/d/resultat/r.html" },
+  { id: "33333333-cccc", type: "dossier", avis_ref: "26-104512", statut: "en_traitement", message: null, cree: new Date(Date.now() - 12 * 60000).toISOString(), termine: null, fichier: null }];
 espace.quotas.rapports_utilises = 1;
 const log = []; let ok = 0, ko = 0; const erreurs = [];
 const verifier = (c, t) => { if (c) ok++; else { ko++; console.log("ÉCHEC :", t); } };
@@ -46,6 +47,9 @@ verifier(await page.isVisible("#d-parcours"), "parcours visible");
 verifier((await page.$$("#r-choix option")).length === 5, "3 marchés + choisir + autre");
 verifier(await page.isHidden("#r-ref-p"), "saisie cachée par défaut");
 verifier((await page.textContent("#l-demandes")).includes("Entretien et vitrerie"), "demande nommée par son objet");
+verifier((await page.$$(".minuteur")).length === 1, "minuteur sur la demande en cours seulement");
+const t1 = await page.textContent(".minuteur-anneau b"); await page.waitForTimeout(1200);
+verifier(/^2[78]:\d\d$/.test(t1) && t1 !== await page.textContent(".minuteur-anneau b"), "compte à rebours qui tourne : " + t1);
 await page.screenshot({ path: `${process.env.S || "/tmp"}/demandes-${nom}.png`, fullPage: true });
 // depuis un marché : bouton Dossier → formulaire prérempli
 await page.goto(`${BASE}/compte/#marches`); await page.waitForSelector("#p-marches:not([hidden])");
