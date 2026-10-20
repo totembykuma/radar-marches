@@ -35,6 +35,7 @@
 | Bilan du dimanche (weekly) | OK | testé en réel 2026-10-15 |
 | Relance prospects J+5 | Construite | active dès 2026-10-21, pas encore observée |
 | Alerte gratuite | **Retirée** (2026-10-16, « c'est nul ») | code dormant, ne pas reproposer |
+- 2026-10-20 : e-mail du matin épuré sur demande de William (« trop chargé, du simple et du concret ») : par marché titre, résumé, lieu, jours restants, montant, dernier gagnant (Pro), 1 bouton ; 5 cartes max puis liste (PR #48).
 
 ## 4. Décisions et règles à respecter
 - Jamais de dépense, engagement ou action irréversible sans l'accord de William.
