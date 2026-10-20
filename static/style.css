@@ -922,3 +922,4 @@ h1,h2,h3{text-wrap:balance}p,li{text-wrap:pretty}
 }
 .a-bento{grid-template-rows:repeat(3,1fr)}.a-carte-fiche{grid-row:span 3}
 @media (max-width:900px){.a-bento{grid-template-rows:none}.a-carte-fiche{grid-row:auto}}
+.a-video video{display:block;width:100%;max-width:860px;margin:24px auto 0;border-radius:14px;background:#101C2C;box-shadow:0 12px 32px rgba(16,28,44,.18)}
