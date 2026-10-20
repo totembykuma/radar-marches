@@ -1,0 +1,84 @@
+{# Petites scènes visuelles de l'accueil, dessinées en HTML/CSS avec les vrais avis du jour (pas d'image figée). #}
+{% import "_ui.html" as ui %}
+
+{% macro radar_ico(s=22) -%}
+<svg viewBox="0 0 32 32" width="{{ s }}" height="{{ s }}" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#101C2C"/><circle cx="16" cy="16" r="10" fill="none" stroke="#B8F36B" stroke-opacity=".35" stroke-width="1.6"/><circle cx="16" cy="16" r="6" fill="none" stroke="#B8F36B" stroke-opacity=".7" stroke-width="1.6"/><path d="M16 16L24 9" stroke="#B8F36B" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="16" r="2.4" fill="#B8F36B"/></svg>
+{%- endmacro %}
+
+{# Étape 1 : le choix du métier et des départements #}
+{% macro choix(ex_key, metiers, exemple) -%}
+{% set deps = [] %}{% for a in exemple %}{% for d in a.departements or [] %}{% if d not in deps %}{% set _ = deps.append(d) %}{% endif %}{% endfor %}{% endfor %}
+{% set deps = (deps or ["33", "47"])[:2] %}
+<div class="v-scene v-choix" aria-hidden="true">
+  <small>Votre métier</small>
+  <span class="v-sel">{{ ui.icone(ex_key, 16) }}{{ metiers[ex_key].libelle if ex_key else "Votre métier" }}<i class="v-ok"></i></span>
+  <small>Vos départements</small>
+  <span class="v-deps">{% for d in deps %}<b>{{ d }}</b>{% endfor %}<em>+</em></span>
+  <span class="v-bouton">C'est parti</span>
+</div>
+{%- endmacro %}
+
+{# Étape 2 : tout le BOAMP lu, seul votre métier passe #}
+{% macro tri(exemple) -%}
+<div class="v-scene v-tri" aria-hidden="true">
+  <div class="v-pile"><i></i><i class="x"></i><i></i><i class="x"></i><i></i><i class="x"></i><i></i></div>
+  <span class="v-filtre"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg></span>
+  <div class="v-garde">{% for a in exemple[:2] %}<span><i class="v-ok"></i>{{ a.objet|truncate(34) }}</span>{% else %}<span><i class="v-ok"></i></span><span><i class="v-ok"></i></span>{% endfor %}</div>
+</div>
+{%- endmacro %}
+
+{# Étape 3 : la notification de 6 h 20 #}
+{% macro notif(biz, exemple) -%}
+<div class="v-scene v-tel" aria-hidden="true">
+  <div class="v-ecran">
+    <span class="v-heure">6:20</span>
+    <div class="v-notif">
+      <p>{{ radar_ico(18) }}<b>{{ biz.nom }}</b><small>maintenant</small></p>
+      <b>{% if exemple %}{{ exemple|length }} nouveau{{ "x" if exemple|length > 1 }} marché{{ "s" if exemple|length > 1 }} pour vous{% else %}Vos marchés du jour{% endif %}</b>
+      {% if exemple %}<span>{{ exemple[0].objet|truncate(52) }}</span>{% endif %}
+    </div>
+  </div>
+</div>
+{%- endmacro %}
+
+{# Espace client : les échéances #}
+{% macro echeances(exemple) -%}
+<div class="v-scene v-ech" aria-hidden="true">
+  {% for a in exemple[:3] %}<p><span class="v-etoile">★</span><span class="v-t">{{ a.objet|truncate(30) }}</span>{{ ui.echeance(a.jours_restants) }}</p>
+  {% else %}<p><span class="v-etoile">★</span><span class="v-t"><i></i></span><span class="due hot">J-3</span></p><p><span class="v-etoile">★</span><span class="v-t"><i></i></span><span class="due warm">J-12</span></p>{% endfor %}
+  <span class="v-rappel">🔔 Rappel 3 jours avant</span>
+</div>
+{%- endmacro %}
+
+{# Bilan du lundi : qui a gagné, à quel prix #}
+{% macro gagnants(derniers, reel) -%}
+{% set lignes = (derniers or [])|selectattr("gagnant")|list if reel else [] %}
+<div class="v-scene v-gagne" aria-hidden="true">
+  {% for d in lignes[:3] %}<p><span class="v-coupe">{{ loop.index }}</span><span class="v-t">{{ d.gagnant|truncate(24) }}</span>{% if d.montant %}<b>{{ "{:,}".format(d.montant).replace(",", " ") }} €</b>{% endif %}</p>
+  {% else %}{% for w in [80, 64, 52] %}<p><span class="v-coupe">{{ loop.index }}</span><span class="v-t"><i style="width:{{ w }}%"></i></span><b class="v-gris"></b></p>{% endfor %}{% endfor %}
+</div>
+{%- endmacro %}
+
+{# Dossier prêt à signer, ou guides #}
+{% macro dossier(actif) -%}
+<div class="v-scene v-doc" aria-hidden="true">
+  <div class="v-page"><span class="v-w">W</span><b>{{ "Mémoire technique" if actif else "DC1 · DC2" }}</b><i></i><i></i><i style="width:70%"></i><i></i><i style="width:55%"></i></div>
+  <span class="v-tampon">{{ "Prêt à signer" if actif else "Pas à pas" }}</span>
+</div>
+{%- endmacro %}
+
+{# Comparer : seul sur le BOAMP / avec le tri fait #}
+{% macro seul() -%}
+<div class="v-nav" aria-hidden="true">
+  <div class="v-nav-barre"><i></i><i></i><i></i><span>boamp.fr · recherche</span></div>
+  <div class="v-nav-liste">{% for x in [1, 0, 0, 1, 0, 1, 0, 0, 1] %}<p class="{{ 'hs' if x }}"><i></i>{% if x %}<em>hors sujet</em>{% endif %}</p>{% endfor %}</div>
+</div>
+{%- endmacro %}
+
+{% macro avec(biz, ex_key, exemple) -%}
+<div class="v-boite" aria-hidden="true">
+  <p class="v-boite-top">{{ radar_ico(26) }}<b>Vos marchés du jour</b><small>6 h 20</small></p>
+  {% for a in exemple[:3] %}<p class="v-boite-l"><span>{{ ui.icone(ex_key, 15) }}</span><span class="v-t">{{ a.objet|truncate(40) }}</span>{{ ui.echeance(a.jours_restants) }}</p>
+  {% else %}{% for w in [90, 75, 82] %}<p class="v-boite-l"><span>{{ ui.icone(ex_key, 15) }}</span><span class="v-t"><i style="width:{{ w }}%"></i></span></p>{% endfor %}{% endfor %}
+</div>
+{%- endmacro %}

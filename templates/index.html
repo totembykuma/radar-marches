@@ -1,4 +1,4 @@
-{% extends "base.html" %}{% import "_ui.html" as ui %}{% block body_attr %} class="acc"{% endblock %}{% block main %}
+{% extends "base.html" %}{% import "_ui.html" as ui %}{% import "_visuels.html" as v %}{% block body_attr %} class="acc"{% endblock %}{% block main %}
 {% set promo = biz.promo if biz.promo and (biz.promo.publie or promo_apercu) and biz.offres[biz.promo.offre].lien_paiement else None %}
 {% set nb_offres = "trois" if biz.cle_actif else "deux" %}
 {% if promo %}<div class="promo-bar" id="promo-bar" hidden data-semaine="{{ promo.semaine }}"><div class="wrap">
@@ -51,10 +51,10 @@
 <section class="wrap a-bloc" id="comment">
   <p class="kicker">Comment ça marche</p>
   <h2>Trois étapes. Ensuite, plus rien à faire.</h2>
-  <ol class="a-etapes">
-    <li><span class="a-num">1</span><h3>Vous choisissez</h3><p>Votre métier et vos départements, en une minute. Vos {{ biz.essai_gratuit_jours }} jours d'essai commencent tout de suite.</p></li>
-    <li><span class="a-num">2</span><h3>Nous trions chaque nuit</h3><p>Tout le BOAMP est lu. Seul votre métier passe le filtre : «&nbsp;peinture routière&nbsp;» n'arrive pas chez un peintre en bâtiment.</p></li>
-    <li><span class="a-num">3</span><h3>Vous répondez</h3><p>À 6&nbsp;h&nbsp;20, un e-mail clair, seulement s'il y a du nouveau. Vos favoris et vos échéances restent dans votre espace client.</p></li>
+  <ol class="a-etapes a-etapes-v">
+    <li>{{ v.choix(ex_key, metiers, exemple or []) }}<span class="a-num">1</span><h3>Vous choisissez</h3><p>Votre métier, vos départements. Une minute.</p></li>
+    <li>{{ v.tri(exemple or []) }}<span class="a-num">2</span><h3>Nous trions chaque nuit</h3><p>Tout le BOAMP est lu. Seul votre métier passe.</p></li>
+    <li>{{ v.notif(biz, exemple or []) }}<span class="a-num">3</span><h3>Vous recevez à 6&nbsp;h&nbsp;20</h3><p>Seulement s'il y a du nouveau. Vous répondez.</p></li>
   </ol>
   <div class="a-film">{% include "_film.html" %}</div>
 </section>
@@ -78,26 +78,21 @@
         <p class="a-fiche-note">{% if reel %}Exemple réel, mis à jour chaque jour (BOAMP et données officielles de la commande publique).{% else %}Exemple d'affichage avec des données fictives.{% endif %}</p>
       </div>
     </article>
-    <article class="a-carte a-module">
-      <span class="a-ic">{{ ui.icone("communication-web", 22) }}</span>
-      <div><p class="a-mod-k">Veille</p><h3>L'alerte du matin</h3>
-      <p>Objet, acheteur, lieu, date limite et lien vers l'avis officiel{% if biz.ia_active %}, avec un résumé en une phrase{% endif %}. Rien quand il n'y a rien de nouveau.</p></div>
+    <article class="a-carte a-vis">
+      {{ v.echeances(exemple or []) }}
+      <h3>Vos échéances, suivies</h3>
+      <p>Vos favoris et leurs dates limites dans votre espace client.</p>
     </article>
-    <article class="a-carte a-module">
-      <span class="a-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span>
-      <div><p class="a-mod-k">Concurrence</p><h3>Le bilan du lundi <span class="a-tag">Pro</span></h3>
-      <p>Qui a gagné les marchés de votre métier dans votre secteur la semaine passée, et à quel prix quand il est publié.</p></div>
+    <article class="a-carte a-vis">
+      {{ v.gagnants(fi.derniers, reel) }}
+      <h3>Qui a gagné, à quel prix <span class="a-tag">Pro</span></h3>
+      <p>Le bilan du lundi de votre secteur. <a href="entreprises/">Voir les lauréats</a></p>
     </article>
-    <article class="a-carte a-module">
-      <span class="a-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg></span>
-      <div><p class="a-mod-k">Marchés attribués</p><h3>Qui a gagné quoi</h3>
-      <p>Les marchés attribués des 12 derniers mois, entreprise par entreprise, en accès libre. <a href="entreprises/">Voir les lauréats</a></p></div>
-    </article>
-    <article class="a-carte a-module">
-      <span class="a-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M9 14h6M9 17h4"/></svg></span>
-      <div><p class="a-mod-k">Rédaction</p>{% if biz.dossier_actif %}<h3>Le dossier prêt à signer</h3>
-      <p>Vous envoyez le dossier du marché, vous recevez votre réponse rédigée au format Word{% if biz.cle_actif %} (2 par mois incluses dans Clé en main){% endif %}. <a href="dossier/">En savoir plus</a></p>{% else %}<h3>Les guides pour répondre</h3>
-      <p>DC1, DC2, mémoire technique, prix : les étapes pour répondre quand on est artisan ou petite entreprise. <a href="guides/">Lire les guides</a></p>{% endif %}</div>
+    <article class="a-carte a-vis">
+      {{ v.dossier(biz.dossier_actif) }}
+      {% if biz.dossier_actif %}<h3>Le dossier prêt à signer</h3>
+      <p>Vous envoyez le dossier, vous recevez votre réponse en Word. <a href="dossier/">En savoir plus</a></p>{% else %}<h3>Les guides pour répondre</h3>
+      <p>DC1, DC2, mémoire technique : pas à pas. <a href="guides/">Lire les guides</a></p>{% endif %}
     </article>
   </div>
 </div></section>
@@ -182,17 +177,11 @@
 <section class="wrap a-bloc" id="comparer">
   <p class="kicker">Comparer</p>
   <h2>Chercher seul, ou recevoir le tri fait.</h2>
-  <p class="a-sous">Ce qui change concrètement par rapport à une veille faite à la main.</p>
-  <table class="a-compare">
-    <thead><tr><th scope="col">Étape</th><th scope="col">Seul, à la main</th><th scope="col" class="rm">Avec {{ biz.nom }}</th></tr></thead>
-    <tbody>
-      <tr><th scope="row">Trouver les avis</th><td class="sans">Ouvrir le BOAMP chaque jour et relancer ses recherches</td><td class="rm">Les avis de votre métier arrivent par e-mail chaque matin ouvré, vers 6&nbsp;h&nbsp;20</td></tr>
-      <tr><th scope="row">Trier</th><td class="sans">Lire beaucoup d'avis hors sujet</td><td class="rm">Filtre par métier et départements{% if biz.offres.pro %}, plus vos mots-clés en Pro{% endif %}</td></tr>
-      <tr><th scope="row">Dates limites</th><td class="sans">Les noter soi-même</td><td class="rm">Échéances dans votre espace client, rappel 3&nbsp;jours avant pour vos favoris</td></tr>
-      <tr><th scope="row">Concurrence</th><td class="sans">Fouiller les attributions publiées</td><td class="rm">Fiche «&nbsp;avant de répondre&nbsp;» et bilan du lundi (Pro)</td></tr>
-      <tr><th scope="row">Répondre</th><td class="sans">Seul face au dossier de consultation</td><td class="rm">{% if biz.dossier_actif %}Guides gratuits, et réponse rédigée au format Word en option{% if biz.cle_actif %} (2 par mois dans Clé en main){% endif %}{% else %}Guides gratuits pas à pas : DC1, DC2, mémoire technique, prix{% endif %}</td></tr>
-    </tbody>
-  </table>
+  <div class="a-duel">
+    <figure class="a-duel-seul">{{ v.seul() }}<figcaption><b>Seul, à la main</b><ul><li>Chercher chaque jour</li><li>Trier les hors sujet</li><li>Noter les dates</li></ul></figcaption></figure>
+    <span class="a-duel-vs" aria-hidden="true">→</span>
+    <figure class="a-duel-avec">{{ v.avec(biz, ex_key, exemple or []) }}<figcaption><b>Avec {{ biz.nom }}</b><ul><li>Arrive seul à 6&nbsp;h&nbsp;20</li><li>Seulement votre métier</li><li>Dates suivies pour vous</li></ul></figcaption></figure>
+  </div>
 </section>
 
 <section id="tarifs" class="a-tarifs"><div class="wrap a-bloc">
