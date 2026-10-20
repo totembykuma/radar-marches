@@ -58,7 +58,7 @@ def _stripe_update(sub_id, meta, session=None):
         raise RuntimeError(f"Stripe abonnement : {r.status_code}")
 
 
-def traiter(subs, biz, metiers, state, criteres_txt, session=None):
+def traiter(subs, biz, metiers, state, criteres_txt, session=None, nouveaux=None):
     """Applique les demandes reçues. Retourne (nb appliquées, erreurs)."""
     key, adresse = (os.getenv("RESEND_INBOUND_KEY") or "").strip(), (biz.get("criteres_adresse") or "").lower()
     if not key or not adresse:
@@ -91,11 +91,18 @@ def traiter(subs, biz, metiers, state, criteres_txt, session=None):
             if s["plan"] in ("pro", "cle") and "motscles" in d:
                 mots = [x.strip() for x in d["motscles"].split(",") if x.strip() and norm(x.strip()) != "aucun"]
                 meta["motscles"], s["mots_cles"] = ", ".join(mots) or ",", mots
+            recents = []
             if meta:
                 _stripe_update(s["stripe_subscription"], meta, session)
                 faits += 1
-            mailer.send(exp, f"{biz['nom']} : vos critères sont à jour", render("email_criteres.html", biz=biz, ok=True,
-                        criteres=criteres_txt(s, metiers)), biz["email_expediteur"], reply_to=biz["email_contact"])
+                if nouveaux:   # 3 appels d'offres récents des nouveaux critères, tout de suite
+                    try:
+                        recents = nouveaux(s) or []
+                    except Exception as exc:
+                        erreurs.append(f"marchés des nouveaux critères non trouvés : {str(exc)[:120]}")
+            mailer.send(exp, f"{biz['nom']} : vos critères sont à jour" + (f", {len(recents)} marchés pour vous" if recents else ""),
+                        render("email_criteres.html", biz=biz, ok=True, criteres=criteres_txt(s, metiers), recents=recents),
+                        biz["email_expediteur"], reply_to=biz["email_contact"])
         except Exception as exc:
             erreurs.append(f"critères non appliqués : {str(exc)[:120]}")
     state["criteres_vus"] = vus[-500:]

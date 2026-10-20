@@ -99,7 +99,8 @@ def comptes_espace(biz, metiers, subs, run, state=None):
                 n, errs = comptes.inviter(subs, biz, utilisateurs, state)
                 run["invitations_compte"], run["erreurs"] = n, run["erreurs"] + errs
                 marches_de_depart(supa, subs, utilisateurs, metiers, state, run)
-        n, errs = comptes.pousser_criteres(supa, subs, biz, metiers, criteres_txt, criteres._stripe_update)
+        n, errs = comptes.pousser_criteres(supa, subs, biz, metiers, criteres_txt, criteres._stripe_update,
+                                           nouveaux=nouveaux_marches(metiers, state, run) if state is not None else None)
         if n:
             run["criteres_espace"] = n
         run["erreurs"] += errs
@@ -127,6 +128,24 @@ def marches_de_depart(supa, subs, utilisateurs, metiers, state, run):
         key = hashlib.sha256(email.encode()).hexdigest()[:16]
         sent[key] = (sent.get(key, []) + [a["id"] for a in avis])[-500:]
     run["marches_de_depart"] = sum(len(v) for v in faits.values())
+
+
+def nouveaux_marches(metiers, state, run):
+    """Critères modifiés : renvoie une fonction donnant au client 3 appels d'offres récents de ses nouveaux critères.
+    BOAMP n'est lu qu'une fois, et seulement si un client a changé ses critères. Les avis remis ne reviennent pas
+    dans l'alerte du matin (ajoutés à `sent`)."""
+    matcher, cache = Matcher(metiers), {}
+
+    def pour(s):
+        if "avis" not in cache:
+            cache["avis"] = [a for a in boamp.fetch_open(days=21) if not matcher.is_award_notice(a)]
+        sent = state.setdefault("sent", {})
+        key = hashlib.sha256(s["email"].lower().encode()).hexdigest()[:16]
+        choix = comptes.recents_pour(cache["avis"], s, matcher, metiers, date.today(), exclus=set(sent.get(key, [])))
+        sent[key] = (sent.get(key, []) + [a["id"] for a in choix])[-500:]
+        run["marches_criteres"] = run.get("marches_criteres", 0) + len(choix)
+        return choix
+    return pour
 
 
 def lien_dossier(biz, sub):
@@ -303,11 +322,11 @@ def run_bienvenue():
     run["erreurs"] += rp.pop("erreurs")
     supa = comptes_espace(biz, metiers, subs, run, state)
     espace_vite(biz, metiers, subs, supa, run)
-    if run.get("bienvenues") or n or any(rp.values()) or run.get("depart_vus") or state.get("reponses_vues") or state.get("compte_vus") or run.get("invitations_compte") or run.get("textes_annuels") is not None:
+    if run.get("bienvenues") or n or any(rp.values()) or run.get("depart_vus") or run.get("marches_criteres") or state.get("reponses_vues") or state.get("compte_vus") or run.get("invitations_compte") or run.get("textes_annuels") is not None:
         _save_json(DATA / "state.json", state)
     return {"bienvenues": run.get("bienvenues", 0), "liens_espace_client": n, "comptes": run.get("comptes"),
             "abonnements_remplaces": len(run.get("remplaces") or []),
-            "criteres_espace": run.get("criteres_espace", 0), "marches_de_depart": run.get("marches_de_depart", 0), "demandes_espace": run.get("demandes_espace", 0), "paliers": run.get("paliers", 0),
+            "criteres_espace": run.get("criteres_espace", 0), "marches_de_depart": run.get("marches_de_depart", 0), "marches_criteres": run.get("marches_criteres", 0), "demandes_espace": run.get("demandes_espace", 0), "paliers": run.get("paliers", 0),
             "essais_refuses": run.get("essais_refuses", 0), "reponses_prospects": rp, "erreurs": run["erreurs"]}
 
 
@@ -447,7 +466,7 @@ def run_daily(avis_new=None, avis_open=None, subs=None, resultats_records=None, 
 
     # 2a. Changements de critères demandés via le formulaire du site (lecture automatique)
     try:
-        n, errs = criteres.traiter(subs, biz, metiers, state, criteres_txt)
+        n, errs = criteres.traiter(subs, biz, metiers, state, criteres_txt, nouveaux=nouveaux_marches(metiers, state, run))
         if n:
             run["criteres_modifies"] = n
         run["erreurs"] += errs
