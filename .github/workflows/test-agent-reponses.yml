@@ -18,10 +18,11 @@ jobs:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
         run: |
           python - <<'PY'
+          from datetime import datetime
           from radar import mailer
           from radar.config import business
           biz = business()
-          r = mailer.send(biz["prospection"]["reponses_adresse"], "Re: [Test agent] marchés publics peinture",
+          r = mailer.send(biz["prospection"]["reponses_adresse"], f"Re: [Test agent {datetime.now():%H:%M}] marchés publics peinture",
                           "<p>Bonjour, combien coûte votre service pour la peinture en Gironde, et y a-t-il un essai ?</p>",
                           biz["email_expediteur"])
           print("question envoyée :", bool(r.get("id")))
