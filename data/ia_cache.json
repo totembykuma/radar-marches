@@ -1,0 +1,23 @@
+{
+ "26-101245": {
+  "resume": "Prestations d'accueil physique et téléphonique et de gestion du courrier pour l'Université Paris Dauphine - PSL, à Paris.",
+  "score": 1,
+  "a_verifier": [],
+  "hors_metier": true,
+  "jour": "2026-10-20"
+ },
+ "26-101403": {
+  "resume": "Nettoyage des locaux, sols et vitres de plusieurs sites de l'Institut Agro (départements 21, 49, 63 et 75) pour l'INESAAE.",
+  "score": 3,
+  "a_verifier": [],
+  "hors_metier": false,
+  "jour": "2026-10-20"
+ },
+ "26-101683": {
+  "resume": "À La Trinité (Martinique), sécurité des personnes et des biens et sécurité incendie en deux lots : Hôtel de Ville et annexes, puis réunions et manifestations communales.",
+  "score": 4,
+  "a_verifier": [],
+  "hors_metier": false,
+  "jour": "2026-10-20"
+ }
+}
