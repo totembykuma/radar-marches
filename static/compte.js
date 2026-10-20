@@ -515,6 +515,24 @@
     $(p + "-choix").addEventListener("change", function () { $(p + "-ref-p").hidden = this.value !== ""; if (!this.value) $(p + "-ref").focus(); });
   });
 
+  // Rapport (page HTML) : affiché comme une page lisible dans un nouvel onglet. Le stockage le sert en texte brut
+  // (sécurité), d'où l'affichage depuis une copie locale, scripts interdits.
+  function ouvrirPage(chemin, fini) {
+    var w = window.open("", "_blank");
+    if (w) { try { w.document.title = "Rapport…"; w.document.body.textContent = "Chargement du rapport…"; } catch (e) {} }
+    sb.storage.from("documents").download(chemin).then(function (r) {
+      fini();
+      if (r.error || !r.data) { if (w) w.close(); return toast("Fichier indisponible (conservé 6 mois). Écrivez-nous si besoin."); }
+      return r.data.text().then(function (t) {
+        var entete = '<meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="script-src \'none\'">' +
+          '<meta name="viewport" content="width=device-width,initial-scale=1">';
+        var html = /<head[^>]*>/i.test(t) ? t.replace(/<head[^>]*>/i, function (h) { return h + entete; }) : entete + t;
+        var url = URL.createObjectURL(new Blob([html], { type: "text/html;charset=utf-8" }));
+        if (w) w.location.href = url; else location.href = url;
+      });
+    }, function () { fini(); if (w) w.close(); toast("Service momentanément indisponible. Réessayez dans un instant."); });
+  }
+
   function afficherDemandes() {
     var d = E.droits || {}, actif = d.veille, q = E.quotas || {}, cle = (d.rapports_mois || 0) + (d.dossiers_mois || 0) > 0 || E.offre === "cle";
     var visible = cle || (actif && !!C.dossier) || DEMANDES.length > 0;
@@ -554,9 +572,11 @@
       li.appendChild(haut);
       var act = el("div", null, "demande-act");
       if (x.statut === "terminee" && x.fichier) {
-        var b = el("button", "Télécharger", "btn btn-sm"); b.type = "button";
+        var page = /\.html?$/i.test(x.fichier);
+        var b = el("button", page ? "Ouvrir le rapport" : "Télécharger", "btn btn-sm"); b.type = "button";
         b.addEventListener("click", function () {
           b.disabled = true;
+          if (page) return ouvrirPage(x.fichier, function () { b.disabled = false; });
           sb.storage.from("documents").createSignedUrl(x.fichier, 120, { download: true }).then(function (r) {
             b.disabled = false;
             if (r.error) return toast("Fichier indisponible (conservé 6 mois). Écrivez-nous si besoin.");
