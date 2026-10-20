@@ -1171,6 +1171,8 @@ def demandes_espace(biz, metiers, cles, histo, supa=None, generer_rapport=None, 
         chemin = f"{dem['user_id']}/{dem['id']}/resultat/{comptes.nom_fichier('rapport ' + avis['objet'], '.html')}"
         page = render("rapport_page.html", biz=biz, jours=jours_restants(avis.get("date_limite")), **{**kw, "r": rapport.pour_page(r)})
         supa.deposer(chemin, page.encode(), "text/html")
+        # données brutes gardées à côté : la page pourra être refaite au nouveau design sans repayer l'IA
+        supa.deposer(chemin.rsplit(".", 1)[0] + ".json", json.dumps({"r": r, "avis": avis, "fiche": fiche}, ensure_ascii=False, default=str).encode(), "application/json")
         rapport._envoyer(biz, c["email"], f"comment gagner « {avis['objet'][:60]} »", "rapport", **kw)
         return chemin, None
 

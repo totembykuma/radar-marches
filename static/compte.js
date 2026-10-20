@@ -565,15 +565,21 @@
     var ul = vider("l-demandes");
     $("l-demandes-vide").hidden = DEMANDES.length > 0;
     DEMANDES.forEach(function (x) {
-      var li = el("li", null, "demande"), haut = el("div");
-      haut.appendChild(el("span", ETATS[x.statut] || x.statut, "badge badge-" + x.statut));
+      // carte visuelle : icône colorée, titre court, suivi en 3 étapes (reçue → en préparation → prêt)
+      var rap = x.type === "rapport", li = el("li", null, "demande demande-" + (rap ? "rapport" : "dossier") + " etat-" + x.statut), haut = el("div", null, "demande-corps");
+      li.appendChild(el("span", rap ? "📊" : "📁", "demande-ic"));
       var av = ALERTES.filter(function (a) { return a.avis_id === x.avis_ref; })[0];
-      haut.appendChild(el("b", (x.type === "rapport" ? "Rapport" : "Dossier") + " · " + (av ? av.objet.slice(0, 80) + " (réf. " + x.avis_ref + ")" : "avis " + x.avis_ref)));
+      haut.appendChild(el("span", rap ? "Rapport « comment gagner »" : "Dossier de candidature", "demande-type"));
+      haut.appendChild(el("b", av ? (av.objet.length > 70 ? av.objet.slice(0, 68) + "…" : av.objet) : "Avis " + x.avis_ref));
+      var rang = { recue: 1, en_traitement: 2, terminee: 3 }[x.statut] || 0, suivi = el("ol", null, "suivi");
+      if (rang) ["Reçue", "En préparation", "Prêt"].forEach(function (t, i) { suivi.appendChild(el("li", t, i + 1 < rang ? "fait" : i + 1 === rang ? "actif" : "")); });
+      else suivi.appendChild(el("li", ETATS[x.statut] || x.statut, "alerte"));
+      haut.appendChild(suivi);
       li.appendChild(haut);
       var act = el("div", null, "demande-act");
       if (x.statut === "terminee" && x.fichier) {
         var page = /\.html?$/i.test(x.fichier);
-        var b = el("button", page ? "Ouvrir le rapport" : "Télécharger", "btn btn-sm"); b.type = "button";
+        var b = el("button", page ? "Voir mon rapport →" : "Télécharger le Word ↓", "btn btn-sm"); b.type = "button";
         b.addEventListener("click", function () {
           b.disabled = true;
           if (page) return ouvrirPage(x.fichier, function () { b.disabled = false; });
@@ -591,7 +597,7 @@
         act.appendChild(k);
       }
       if (act.children.length) li.appendChild(act);
-      li.appendChild(el("small", "Demandée le " + dateFr(x.cree) + (x.termine ? " · terminée le " + dateFr(x.termine) : "") + " · n° " + x.id.slice(0, 8)));
+      li.appendChild(el("small", "Demandée le " + dateFr(x.cree) + (x.termine ? " · prête le " + dateFr(x.termine) : "") + " · réf. " + x.avis_ref));
       if (x.message) li.appendChild(el("p", x.message));
       ul.appendChild(li);
     });
