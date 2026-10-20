@@ -783,7 +783,9 @@ def test_pages_entreprises_barometre_et_posts(tmp_path, monkeypatch):
     posts = json.loads((tmp_path / "s" / "linkedin" / "semaine.json").read_text())["posts"]
     assert len(posts) >= 3 and all(p["date"].endswith("T09:00:00") for p in posts)
     rss = (tmp_path / "s" / "linkedin" / "flux.xml").read_text()
-    assert rss.startswith("<?xml") and rss.count("<item>") == sum(p["date"][:10] <= date.today().isoformat() for p in posts)
+    annonces = sum(str(a["date"]) <= date.today().isoformat() for a in business().get("linkedin_annonces") or [])
+    assert rss.startswith("<?xml") and rss.count("<item>") == sum(p["date"][:10] <= date.today().isoformat() for p in posts) + annonces
+    assert "radar-linkedin-video-dossier" in rss or not annonces
     assert any("PROPRE SAS" in p["texte"] for p in posts) and any("/appels-offres/nettoyage/" in p["texte"] for p in posts)
 
 

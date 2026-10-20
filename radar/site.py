@@ -364,6 +364,11 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=Non
         write("dossier/envoyer/index.html", render("dossier_envoyer.html", root="../../", path="/dossier/envoyer/", noindex=True,
                                                    title=f"Envoyer mon dossier · {biz['nom']}", description="", **common))
 
+    write("videos/index.html", render("videos.html", root="../", path="/videos/",
+                                      title=f"Votre dossier de candidature en 3 étapes (vidéo) · {biz['nom']}",
+                                      description="30 secondes pour voir comment Radar Marchés prépare votre réponse à un appel d'offres.",
+                                      og_image=biz["site_url"].rstrip("/") + "/static/videos/creer-un-dossier.jpg", **common))
+
     for name in ("mentions-legales", "cgv", "confidentialite"):
         src = (ROOT / "templates" / "legal" / f"{name}.html").read_text(encoding="utf-8")
         content = Markup(render_string(src, e=biz["editeur"], **common))
