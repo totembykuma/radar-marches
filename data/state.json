@@ -65,12 +65,15 @@
  "reponses_vues": [
   "bcaf3dc2-4661-4287-b4bf-a7fd6acfcc9d",
   "9b6bcb54-49b8-4e53-8ca6-60f1672144f3",
-  "000bfc39-7983-47ca-bc1c-ec074b320429"
+  "000bfc39-7983-47ca-bc1c-ec074b320429",
+  "36016e08-80a2-40c0-92ec-14519f467da0"
  ],
  "reponses_auteurs": {
   "8f6bebb7e6f521f17e05a969": 2
  },
- "prospects_refus": [],
+ "prospects_refus": [
+  "f06862dc7e458863d3003501"
+ ],
  "reponses_journal": [
   {
    "date": "2026-10-19",
@@ -83,6 +86,10 @@
   {
    "date": "2026-10-19",
    "action": "repondu"
+  },
+  {
+   "date": "2026-10-21",
+   "action": "desinscrit"
   }
  ],
  "ia_usage": {
