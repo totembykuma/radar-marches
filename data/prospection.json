@@ -76,7 +76,42 @@
   "5211c47fd12093b45094f66d",
   "df382d866470e9bac496384f",
   "f9fcd41e8fa0ad912f7cb534",
-  "d0ff179e9c4c7a2e744cb072"
+  "d0ff179e9c4c7a2e744cb072",
+  "cd6763052a88f4ab198fe681",
+  "e8837a29607230ba7a306183",
+  "426673fb92f3847ffb2dac81",
+  "27e7daf0dd2934f25bbb0b0f",
+  "f6361bf5b94205c828d65efa",
+  "19ae014a4f8adca5f03d8346",
+  "303596cebfbe343c5f62f95b",
+  "570b77b3cf6f55f3a971022d",
+  "ea591df51e424bf1f106a047",
+  "7e7b4e9719d3a5fedc624610",
+  "f06862dc7e458863d3003501",
+  "5f31eda010cf9e799d786c66",
+  "6b2d41df853b1baa42c9bb68",
+  "adc93798cf71cb8f8fd2eb01",
+  "0a1b49293ba755c5eac75c8e",
+  "18ff1c89a81fdec0cb69b845",
+  "58cb999e247cdb862231e505",
+  "748077b851496fc1a0dbefdd",
+  "4b4bdfae17ba442d76d3861c",
+  "71ea14e1d8b8693f9e67c17a",
+  "4726225f9b7156c526a2ba61",
+  "0ce11fc668f14a6a37d5ad13",
+  "02940637052979cf399d05ab",
+  "c01046065c961fae9ec06b50",
+  "6997d10d501575b9ccab877e",
+  "dda22a7730200b54fd73ce9d",
+  "3289cc6dc2c2e0fa376e0673",
+  "6c5e0d5c19b66da41d35318d",
+  "1289b7516f2f7683b58b3232",
+  "2701391131a77943f5308926",
+  "bfa2f678168898db7f9afbc2",
+  "4a9967b1282739a162e11e40",
+  "dfb0cbe6944001968f3f54a2",
+  "42d0e766d41c3a8b125a76d1",
+  "289cc440c699d4a190704856"
  ],
  "journal": [
   {
@@ -210,6 +245,115 @@
     "01a1585c-df55-7e7a-a8e4-43ba887fe003": [
      "menuiserie",
      "25"
+    ]
+   },
+   "relances": 0
+  },
+  {
+   "date": "2026-10-21",
+   "envoyes": 20,
+   "ids": [
+    "01a15d85-9ef4-70be-9f03-0f61ca263582",
+    "01a15d85-9f9b-767a-b232-844923e3a4f7",
+    "01a15d85-a035-7b20-a0ab-0dde496763f3",
+    "01a15d85-a0cd-7072-a365-6d88f6e52d60",
+    "01a15d85-a171-76a5-b0e5-4edcab9c5b5f",
+    "01a15d85-a208-71a7-a550-e389e47da3a0",
+    "01a15d85-a29d-7d02-8b74-c4914fdb3d23",
+    "01a15d85-a331-7ee5-8003-5f6fc4f69ba7",
+    "01a15d85-a3df-7b3b-b08a-8c8625705ea6",
+    "01a15d85-a472-7a02-ae8f-098cd96c18f7",
+    "01a15d85-a4ff-7253-a60d-3c93df3763cc",
+    "01a15d85-a591-738c-aaba-333dbf5351fd",
+    "01a15d85-a623-7851-b757-bb98f2fd88a6",
+    "01a15d85-a6c1-7c0f-9d82-31a231e64bb7",
+    "01a15d85-a767-7aa5-88cc-8dda59cc2559",
+    "01a15d85-a804-7bdc-9eef-f5206cd4a4aa",
+    "01a15d85-a89c-7973-b169-37585332e43c",
+    "01a15d85-a931-70fe-a27c-0540231911fb",
+    "01a15d85-a9c6-7991-b846-627231431124",
+    "01a15d85-aa5d-72f6-9461-49e2aefc4b0e"
+   ],
+   "suivi": {
+    "01a15d85-9ef4-70be-9f03-0f61ca263582": [
+     "nettoyage",
+     "76"
+    ],
+    "01a15d85-9f9b-767a-b232-844923e3a4f7": [
+     "plomberie-cvc",
+     "67"
+    ],
+    "01a15d85-a035-7b20-a0ab-0dde496763f3": [
+     "plomberie-cvc",
+     "13"
+    ],
+    "01a15d85-a0cd-7072-a365-6d88f6e52d60": [
+     "plomberie-cvc",
+     "13"
+    ],
+    "01a15d85-a171-76a5-b0e5-4edcab9c5b5f": [
+     "plomberie-cvc",
+     "13"
+    ],
+    "01a15d85-a208-71a7-a550-e389e47da3a0": [
+     "plomberie-cvc",
+     "13"
+    ],
+    "01a15d85-a29d-7d02-8b74-c4914fdb3d23": [
+     "plomberie-cvc",
+     "13"
+    ],
+    "01a15d85-a331-7ee5-8003-5f6fc4f69ba7": [
+     "plomberie-cvc",
+     "13"
+    ],
+    "01a15d85-a3df-7b3b-b08a-8c8625705ea6": [
+     "nettoyage",
+     "26"
+    ],
+    "01a15d85-a472-7a02-ae8f-098cd96c18f7": [
+     "nettoyage",
+     "84"
+    ],
+    "01a15d85-a4ff-7253-a60d-3c93df3763cc": [
+     "nettoyage",
+     "17"
+    ],
+    "01a15d85-a591-738c-aaba-333dbf5351fd": [
+     "electricite",
+     "38"
+    ],
+    "01a15d85-a623-7851-b757-bb98f2fd88a6": [
+     "communication-web",
+     "31"
+    ],
+    "01a15d85-a6c1-7c0f-9d82-31a231e64bb7": [
+     "nettoyage",
+     "38"
+    ],
+    "01a15d85-a767-7aa5-88cc-8dda59cc2559": [
+     "electricite",
+     "92"
+    ],
+    "01a15d85-a804-7bdc-9eef-f5206cd4a4aa": [
+     "nettoyage",
+     "78"
+    ],
+    "01a15d85-a89c-7973-b169-37585332e43c": [
+     "plomberie-cvc",
+     "59"
+    ],
+    "01a15d85-a931-70fe-a27c-0540231911fb": [
+     "electricite",
+     "93"
+    ],
+    "01a15d85-a9c6-7991-b846-627231431124": [
+     "plomberie-cvc",
+     "83"
+    ],
+    "01a15d85-aa5d-72f6-9461-49e2aefc4b0e": [
+     "plomberie-cvc",
+     "13"
     ]
    },
    "relances": 0
