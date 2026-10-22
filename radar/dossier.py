@@ -46,13 +46,16 @@ Règles absolues :
 - Si le DCE est incomplet ou illisible, dis-le dans « vigilance » et fais au mieux.
 - Si seul l'avis officiel est fourni (« AVIS OFFICIEL SEUL »), appuie-toi dessus et sur les usages de ce type de marché,
   écris « [À VÉRIFIER DANS LE RÈGLEMENT] » à chaque point incertain et rappelle en tête de « vigilance » de relire le règlement.
-- Les pièces déjà fournies par l'entreprise (Kbis, attestations…) sont listées : marque-les « fournie » dans « pieces ».
+- Les pièces déjà fournies par l'entreprise (Kbis, attestations…) sont listées : écris « fournie » dans « ou_la_trouver ».
+- Le client doit finir vite : phrases courtes, paragraphes de 3 phrases au plus, aucun remplissage. Chaque information
+  manquante n'est demandée qu'une fois (un même [À COMPLÉTER] ne se répète pas d'une partie à l'autre).
+- « resume » : 3 phrases simples, sans jargon.
 
 Réponds uniquement par un objet JSON, sans texte autour :
 {{
  "acheteur": "...", "objet": "...", "reference": "...", "lots": "lot(s) concerné(s) ou « lot unique »",
  "date_limite": "AAAA-MM-JJ HH:MM ou vide si introuvable",
- "resume": "5 lignes : ce que l'acheteur veut, où, durée, montant si cité",
+ "resume": "3 phrases : ce que l'acheteur veut, où, durée, montant si cité",
  "criteres": [{{"critere": "...", "poids": "ex. 60 %", "conseil": "comment marquer des points"}}],
  "pieces": [{{"piece": "...", "ou_la_trouver": "ex. Kbis sur infogreffe.fr", "obligatoire": true}}],
  "vigilance": ["points du règlement qui peuvent faire écarter l'offre (visite obligatoire, signature électronique, format…)"],
@@ -183,72 +186,260 @@ def generer(dce, infos, modele):
 
 # ---------------------------------------------------------------- fichier Word
 
-def construire_docx(d, nom_service):
+MOIS = ("janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc.")
+A_FAIRE = r"(\[À (?:COMPLÉTER|VÉRIFIER)[^\]]*\])"
+
+
+def _date_fr(date_limite):
+    m = re.match(r"(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{1,2}):(\d{2}))?", date_limite or "")
+    if not m:
+        return ""
+    a, mo, j, h, mi = m.groups()
+    heure = f" à {int(h)} h{'' if mi in (None, '00') else ' ' + mi}" if h else ""
+    return f"{int(j)} {MOIS[int(mo) - 1]} {a}{heure}"
+
+
+def construire_docx(d, nom_service, maintenant=None):
+    """Word du dossier, pensé pour être fini vite : page 1 = l'essentiel et la liste de ce qu'il reste à faire,
+    puis une partie par page, phrases aérées, passages à compléter surlignés en vert citron."""
     from docx import Document
-    from docx.enum.text import WD_COLOR_INDEX
-    from docx.shared import Pt
+    from docx.enum.table import WD_TABLE_ALIGNMENT
+    from docx.enum.text import WD_BREAK
+    from docx.oxml import OxmlElement
+    from docx.oxml.ns import qn
+    from docx.shared import Cm, Pt, RGBColor
 
+    NUIT, IVOIRE, CITRON, GRIS, TEXTE2, ROUGE, VERT = "101C2C", "F5F3ED", "B8F36B", "F1F3F5", "5E6A7C", "C83C48", "21845B"
     doc = Document()
-    doc.styles["Normal"].font.name = "Calibri"
-    doc.styles["Normal"].font.size = Pt(11)
+    for sec in doc.sections:
+        sec.left_margin = sec.right_margin = Cm(2.2)
+        sec.top_margin, sec.bottom_margin = Cm(1.8), Cm(1.8)
+    st = doc.styles["Normal"]
+    st.font.name, st.font.size = "Calibri", Pt(11)
+    st.font.color.rgb = RGBColor.from_string(NUIT)
+    st.paragraph_format.space_after, st.paragraph_format.line_spacing = Pt(8), 1.25
 
-    def para(texte, style=None):
-        p = doc.add_paragraph(style=style)
-        for i, morceau in enumerate(re.split(r"(\[À COMPLÉTER[^\]]*\])", str(texte or ""))):
-            run = p.add_run(morceau)
+    def fond(el, couleur):                 # el = cellule ou run
+        pr = el._tc.get_or_add_tcPr() if hasattr(el, "_tc") else el._r.get_or_add_rPr()
+        shd = OxmlElement("w:shd")
+        shd.set(qn("w:val"), "clear"), shd.set(qn("w:color"), "auto"), shd.set(qn("w:fill"), couleur)
+        pr.append(shd)
+
+    def bordure(p, couleur, cote="left", taille=24):
+        pPr = p._p.get_or_add_pPr()
+        bd = pPr.find(qn("w:pBdr"))
+        if bd is None:
+            bd = OxmlElement("w:pBdr")
+            pPr.append(bd)
+        b = OxmlElement(f"w:{cote}")
+        b.set(qn("w:val"), "single"), b.set(qn("w:sz"), str(taille)), b.set(qn("w:space"), "8"), b.set(qn("w:color"), couleur)
+        bd.append(b)
+
+    def sans_bordures(t):
+        tblPr = t._tbl.tblPr
+        bd = OxmlElement("w:tblBorders")
+        for c in ("top", "left", "bottom", "right", "insideH", "insideV"):
+            e = OxmlElement(f"w:{c}")
+            e.set(qn("w:val"), "single"), e.set(qn("w:sz"), "18"), e.set(qn("w:color"), "FFFFFF")
+            bd.append(e)
+        tblPr.append(bd)
+        mar = OxmlElement("w:tblCellMar")
+        for c, v in (("top", 120), ("bottom", 120), ("left", 160), ("right", 160)):
+            e = OxmlElement(f"w:{c}")
+            e.set(qn("w:w"), str(v)), e.set(qn("w:type"), "dxa")
+            mar.append(e)
+        tblPr.append(mar)
+
+    def largeurs(t, cms):
+        t.autofit = False
+        for col, cm in zip(t.columns, cms):
+            col.width = Cm(cm)
+            for cell in col.cells:
+                cell.width = Cm(cm)
+
+    def run(p, texte, taille=None, gras=False, couleur=None):
+        r = p.add_run(texte)
+        r.bold = gras
+        if taille:
+            r.font.size = Pt(taille)
+        if couleur:
+            r.font.color.rgb = RGBColor.from_string(couleur)
+        return r
+
+    def para(texte, p=None, **kw):
+        """Paragraphe dont les [À COMPLÉTER …] et [À VÉRIFIER …] ressortent en vert citron."""
+        p = p or doc.add_paragraph()
+        for i, morceau in enumerate(re.split(A_FAIRE, str(texte or ""))):
+            if not morceau:
+                continue
+            r = run(p, morceau, gras=bool(i % 2) or kw.get("gras", False), taille=kw.get("taille"), couleur=kw.get("couleur"))
             if i % 2:
-                run.font.highlight_color = WD_COLOR_INDEX.YELLOW
+                fond(r, CITRON)
         return p
 
     def bloc(texte):
-        for ligne in str(texte or "").split("\n\n"):
+        for ligne in re.split(r"\n\s*\n", str(texte or "")):
             if ligne.strip():
                 para(ligne.strip())
 
-    def tableau(entetes, lignes):
-        t = doc.add_table(rows=1, cols=len(entetes))
-        t.style = "Table Grid"
-        for c, h in zip(t.rows[0].cells, entetes):
-            c.text = h
+    def titre(num, texte, sous=""):
+        p = doc.add_paragraph()
+        p.paragraph_format.space_before, p.paragraph_format.space_after = Pt(4), Pt(2)
+        p.paragraph_format.keep_with_next = True
+        bordure(p, CITRON, taille=48)
+        run(p, f"{num}  " if num else "", 20, True, TEXTE2)
+        run(p, texte, 20, True)
+        if sous:
+            q = doc.add_paragraph()
+            q.paragraph_format.space_after = Pt(14)
+            run(q, sous, 10.5, couleur=TEXTE2)
+
+    def page():
+        doc.add_paragraph().add_run().add_break(WD_BREAK.PAGE)
+
+    def tuiles(cases, couleur=IVOIRE):
+        t = doc.add_table(rows=1, cols=len(cases))
+        t.alignment = WD_TABLE_ALIGNMENT.CENTER
+        sans_bordures(t)
+        for c, (petit, grand, sous) in zip(t.rows[0].cells, cases):
+            fond(c, couleur)
+            p = c.paragraphs[0]
+            p.paragraph_format.space_after = Pt(0)
+            run(p, petit.upper(), 8, True, TEXTE2)
+            q = c.add_paragraph()
+            q.paragraph_format.space_after = Pt(0)
+            run(q, grand or "—", 13, True)
+            if sous:
+                run(c.add_paragraph(), sous, 9, couleur=TEXTE2)
+        doc.add_paragraph().paragraph_format.space_after = Pt(2)
+
+    def liste(lignes, case="☐"):
+        t = doc.add_table(rows=0, cols=2)
+        sans_bordures(t)
+        for coche, texte, aide in lignes:
+            cl = t.add_row().cells
+            fond(cl[0], CITRON if coche == "✔" else GRIS)
+            run(cl[0].paragraphs[0], coche or case, 13, True, VERT if coche == "✔" else NUIT)
+            fond(cl[1], GRIS)
+            p = cl[1].paragraphs[0]
+            p.paragraph_format.space_after = Pt(0)
+            para(texte, p, gras=True)
+            if aide:
+                q = cl[1].add_paragraph()
+                q.paragraph_format.space_after = Pt(0)
+                run(q, aide, 9.5, couleur=TEXTE2)
+        largeurs(t, (1.2, 15.4))
+        doc.add_paragraph().paragraph_format.space_after = Pt(2)
+
+    def encadre(lignes, couleur, signe):
         for l in lignes:
-            for c, v in zip(t.add_row().cells, l):
-                c.text = str(v or "")
+            p = para(f"{signe}  {l}")
+            bordure(p, couleur, taille=24)
+            p.paragraph_format.left_indent = Cm(0.3)
 
-    doc.add_heading(f"Réponse à l'appel d'offres : {d.get('objet') or ''}", 0)
-    para(f"Acheteur : {d.get('acheteur') or ''}\nRéférence : {d.get('reference') or ''}\nLots : {d.get('lots') or ''}\n"
-         f"Date limite de remise des offres : {d.get('date_limite') or '[À COMPLÉTER : vérifier dans le règlement]'}")
-    para(f"Préparé par {nom_service}. À relire entièrement : complétez les passages surlignés en jaune, ajoutez vos prix, "
-         "puis signez et déposez sur le site de l'acheteur. Vous restez seul responsable de l'offre déposée.")
+    tout = json.dumps(d, ensure_ascii=False)
+    nb_trous = len(re.findall(A_FAIRE, tout))
+    pieces = d.get("pieces") or []
+    fournies = [p for p in pieces if re.search(r"\bfourni(?:e|es|s)?\b", f"{p.get('ou_la_trouver')}".lower())]
+    a_joindre = [p for p in pieces if p not in fournies and p.get("obligatoire")]
+    minutes = max(15, 5 * round((10 + 1.5 * nb_trous + 2 * len(a_joindre)) / 5))
+    jours = jours_avant(d.get("date_limite"), maintenant)
+    quand = _date_fr(d.get("date_limite"))
 
-    doc.add_heading("1. Ce que demande l'acheteur", 1)
+    # ---- page 1 : l'essentiel
+    t = doc.add_table(rows=1, cols=1)
+    sans_bordures(t)
+    c = t.rows[0].cells[0]
+    fond(c, NUIT)
+    run(c.paragraphs[0], f"{nom_service.upper()}  ·  DOSSIER PRÊT À SIGNER", 8.5, True, CITRON)
+    p = c.add_paragraph()
+    p.paragraph_format.space_after, p.paragraph_format.line_spacing = Pt(4), 1.05
+    run(p, d.get("objet") or "Votre réponse à l'appel d'offres", 22, True, "FFFFFF")
+    run(c.add_paragraph(), d.get("acheteur") or "", 11, couleur=IVOIRE)
+    doc.add_paragraph().paragraph_format.space_after = Pt(0)
+
+    tuiles([("Date limite", quand or "À vérifier", f"dans {jours} jours" if jours is not None and jours >= 0 else ""),
+            ("Votre temps", f"≈ {minutes} min", "pour finir ce dossier"),
+            ("À compléter", str(nb_trous), "passages en vert")])
+
+    titre("", "Il vous reste 4 choses à faire", "Le reste est déjà rédigé. Cochez au fur et à mesure.")
+    liste([("", f"Compléter les {nb_trous} passages surlignés en vert" if nb_trous else "Relire le dossier",
+            "Tapez directement dessus, puis enlevez le surlignage."),
+           ("", "Ajouter vos prix", "Dans le bordereau de prix de l'acheteur. Nous n'en proposons jamais."),
+           ("", f"Joindre {len(a_joindre)} pièce(s) obligatoire(s)" if a_joindre else "Vérifier vos pièces",
+            "La liste est page 2." + (f" {len(fournies)} déjà fournie(s)." if fournies else "")),
+           ("", "Signer et déposer" + (f" avant le {quand}" if quand else ""),
+            "Sur le site indiqué par l'acheteur. Vous restez seul responsable de l'offre.")])
+
+    titre("", "En bref")
     bloc(d.get("resume"))
-    doc.add_heading("Critères de notation", 2)
-    tableau(["Critère", "Poids", "Comment marquer des points"],
-            [(c.get("critere"), c.get("poids"), c.get("conseil")) for c in d.get("criteres") or []])
-    if d.get("vigilance"):
-        doc.add_heading("Points de vigilance", 2)
-        for v in d["vigilance"]:
-            para(v, "List Bullet")
-    doc.add_heading("Pièces à joindre", 2)
-    tableau(["Pièce", "Où la trouver", "Obligatoire"],
-            [(p.get("piece"), p.get("ou_la_trouver"), "oui" if p.get("obligatoire") else "si demandé") for p in d.get("pieces") or []])
+    if d.get("reference") or d.get("lots"):
+        run(doc.add_paragraph(), f"Référence {d.get('reference') or '—'}  ·  {d.get('lots') or 'lot unique'}", 9.5, couleur=TEXTE2)
 
-    doc.add_page_break()
-    doc.add_heading("2. Mémoire technique", 1)
+    # ---- page 2 : gagner des points, pièges, pièces
+    page()
+    titre("1", "Comment marquer des points", "Ce que l'acheteur note, et comment le mémoire y répond.")
+    crit = d.get("criteres") or []
+    if crit:
+        t = doc.add_table(rows=0, cols=2)
+        sans_bordures(t)
+        for x in crit:
+            cl = t.add_row().cells
+            fond(cl[0], NUIT)
+            run(cl[0].paragraphs[0], x.get("poids") or "—", 15, True, CITRON)
+            fond(cl[1], IVOIRE)
+            run(cl[1].paragraphs[0], x.get("critere") or "", 11, True)
+            if x.get("conseil"):
+                para(x["conseil"], cl[1].add_paragraph(), taille=10)
+        largeurs(t, (2.6, 14))
+        doc.add_paragraph().paragraph_format.space_after = Pt(2)
+    if d.get("vigilance"):
+        titre("", "Attention", "Ce qui peut faire écarter une offre.")
+        encadre(d["vigilance"], ROUGE, "!")
+    titre("", "Vos pièces")
+    liste([("✔" if p in fournies else "", p.get("piece") or "",
+            ("Déjà fournie" if p in fournies else (p.get("ou_la_trouver") or "")) + ("" if p.get("obligatoire") else " · si demandé"))
+           for p in pieces])
+
+    # ---- une partie par page
+    page()
+    titre("2", "Mémoire technique", "Votre présentation, point par point, dans l'ordre de la notation.")
     for s in d.get("memoire") or []:
-        doc.add_heading(s.get("titre") or "", 2)
+        p = para(s.get("titre") or "", gras=True, taille=13)
+        p.paragraph_format.space_before, p.paragraph_format.keep_with_next = Pt(12), True
         bloc(s.get("texte"))
 
-    doc.add_page_break()
-    doc.add_heading("3. Lettre de candidature", 1)
+    page()
+    titre("3", "Lettre de candidature", "Prête à imprimer sur votre papier à en-tête.")
     bloc(d.get("lettre"))
 
-    doc.add_heading("4. DUME (à reporter sur le formulaire en ligne indiqué par l'acheteur)", 1)
-    tableau(["Rubrique", "Réponse"], [(x.get("rubrique"), x.get("reponse")) for x in d.get("dume") or []])
+    if d.get("dume"):
+        page()
+        titre("4", "DUME", "À recopier sur le formulaire en ligne indiqué par l'acheteur.")
+        t = doc.add_table(rows=0, cols=2)
+        sans_bordures(t)
+        for i, x in enumerate(d["dume"]):
+            cl = t.add_row().cells
+            for cell in cl:
+                fond(cell, GRIS if i % 2 else IVOIRE)
+            run(cl[0].paragraphs[0], x.get("rubrique") or "", 9.5, True, TEXTE2)
+            para(x.get("reponse"), cl[1].paragraphs[0])
+        largeurs(t, (5.5, 11.1))
 
-    doc.add_heading("5. Références", 1)
-    tableau(["Client", "Objet", "Année", "Montant"],
-            [(r.get("client"), r.get("objet"), r.get("annee"), r.get("montant")) for r in d.get("references") or []])
+    if d.get("references"):
+        titre("5", "Vos références")
+        t = doc.add_table(rows=1, cols=4)
+        sans_bordures(t)
+        for cell, h in zip(t.rows[0].cells, ("Client", "Objet", "Année", "Montant")):
+            fond(cell, NUIT)
+            run(cell.paragraphs[0], h, 9, True, CITRON)
+        for i, r in enumerate(d["references"]):
+            for cell, v in zip(t.add_row().cells, (r.get("client"), r.get("objet"), r.get("annee"), r.get("montant"))):
+                fond(cell, GRIS if i % 2 else IVOIRE)
+                para(v, cell.paragraphs[0], taille=10)
+
+    pied = doc.sections[0].footer.paragraphs[0]
+    run(pied, f"{nom_service} · dossier préparé pour vous, à relire, compléter et signer", 8, couleur=TEXTE2)
     buf = io.BytesIO()
     doc.save(buf)
     return buf.getvalue()

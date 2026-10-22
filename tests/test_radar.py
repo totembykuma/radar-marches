@@ -1343,3 +1343,20 @@ def test_prospection_plus_d_envois_si_semaine_propre(monkeypatch):
         raise RuntimeError("401")
     monkeypatch.setattr(cli.mailer, "dernier_evenement", illisible)
     assert cli.sante_envois(journal) is None
+
+
+def test_word_dossier_aere():
+    import io
+    from datetime import date
+    from docx import Document
+    from radar import dossier
+    d = {"objet": "Nettoyage mairie", "acheteur": "Commune", "date_limite": "2026-11-12 12:00", "resume": "Court.",
+         "pieces": [{"piece": "Kbis", "ou_la_trouver": "fournie", "obligatoire": True},
+                    {"piece": "Assurance", "ou_la_trouver": "à fournir par l'assureur", "obligatoire": True}],
+         "memoire": [{"titre": "1. Équipe", "texte": "Une équipe de [À COMPLÉTER : nombre] agents."}],
+         "lettre": "Signé [À COMPLÉTER : nom]", "dume": [], "references": []}
+    doc = Document(io.BytesIO(dossier.construire_docx(d, "Radar Marchés", maintenant=date(2026, 10, 22))))
+    texte = "\n".join(c.text for t in doc.tables for r in t.rows for c in r.cells) + "\n".join(p.text for p in doc.paragraphs)
+    assert "12 nov. 2026 à 12 h" in texte and "dans 21 jours" in texte
+    assert "Compléter les 2 passages" in texte and "Joindre 1 pièce(s)" in texte and "Déjà fournie" in texte
+    assert "[À COMPLÉTER : nombre]" in texte
