@@ -204,7 +204,6 @@ def construire_docx(d, nom_service, maintenant=None):
     puis une partie par page, phrases aérées, passages à compléter surlignés en vert citron."""
     from docx import Document
     from docx.enum.table import WD_TABLE_ALIGNMENT
-    from docx.enum.text import WD_BREAK
     from docx.oxml import OxmlElement
     from docx.oxml.ns import qn
     from docx.shared import Cm, Pt, RGBColor
@@ -235,7 +234,7 @@ def construire_docx(d, nom_service, maintenant=None):
         b.set(qn("w:val"), "single"), b.set(qn("w:sz"), str(taille)), b.set(qn("w:space"), "8"), b.set(qn("w:color"), couleur)
         bd.append(b)
 
-    def sans_bordures(t):
+    def sans_bordures(t, marge=120):
         tblPr = t._tbl.tblPr
         bd = OxmlElement("w:tblBorders")
         for c in ("top", "left", "bottom", "right", "insideH", "insideV"):
@@ -244,7 +243,7 @@ def construire_docx(d, nom_service, maintenant=None):
             bd.append(e)
         tblPr.append(bd)
         mar = OxmlElement("w:tblCellMar")
-        for c, v in (("top", 120), ("bottom", 120), ("left", 160), ("right", 160)):
+        for c, v in (("top", marge), ("bottom", marge), ("left", 160), ("right", 160)):
             e = OxmlElement(f"w:{c}")
             e.set(qn("w:w"), str(v)), e.set(qn("w:type"), "dxa")
             mar.append(e)
@@ -286,6 +285,9 @@ def construire_docx(d, nom_service, maintenant=None):
         p = doc.add_paragraph()
         p.paragraph_format.space_before, p.paragraph_format.space_after = Pt(4), Pt(2)
         p.paragraph_format.keep_with_next = True
+        if saut:
+            p.paragraph_format.page_break_before = True
+            saut.clear()
         bordure(p, CITRON, taille=48)
         run(p, f"{num}  " if num else "", 20, True, TEXTE2)
         run(p, texte, 20, True)
@@ -294,13 +296,16 @@ def construire_docx(d, nom_service, maintenant=None):
             q.paragraph_format.space_after = Pt(14)
             run(q, sous, 10.5, couleur=TEXTE2)
 
-    def page():
-        doc.add_paragraph().add_run().add_break(WD_BREAK.PAGE)
+    saut = []
+
+    def page():                            # la partie suivante commence en haut de page (sans page blanche si la précédente déborde)
+        saut.append(True)
 
     def tuiles(cases, couleur=IVOIRE):
         t = doc.add_table(rows=1, cols=len(cases))
         t.alignment = WD_TABLE_ALIGNMENT.CENTER
         sans_bordures(t)
+        largeurs(t, [16.6 / len(cases)] * len(cases))
         for c, (petit, grand, sous) in zip(t.rows[0].cells, cases):
             fond(c, couleur)
             p = c.paragraphs[0]
@@ -313,18 +318,20 @@ def construire_docx(d, nom_service, maintenant=None):
                 run(c.add_paragraph(), sous, 9, couleur=TEXTE2)
         doc.add_paragraph().paragraph_format.space_after = Pt(2)
 
-    def liste(lignes, case="☐"):
+    def liste(lignes, case="☐", serre=False):
         t = doc.add_table(rows=0, cols=2)
-        sans_bordures(t)
+        sans_bordures(t, 50 if serre else 120)
         for coche, texte, aide in lignes:
             cl = t.add_row().cells
             fond(cl[0], CITRON if coche == "✔" else GRIS)
-            run(cl[0].paragraphs[0], coche or case, 13, True, VERT if coche == "✔" else NUIT)
+            run(cl[0].paragraphs[0], coche or case, 11 if serre else 13, True, VERT if coche == "✔" else NUIT)
             fond(cl[1], GRIS)
             p = cl[1].paragraphs[0]
             p.paragraph_format.space_after = Pt(0)
             para(texte, p, gras=True)
-            if aide:
+            if aide and serre:
+                run(p, "   " + aide, 9, couleur=TEXTE2)
+            elif aide:
                 q = cl[1].add_paragraph()
                 q.paragraph_format.space_after = Pt(0)
                 run(q, aide, 9.5, couleur=TEXTE2)
@@ -349,6 +356,7 @@ def construire_docx(d, nom_service, maintenant=None):
     # ---- page 1 : l'essentiel
     t = doc.add_table(rows=1, cols=1)
     sans_bordures(t)
+    largeurs(t, (16.6,))
     c = t.rows[0].cells[0]
     fond(c, NUIT)
     run(c.paragraphs[0], f"{nom_service.upper()}  ·  DOSSIER PRÊT À SIGNER", 8.5, True, CITRON)
@@ -360,11 +368,11 @@ def construire_docx(d, nom_service, maintenant=None):
 
     tuiles([("Date limite", quand or "À vérifier", f"dans {jours} jours" if jours is not None and jours >= 0 else ""),
             ("Votre temps", f"≈ {minutes} min", "pour finir ce dossier"),
-            ("À compléter", str(nb_trous), "passages en vert")])
+            ("À compléter", str(nb_trous), "passages en vert") if nb_trous else ("À compléter", "Rien ✔", "tout est rempli")])
 
     titre("", "Il vous reste 4 choses à faire", "Le reste est déjà rédigé. Cochez au fur et à mesure.")
     liste([("", f"Compléter les {nb_trous} passages surlignés en vert" if nb_trous else "Relire le dossier",
-            "Tapez directement dessus, puis enlevez le surlignage."),
+            "Tapez directement dessus, puis enlevez le surlignage." if nb_trous else "Tout est rempli : vérifiez simplement les chiffres."),
            ("", "Ajouter vos prix", "Dans le bordereau de prix de l'acheteur. Nous n'en proposons jamais."),
            ("", f"Joindre {len(a_joindre)} pièce(s) obligatoire(s)" if a_joindre else "Vérifier vos pièces",
             "La liste est page 2." + (f" {len(fournies)} déjà fournie(s)." if fournies else "")),
@@ -399,7 +407,7 @@ def construire_docx(d, nom_service, maintenant=None):
     titre("", "Vos pièces")
     liste([("✔" if p in fournies else "", p.get("piece") or "",
             ("Déjà fournie" if p in fournies else (p.get("ou_la_trouver") or "")) + ("" if p.get("obligatoire") else " · si demandé"))
-           for p in pieces])
+           for p in pieces], serre=True)
 
     # ---- une partie par page
     page()
