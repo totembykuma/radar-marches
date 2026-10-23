@@ -135,6 +135,9 @@ def pages_video(site, email):
     if email and Path(email).exists():
         html = Path(email).read_text(encoding="utf-8")
         html = html.replace("<body", "<body style=\"background:#F1F3F5;padding:20px 0;zoom:1.3\"", 1)
+        # Arial absent des machines GitHub : l'e-mail s'afficherait avec une police à empattements
+        html = html.replace("</head>", "<style>@font-face{font-family:Inter;src:url(/static/fonts/inter.woff2)}"
+                                      "*{font-family:Arial,Helvetica,Inter,sans-serif!important}</style></head>", 1)
         (d / "email.html").write_text(html, encoding="utf-8")
     else:
         (d / "email.html").write_text("<p style='font:20px sans-serif;padding:40px'>Aperçu d'e-mail indisponible</p>", encoding="utf-8")

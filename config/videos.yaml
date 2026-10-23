@@ -30,7 +30,7 @@ videos:
       - page: /_videos/email.html
         url: "Votre boîte de réception"
         phrases:
-          - texte: "Pour chaque marché : l'objet, l'acheteur, le lieu, la date limite et le lien vers l'avis officiel."
+          - texte: "Pour chaque marché : l'objet, le lieu, la date limite et le lien vers l'avis officiel."
           - texte: "Pas de tri à faire. Vous lisez, et vous décidez."
         actions:
           - {a: defiler, y: 260, t: 1.5, d: 4}
