@@ -365,9 +365,9 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=Non
                                                    title=f"Envoyer mon dossier · {biz['nom']}", description="", **common))
 
     write("videos/index.html", render("videos.html", root="../", path="/videos/",
-                                      title=f"Votre dossier de candidature en 3 étapes (vidéo) · {biz['nom']}",
-                                      description="30 secondes pour voir comment Radar Marchés prépare votre réponse à un appel d'offres.",
-                                      og_image=biz["site_url"].rstrip("/") + "/static/videos/creer-un-dossier.jpg", **common))
+                                      title=f"Radar Marchés en vidéo : l'alerte du matin et le dossier en 3 étapes · {biz['nom']}",
+                                      description="Deux vidéos commentées : comment Radar Marchés trouve vos marchés publics, puis prépare votre dossier de candidature.",
+                                      og_image=biz["site_url"].rstrip("/") + "/static/videos/decouvrir-radar-marches-affiche.jpg", **common))
 
     titres_legaux = {"mentions-legales": "Mentions légales", "cgv": "Conditions générales de vente",
                      "confidentialite": "Politique de confidentialité"}

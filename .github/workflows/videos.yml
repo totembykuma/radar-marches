@@ -1,0 +1,37 @@
+name: Vidéos avec voix off (aperçu MP4)
+# Filme les vidéos de config/videos.yaml sur le site du jour (espace client simulé), ajoute la voix et la musique,
+# puis publie l'aperçu sur la branche apercu-videos. Rien n'est mis en ligne : on copie ensuite dans static/videos/.
+on:
+  workflow_dispatch:
+  push:
+    branches-ignore: [main, gh-pages, apercu-videos, apercu-film]
+    paths: [config/videos.yaml, scripts/videos_voix.py, .github/workflows/videos.yml]
+permissions: { contents: write }
+jobs:
+  videos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -q -r requirements.txt playwright edge-tts pillow fonttools brotli && python -m playwright install --with-deps chromium >/dev/null && sudo apt-get install -y -qq ffmpeg fonts-inter >/dev/null
+      - name: Polices du site
+        run: |
+          mkdir -p static/fonts
+          curl -fsSL -o static/fonts/inter.woff2 https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5/files/inter-latin-wght-normal.woff2
+      - name: E-mail d'exemple (données fictives), puis site avec les données réelles du jour (aucun e-mail envoyé)
+        # Bandeau de promo masqué (offre de la semaine : la vidéo doit rester vraie toute l'année). Clé IA : seulement pour afficher Clé en main.
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          python -m radar.cli demo > /dev/null
+          mkdir -p /tmp/ex && cp "$(ls out/outbox/*pro_example_com_2_* | head -1)" /tmp/ex/email.html
+          sed -i 's/^  publie: true/  publie: false/' config/business.yaml
+          python -m radar.cli essai | tail -3
+      - run: python scripts/videos_voix.py out/site out/videos --email /tmp/ex/email.html --apercu out/videos/images
+      - name: Publier l'aperçu sur la branche apercu-videos
+        run: |
+          cd out/videos && git init -q && git checkout -q -b apercu-videos
+          git config user.name "radar-bot" && git config user.email "radar-bot@users.noreply.github.com"
+          git add -A && git commit -qm "Aperçu des vidéos avec voix" && git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" apercu-videos
