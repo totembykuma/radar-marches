@@ -23,7 +23,7 @@
       <p class="kicker">Vous êtes {{ f.nom }} ?</p>
       <p><b>Recevez chaque matin les nouveaux appels d'offres{% if metier %} « {{ metier.libelle|lower }} »{% endif %}{% if dep %} du {{ dep }}{% endif %}</b>, avant vos concurrents.</p>
       <a class="btn btn-block" href="{{ root }}#tarifs">Essai gratuit {{ biz.essai_gratuit_jours }} jours</a>
-      {% if metier_key %}<a class="cta-free" href="{{ root }}appels-offres/{{ metier_key }}/{% if dep %}{{ dep }}.html{% endif %}">Voir les marchés ouverts en ce moment</a>{% endif %}
+      {% if metier_key %}<a class="cta-free" href="{{ root }}appels-offres/{{ metier_key }}/{% if dep and dep_page %}{{ dep }}.html{% endif %}">Voir les marchés ouverts en ce moment</a>{% endif %}
     </div>
     {% if f.concurrents %}
     <h2>Autres lauréats du même métier et du même département</h2>
