@@ -369,15 +369,18 @@ def build(avis_open, biz, metiers, matcher, out_dir: Path, stats=None, histo=Non
                                       description="30 secondes pour voir comment Radar Marchés prépare votre réponse à un appel d'offres.",
                                       og_image=biz["site_url"].rstrip("/") + "/static/videos/creer-un-dossier.jpg", **common))
 
-    for name in ("mentions-legales", "cgv", "confidentialite"):
+    titres_legaux = {"mentions-legales": "Mentions légales", "cgv": "Conditions générales de vente",
+                     "confidentialite": "Politique de confidentialité"}
+    for name in titres_legaux:
         src = (ROOT / "templates" / "legal" / f"{name}.html").read_text(encoding="utf-8")
         content = Markup(render_string(src, e=biz["editeur"], **common))
         write(f"{name}.html", render("legal.html", root="", path=f"/{name}.html", content=content, noindex=True,
-                                     title=f"{name.replace('-', ' ').capitalize()} · {biz['nom']}", description="", **common))
+                                     title=f"{titres_legaux[name]} · {biz['nom']}", description="", **common))
 
     baros = baro_mod.tous()
     if laureats and laureats.get("fiches"):
-        _entreprises(write, common, laureats, metiers)
+        pages_dep = {(k, d) for k in metiers for a in by_metier[k] for d in a["departements"]}
+        _entreprises(write, common, laureats, metiers, pages_dep)
     if baros:
         _barometres(write, common, baros, metiers)
     publics = {k: _publics(v, today)[0] for k, v in by_metier.items()}
@@ -444,15 +447,16 @@ def _euros(n):
     return f"{n:,}".replace(",", " ") + " €" if n else ""
 
 
-def _entreprises(write, common, data, metiers):
+def _entreprises(write, common, data, metiers, pages_dep=None):
     """Une page par entreprise lauréate, une page par département et un sommaire."""
     fiches, reperes = data["fiches"], data["reperes"]
     for f in fiches:
         m = metiers.get(f["metiers"][0]) if f["metiers"] else None
+        dep = f["deps"][0] if f["deps"] else f["dep"]
         ville = f" ({f['commune']})" if f["commune"] else ""
         write(f"entreprises/{f['slug']}.html", render(
             "entreprise.html", root="../", path=f"/entreprises/{f['slug']}.html", f=f, metier=m, metier_key=f["metiers"][0] if m else None,
-            dep=f["deps"][0] if f["deps"] else f["dep"], reperes=reperes, euros=_euros, nom_dep=_nom_dep, date_lim=date_limite_fr,
+            dep=dep, dep_page=m is not None and (pages_dep is None or (f["metiers"][0], dep) in pages_dep), reperes=reperes, euros=_euros, nom_dep=_nom_dep, date_lim=date_limite_fr,
             h1=f"{f['nom']} : marchés publics remportés",
             title=f"{f['nom']}{ville} : {len(f['marches'])} marché{'s' if len(f['marches']) > 1 else ''} public{'s' if len(f['marches']) > 1 else ''} remporté{'s' if len(f['marches']) > 1 else ''}",
             description=f"Les marchés publics attribués à {f['nom']}{ville} : acheteurs, montants, nombre d'offres reçues. Données officielles mises à jour chaque jour.",
