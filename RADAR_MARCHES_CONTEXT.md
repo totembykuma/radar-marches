@@ -47,6 +47,7 @@
 
 ## 5. Bugs connus, en cours, priorités
 - Aucun bug ouvert connu au 2026-10-17 (derniers runs tous « success »).
+- 2026-10-23 : test complet du site (PR #63, contrôle verif-site.yml en lecture seule) : 9 liens Stripe OK, pages OK ; à régler par William : « Enforce HTTPS » GitHub Pages (http ne bascule pas en https) et radar-marches.fr sans www injoignable en https (DNS OVH).
 - `README.md` : sections « pas encore vérifié » et « tes actions » datent du 2026-10-15 et sont dépassées ; se fier à ce fichier.
 - Priorité semaine du 19 au 23/10 : **fiabilité** (William note le projet sur 20 le vendredi 2026-10-23, sous 15 = arrêt ; critère : pas de panne, visites et essais). Contrôle prévu lundi 2026-10-19 ~10 h 45.
 - À surveiller : 1er paiement réel du client vers le 2026-10-30 ; 1er dossier réel ; 1res relances le 2026-10-21.
