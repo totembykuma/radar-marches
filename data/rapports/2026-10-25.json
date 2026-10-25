@@ -1,0 +1,44 @@
+{
+ "kpi": {
+  "mrr": 0.0,
+  "abonnes_payants": 0,
+  "en_essai": 1,
+  "impayes": 0,
+  "nouveaux_7j": 0,
+  "resilies_7j": 0,
+  "runs_7j": 5,
+  "runs_avec_erreur": 0,
+  "emails_7j": 6,
+  "avis_moyens_jour": 1604,
+  "objectif_mensuel_ca": [
+   800,
+   1300
+  ],
+  "essais_commences_7j": 0,
+  "ventes_7j": 0,
+  "dossiers_livres_7j": 0,
+  "visites_7j": 264,
+  "ia_cout_mois_usd": 0.0032,
+  "ia_avis_7j": 6,
+  "ia_hors_metier_7j": 1,
+  "collectes_reportees_7j": 0,
+  "prospects_contactes_7j": 80,
+  "prospects_contactes_total": 100,
+  "prospects_relances_7j": 0,
+  "alerte_gratuite_inscrits": 0,
+  "prospects_clics_7j": 0,
+  "prospects_repondu_7j": 2,
+  "prospects_transmis_7j": 1,
+  "prospects_desinscrit_7j": 1
+ },
+ "finance": {
+  "chiffre_affaires": 0.0,
+  "frais_stripe": 0.0,
+  "autres_depenses": 0.0,
+  "benefice_apres_depenses": 0.0,
+  "cotisations_et_impot": 0.0,
+  "taux_prelevement": 0.256,
+  "revenu_net": 0.0
+ },
+ "decisions": []
+}
