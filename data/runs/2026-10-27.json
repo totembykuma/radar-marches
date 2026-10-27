@@ -1,0 +1,41 @@
+{
+ "date": "2026-10-27T05:45+00:00",
+ "erreurs": [],
+ "avis_recuperes": 1344,
+ "avis_metiers": 497,
+ "essais_refuses": 0,
+ "abonnes": 1,
+ "comptes": {
+  "comptes": 2,
+  "relies": 2,
+  "modifies": 0,
+  "criteres_importes": 0
+ },
+ "invitations_compte": 0,
+ "marches_de_depart": 0,
+ "liens_espace_client": 0,
+ "rappels_essai": 1,
+ "ia": {
+  "entree": 701,
+  "sortie": 911,
+  "cout_usd": 0.0005,
+  "lots_ok": 1,
+  "lots_echoues": 0,
+  "depuis_cache": 0,
+  "budget_atteint": false,
+  "hors_metier": 0,
+  "avis": 2
+ },
+ "fiches_acheteur": 0,
+ "emails_envoyes": 3,
+ "rappels_favoris": 0,
+ "abonnes_sans_nouveaute": 0,
+ "entreprises_lauréates": 6000,
+ "pages_site": 7728,
+ "alerte_gratuite": {
+  "inscrits": 0,
+  "desinscrits": 0,
+  "envoyes": 0
+ },
+ "emails_gratuits": 0
+}
