@@ -248,7 +248,77 @@
   "48c17112c4938000b657d6a4",
   "d7b6e9332b5f2fb5f50f561b",
   "8cc8e94028c5dacd8fc00294",
-  "a69b24774d276266d9e40351"
+  "a69b24774d276266d9e40351",
+  "39a8eaa7b3becd178bf61f29",
+  "59470678d1e922d39c85a3a4",
+  "d4a5517c0fafe95e2f8973ca",
+  "fe6260f88a8547cc0ecf90f8",
+  "1bfede1c0efb6d689bb771cd",
+  "ca9c11574fde9a7404421f35",
+  "3708ff65507e794d9a4b1814",
+  "76605314d6497479e3d7bec6",
+  "54cedd7f9ff372dfd41956ab",
+  "3c37941bd7323e8e8ac10235",
+  "84ec1b898cdb5b67d9b46bdf",
+  "35096f3cfd74dca5ff1a28fb",
+  "731e19e828b879db32a26a95",
+  "76a446c748acd68cffb2fd6e",
+  "a59938f21769cd84fded7514",
+  "e356d1d40edd0ceae4df5e0b",
+  "aa4f7da1cacbeb5e635feef6",
+  "b6829e8b70ec155f0d8a816a",
+  "59cf537a7f0f486e722d32ba",
+  "d21eefd3771b8e5c15f4e753",
+  "89d56c58416ddf66a91df219",
+  "b9f3eefcb74979c799e38ffd",
+  "7115734891028dfe46b5dae2",
+  "0a663b1d5cd7da0d044d02b1",
+  "694553646077c66352844a59",
+  "42665eef086d8ba17cb5260e",
+  "8de8095ab0dfc71ace9e0bb8",
+  "928bfa94d639a98278ffe892",
+  "6b66b7d993b906fcb114c816",
+  "215b6160a84e4dc063ff88b8",
+  "62324dba221fb07f9b02c37d",
+  "0aa83990b4428e00fe46a4fb",
+  "d52604dfbf0867fb767da3b9",
+  "a54819b6e0072cc782085d4f",
+  "f65a346dc1d08ce43fa6a448",
+  "6eee89638b2351056e18711f",
+  "bf854b2440558ab515adb223",
+  "a96e7a6dbc044930f48e92d3",
+  "1cd6b853c4cc125112511a4f",
+  "e1d6cc9f8a2ce570bf5b94bb",
+  "0b0224971b1ecf2b14ed0b2f",
+  "c4ed91dc89281a854f94790b",
+  "5a3b988831d3def2c1bf7f99",
+  "866712a302def669286ac9bd",
+  "a05a9ebbd51a2666b21203c4",
+  "d7adb2a0f6d2991fcbfcaa8e",
+  "d13ecaea3a5bc033c992808d",
+  "a29f05d0a59b0ee283fd47fa",
+  "2dd6016c10dceb682d4a5ad0",
+  "94002770aca6e12356c4de77",
+  "cb7b2ebc093fe213ca6ea4f8",
+  "1a48d53e7025950d88e385b4",
+  "efcde3b2752ea9f3c651730a",
+  "03753afeab579aec971f45b2",
+  "ba7aa53a882aaa74826a3401",
+  "7f06b02a82829c4f9a8c7010",
+  "cce3f32722dda28da666dc19",
+  "53b1a8e284afc2c8e623795a",
+  "8382d5e4303d8ad6b50b968a",
+  "c9e7dbce6a02513fa290e848",
+  "920db5e938a4892212804a87",
+  "82afaad0dbb87707fd4d72eb",
+  "8c3fe110d855739f8e5d2895",
+  "c896611f81f0ce6c3f81858b",
+  "bb630304a30659b6c89f3ef2",
+  "68b5a14bc69e3181c5410eae",
+  "70808fccfa7db0fce2a13a4e",
+  "5404800239e0a09b58ce3fc6",
+  "5131ce282a429817e9a3d7c1",
+  "a3653c469a001e00b86a59c4"
  ],
  "journal": [
   {
@@ -714,7 +784,8 @@
      "31"
     ]
    },
-   "relances": 0
+   "relances": 0,
+   "relance_faite": true
   },
   {
    "date": "2026-10-27",
@@ -896,6 +967,190 @@
     "01a17c70-e3bf-7b92-a5cf-183ea03ac0cf": [
      "formation",
      "974"
+    ]
+   },
+   "relances": 0
+  },
+  {
+   "date": "2026-10-28",
+   "envoyes": 35,
+   "ids": [
+    "01a1819b-e437-733b-9058-ef8921449e37",
+    "01a1819b-e48a-766f-b562-6195253ba304",
+    "01a1819b-e4e2-7e13-bfbb-e91d31ea925d",
+    "01a1819b-e53a-796d-81d2-2ef6aa6025e4",
+    "01a1819b-e599-742c-8c7a-139c6e900be9",
+    "01a1819b-e602-7be6-9c1c-74757b43a59f",
+    "01a1819b-e65e-70e5-9561-001e6b9fb50b",
+    "01a1819b-e6b6-76e2-8c88-62fbab437a0c",
+    "01a1819b-e708-778f-bad6-9d1d52da6840",
+    "01a1819b-e76d-7b8e-85c8-0f083ff483d2",
+    "01a1819b-e7ce-7af5-8468-2652859622ef",
+    "01a1819b-e81d-7f26-816a-b7e0000d7422",
+    "01a1819b-e87e-78ef-9b3a-ad7d20163864",
+    "01a1819b-e8d7-712c-8ad3-1e904b6ea696",
+    "01a1819b-fd6a-7b9a-92b9-20a7cf17287a",
+    "01a1819b-fe5a-7824-8bf4-7306d232e930",
+    "01a1819b-feae-72dc-a803-1fc86d5981ec",
+    "01a1819b-ff0c-7e68-9d3f-544430b30735",
+    "01a1819b-ff6e-7b88-8821-d98f64dccc64",
+    "01a1819b-ffc2-7960-805f-ac92fb029486",
+    "01a1819c-0019-7c0d-b335-147254e10315",
+    "01a1819c-0076-7894-b5ea-1cef567f8de9",
+    "01a1819c-00ce-7995-b3a6-637ea7865148",
+    "01a1819c-0127-7d04-ac90-940d2867502a",
+    "01a1819c-01b7-77fb-941f-1b97f60e5090",
+    "01a1819c-020d-7bf3-b3e3-a9d01f613474",
+    "01a1819c-026b-72dd-80cc-c1649d9a3d40",
+    "01a1819c-02cb-77fe-9913-d96fc618646d",
+    "01a1819c-032a-748f-9b5f-9a6e2e78962d",
+    "01a1819c-037a-7993-9228-60700fb1d676",
+    "01a1819c-03d4-7a1c-9ec4-dae848fc3a4a",
+    "01a1819c-048d-72e7-b44b-6f0e6ab70734",
+    "01a1819c-04de-71bf-bf89-539a7d13ead3",
+    "01a1819c-0539-7365-b92e-176e6a1e9399",
+    "01a1819c-059e-7acf-8c49-45437d4b1f9d"
+   ],
+   "suivi": {
+    "01a1819b-e437-733b-9058-ef8921449e37": [
+     "voirie-vrd",
+     "92"
+    ],
+    "01a1819b-e48a-766f-b562-6195253ba304": [
+     "informatique",
+     "78"
+    ],
+    "01a1819b-e4e2-7e13-bfbb-e91d31ea925d": [
+     "informatique",
+     "92"
+    ],
+    "01a1819b-e53a-796d-81d2-2ef6aa6025e4": [
+     "informatique",
+     "92"
+    ],
+    "01a1819b-e599-742c-8c7a-139c6e900be9": [
+     "informatique",
+     "92"
+    ],
+    "01a1819b-e602-7be6-9c1c-74757b43a59f": [
+     "informatique",
+     "95"
+    ],
+    "01a1819b-e65e-70e5-9561-001e6b9fb50b": [
+     "informatique",
+     "75"
+    ],
+    "01a1819b-e6b6-76e2-8c88-62fbab437a0c": [
+     "informatique",
+     "92"
+    ],
+    "01a1819b-e708-778f-bad6-9d1d52da6840": [
+     "informatique",
+     "92"
+    ],
+    "01a1819b-e76d-7b8e-85c8-0f083ff483d2": [
+     "informatique",
+     "75"
+    ],
+    "01a1819b-e7ce-7af5-8468-2652859622ef": [
+     "plomberie-cvc",
+     "65"
+    ],
+    "01a1819b-e81d-7f26-816a-b7e0000d7422": [
+     "plomberie-cvc",
+     "40"
+    ],
+    "01a1819b-e87e-78ef-9b3a-ad7d20163864": [
+     "informatique",
+     "974"
+    ],
+    "01a1819b-e8d7-712c-8ad3-1e904b6ea696": [
+     "informatique",
+     "974"
+    ],
+    "01a1819b-fd6a-7b9a-92b9-20a7cf17287a": [
+     "informatique",
+     "974"
+    ],
+    "01a1819b-fe5a-7824-8bf4-7306d232e930": [
+     "informatique",
+     "974"
+    ],
+    "01a1819b-feae-72dc-a803-1fc86d5981ec": [
+     "nettoyage",
+     "76"
+    ],
+    "01a1819b-ff0c-7e68-9d3f-544430b30735": [
+     "nettoyage",
+     "71"
+    ],
+    "01a1819b-ff6e-7b88-8821-d98f64dccc64": [
+     "nettoyage",
+     "06"
+    ],
+    "01a1819b-ffc2-7960-805f-ac92fb029486": [
+     "menuiserie",
+     "83"
+    ],
+    "01a1819c-0019-7c0d-b335-147254e10315": [
+     "maconnerie-gros-oeuvre",
+     "79"
+    ],
+    "01a1819c-0076-7894-b5ea-1cef567f8de9": [
+     "espaces-verts",
+     "971"
+    ],
+    "01a1819c-00ce-7995-b3a6-637ea7865148": [
+     "electricite",
+     "78"
+    ],
+    "01a1819c-0127-7d04-ac90-940d2867502a": [
+     "voirie-vrd",
+     "13"
+    ],
+    "01a1819c-01b7-77fb-941f-1b97f60e5090": [
+     "voirie-vrd",
+     "49"
+    ],
+    "01a1819c-020d-7bf3-b3e3-a9d01f613474": [
+     "voirie-vrd",
+     "13"
+    ],
+    "01a1819c-026b-72dd-80cc-c1649d9a3d40": [
+     "voirie-vrd",
+     "13"
+    ],
+    "01a1819c-02cb-77fe-9913-d96fc618646d": [
+     "voirie-vrd",
+     "13"
+    ],
+    "01a1819c-032a-748f-9b5f-9a6e2e78962d": [
+     "voirie-vrd",
+     "26"
+    ],
+    "01a1819c-037a-7993-9228-60700fb1d676": [
+     "voirie-vrd",
+     "13"
+    ],
+    "01a1819c-03d4-7a1c-9ec4-dae848fc3a4a": [
+     "voirie-vrd",
+     "13"
+    ],
+    "01a1819c-048d-72e7-b44b-6f0e6ab70734": [
+     "voirie-vrd",
+     "13"
+    ],
+    "01a1819c-04de-71bf-bf89-539a7d13ead3": [
+     "voirie-vrd",
+     "13"
+    ],
+    "01a1819c-0539-7365-b92e-176e6a1e9399": [
+     "voirie-vrd",
+     "06"
+    ],
+    "01a1819c-059e-7acf-8c49-45437d4b1f9d": [
+     "voirie-vrd",
+     "84"
     ]
    },
    "relances": 0
