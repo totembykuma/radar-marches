@@ -1,0 +1,31 @@
+{
+ "date": "2026-11-03T05:06+00:00",
+ "erreurs": [
+  "pages entreprises non générées : 504 Server Error: Gateway Time-out for url: https://data.economie.gouv.fr/api/explore/v2.1/catalog/datasets/decp-2022-marches-valides/exports/json?select=id%2C+objet%2C+montant%2C+offresrecues%2C+datenotification%2C+codecpv%2C+acheteur_id%2C+lieuexecution_code%2C+titulaire_id_1%2C+titulaire_typeidentifiant_1%2C+titulaire_id_2%2C+titulaire_typeidentifiant_2%2C+titulaire_id_3%2C+titulaire_typeidentifiant_3&where=datenotification+%3E%3D+date%272025-11-08%27+and+%28startswith%28codecpv%2C+%22302%22%"
+ ],
+ "avis_recuperes": 1096,
+ "avis_metiers": 419,
+ "essais_refuses": 0,
+ "abonnes": 0,
+ "comptes": {
+  "comptes": 3,
+  "relies": 2,
+  "modifies": 0,
+  "criteres_importes": 0
+ },
+ "invitations_compte": 0,
+ "marches_de_depart": 0,
+ "liens_espace_client": 0,
+ "fiches_acheteur": 0,
+ "emails_envoyes": 0,
+ "rappels_favoris": 0,
+ "abonnes_sans_nouveaute": 2,
+ "pages_site": 1623,
+ "emails_rien_de_neuf": 2,
+ "alerte_gratuite": {
+  "inscrits": 0,
+  "desinscrits": 0,
+  "envoyes": 0
+ },
+ "emails_gratuits": 0
+}
