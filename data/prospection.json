@@ -508,7 +508,74 @@
   "0837e963c3f4fafb71bbafb3",
   "e9e94ccef7ac6a53851ac6e4",
   "63e54f220b80ca8011a2fed3",
-  "12fab3fa111bf7897a94580e"
+  "12fab3fa111bf7897a94580e",
+  "50a86280c3fd8f6f90fc3be9",
+  "e638879fb5f5d6710a538aab",
+  "bce3fde02ca6ec9c489206db",
+  "3d98aad1414c10d629d67d57",
+  "60b6034c86f59fcf56f94a1d",
+  "eab909391c3fd3cc5f8e678a",
+  "66a74308728f49d0ddfbc806",
+  "485f48ee8b5d6b907eb74aec",
+  "9396e95ee33ddcfd1a0b22b6",
+  "3fc6164c796b81e954139d78",
+  "ea45b904cea8b761fc098f39",
+  "22c5684d3a6e8f6edb212a24",
+  "c8188bf4874e8d322255458c",
+  "6ea140e35f2bae8986fc1e46",
+  "6a31527f5e412e8e37848fbb",
+  "e798fca5f1dec300381a32fa",
+  "e780653dc9599613bbc40e94",
+  "63427167c58d72238ed6e7b8",
+  "812a57c7df8b0a4c84fc44e2",
+  "7ceae9f5130e2e4449985fa4",
+  "1c200c52943cb6e58a20c4a7",
+  "cc9fbd9f8c06184d1b46aa73",
+  "805cd9981bf88666b2b86082",
+  "cc685f40518c827e4ba3ec0f",
+  "021edd87a5b6a320ee193000",
+  "1d22145b2cc28e0d7c9cf62d",
+  "82e13d23976994f2969509ce",
+  "7ffd9c7050fefb3953c6f107",
+  "2f24e410b4372c97570e795f",
+  "b6ae947713246ac901310aea",
+  "a0b794820b13b232f8680912",
+  "f16bd330e12b3219d5539296",
+  "f0c77aba14777fdcad56ccaf",
+  "992ffe116db2d5ba2ff07067",
+  "660ece75357a80be8b738a7b",
+  "dbbbd3da2994a21b729d4e67",
+  "ab4997688a743c989107026e",
+  "3b306f622abbd66410bf942d",
+  "b6bd820ff4fc8db56bd96ab3",
+  "694b535c74807e566d1502ad",
+  "ae864e5b84c5c090ab820055",
+  "06797eb0ac366c63d97b3831",
+  "958022f33cfd50f1088e6cb0",
+  "d1f4a4475c6a90206e26f27b",
+  "f6fd929f0318347c71937eab",
+  "2334c387c88bcf26160c5af0",
+  "0049e3b5893884c4addba026",
+  "8167fb848fc09b0d2db15093",
+  "5a1b2de15cc9a28816cab33a",
+  "38bd9156176b49a579054aef",
+  "a35245d7f35e7db07de527f2",
+  "9b7e7c5cf696965a5a762b75",
+  "1cc5a6cbfd58d14062540fc1",
+  "e9ce67aec4e94d96f7717964",
+  "58e13f196e92cd43ba7c17e5",
+  "e994dd24cdbcb6c401b6aafc",
+  "010ec555dc8c8cec532ddd7c",
+  "ef44919bb2bf073c4cc72540",
+  "f566dba8178332e5b22a117a",
+  "db6039a69e432532933345df",
+  "2d385491e45da0b3f0d11642",
+  "f9d9e971348be2f95f9cfae2",
+  "04e48459457d8ec18ae7c124",
+  "368232ba5706d67c8a1d372c",
+  "2c1576b73e434c0f47e38b1c",
+  "73845a4683507671b31f4412",
+  "c0454ff9408beba7748573c5"
  ],
  "journal": [
   {
@@ -1714,7 +1781,8 @@
      "44"
     ]
    },
-   "relances": 0
+   "relances": 0,
+   "relance_faite": true
   },
   {
    "date": "2026-11-03",
@@ -1896,6 +1964,190 @@
     "01a1a08c-9791-7c8f-b462-04abfccb61b1": [
      "communication-web",
      "974"
+    ]
+   },
+   "relances": 0
+  },
+  {
+   "date": "2026-11-04",
+   "envoyes": 35,
+   "ids": [
+    "01a1a73c-e730-775c-bd4b-79a2abb2688a",
+    "01a1a73c-e7a0-792b-99ca-41e7c47af4eb",
+    "01a1a73c-e818-795a-8e06-79811c83b101",
+    "01a1a73c-e888-7832-bd75-af0fa3f83592",
+    "01a1a73c-e920-722b-96fd-36678be782e5",
+    "01a1a73c-e9ba-7a35-8ab7-667b6384f714",
+    "01a1a73c-ea2f-71d3-b501-ea76573420ce",
+    "01a1a73c-eaaf-712e-9983-12e64b31a86c",
+    "01a1a73c-eb2e-762e-859b-a8d92c8e5c78",
+    "01a1a73c-eba2-72b3-a1f9-d81f65ceb5c3",
+    "01a1a73c-ec12-72c2-ae2b-8d85aaf4f10e",
+    "01a1a73c-ec8d-75c1-b67c-48c412844aca",
+    "01a1a73c-ed01-725c-b9d2-93bec278d71c",
+    "01a1a73c-ed85-7e96-8b0a-3f16e627c90d",
+    "01a1a73c-ee03-718f-b0d1-04235b9ffa75",
+    "01a1a73c-ee75-70b6-8081-47bf8d2f6437",
+    "01a1a73c-eee8-7300-9197-0b9b3c878fab",
+    "01a1a73c-ef55-7bc7-8157-4da0c752a3da",
+    "01a1a73c-efd0-739a-8609-6da76c691b0d",
+    "01a1a73c-f051-7cb9-96f2-7177ec5f1e97",
+    "01a1a73c-f0ce-75e1-bfd8-00e56110d184",
+    "01a1a73c-f14a-7416-a6f7-b97fa5a90b84",
+    "01a1a73c-f1c9-70b1-baa7-6e1de9914046",
+    "01a1a73c-f23d-7026-b58e-909ecd56a3cb",
+    "01a1a73c-f2b6-7a16-a378-e603c9aee559",
+    "01a1a73c-f338-795b-8cfe-3461b2560e19",
+    "01a1a73c-f3a9-7d59-bddd-d7153e60d846",
+    "01a1a73c-f41f-7969-8e89-54ecc1a117e0",
+    "01a1a73c-f4af-7c24-81ce-8801174a8430",
+    "01a1a73c-f522-72c2-881a-d3fd5e7a47ef",
+    "01a1a73c-f592-7a8c-80b4-bb5fe5718547",
+    "01a1a73c-f60d-73b3-9cc8-57fedd946a4c",
+    "01a1a73c-f684-7784-a7b3-4918344d8fd8",
+    "01a1a73c-f6f9-771d-82ad-6a38b819a6cd",
+    "01a1a73c-f77d-7de6-baee-34c244ecc07c"
+   ],
+   "suivi": {
+    "01a1a73c-e730-775c-bd4b-79a2abb2688a": [
+     "espaces-verts",
+     "34"
+    ],
+    "01a1a73c-e7a0-792b-99ca-41e7c47af4eb": [
+     "espaces-verts",
+     "34"
+    ],
+    "01a1a73c-e818-795a-8e06-79811c83b101": [
+     "espaces-verts",
+     "12"
+    ],
+    "01a1a73c-e888-7832-bd75-af0fa3f83592": [
+     "couverture",
+     "91"
+    ],
+    "01a1a73c-e920-722b-96fd-36678be782e5": [
+     "electricite",
+     "01"
+    ],
+    "01a1a73c-e9ba-7a35-8ab7-667b6384f714": [
+     "electricite",
+     "74"
+    ],
+    "01a1a73c-ea2f-71d3-b501-ea76573420ce": [
+     "securite",
+     "20"
+    ],
+    "01a1a73c-eaaf-712e-9983-12e64b31a86c": [
+     "securite",
+     "38"
+    ],
+    "01a1a73c-eb2e-762e-859b-a8d92c8e5c78": [
+     "peinture",
+     "78"
+    ],
+    "01a1a73c-eba2-72b3-a1f9-d81f65ceb5c3": [
+     "peinture",
+     "83"
+    ],
+    "01a1a73c-ec12-72c2-ae2b-8d85aaf4f10e": [
+     "peinture",
+     "83"
+    ],
+    "01a1a73c-ec8d-75c1-b67c-48c412844aca": [
+     "informatique",
+     "81"
+    ],
+    "01a1a73c-ed01-725c-b9d2-93bec278d71c": [
+     "informatique",
+     "67"
+    ],
+    "01a1a73c-ed85-7e96-8b0a-3f16e627c90d": [
+     "communication-web",
+     "13"
+    ],
+    "01a1a73c-ee03-718f-b0d1-04235b9ffa75": [
+     "formation",
+     "75"
+    ],
+    "01a1a73c-ee75-70b6-8081-47bf8d2f6437": [
+     "formation",
+     "94"
+    ],
+    "01a1a73c-eee8-7300-9197-0b9b3c878fab": [
+     "formation",
+     "34"
+    ],
+    "01a1a73c-ef55-7bc7-8157-4da0c752a3da": [
+     "securite",
+     "974"
+    ],
+    "01a1a73c-efd0-739a-8609-6da76c691b0d": [
+     "securite",
+     "974"
+    ],
+    "01a1a73c-f051-7cb9-96f2-7177ec5f1e97": [
+     "communication-web",
+     "974"
+    ],
+    "01a1a73c-f0ce-75e1-bfd8-00e56110d184": [
+     "communication-web",
+     "974"
+    ],
+    "01a1a73c-f14a-7416-a6f7-b97fa5a90b84": [
+     "communication-web",
+     "974"
+    ],
+    "01a1a73c-f1c9-70b1-baa7-6e1de9914046": [
+     "communication-web",
+     "974"
+    ],
+    "01a1a73c-f23d-7026-b58e-909ecd56a3cb": [
+     "communication-web",
+     "974"
+    ],
+    "01a1a73c-f2b6-7a16-a378-e603c9aee559": [
+     "communication-web",
+     "974"
+    ],
+    "01a1a73c-f338-795b-8cfe-3461b2560e19": [
+     "espaces-verts",
+     "91"
+    ],
+    "01a1a73c-f3a9-7d59-bddd-d7153e60d846": [
+     "plomberie-cvc",
+     "67"
+    ],
+    "01a1a73c-f41f-7969-8e89-54ecc1a117e0": [
+     "nettoyage",
+     "17"
+    ],
+    "01a1a73c-f4af-7c24-81ce-8801174a8430": [
+     "espaces-verts",
+     "73"
+    ],
+    "01a1a73c-f522-72c2-881a-d3fd5e7a47ef": [
+     "espaces-verts",
+     "49"
+    ],
+    "01a1a73c-f592-7a8c-80b4-bb5fe5718547": [
+     "espaces-verts",
+     "94"
+    ],
+    "01a1a73c-f60d-73b3-9cc8-57fedd946a4c": [
+     "espaces-verts",
+     "24"
+    ],
+    "01a1a73c-f684-7784-a7b3-4918344d8fd8": [
+     "espaces-verts",
+     "95"
+    ],
+    "01a1a73c-f6f9-771d-82ad-6a38b819a6cd": [
+     "espaces-verts",
+     "34"
+    ],
+    "01a1a73c-f77d-7de6-baee-34c244ecc07c": [
+     "nettoyage",
+     "54"
     ]
    },
    "relances": 0
