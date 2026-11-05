@@ -575,7 +575,70 @@
   "368232ba5706d67c8a1d372c",
   "2c1576b73e434c0f47e38b1c",
   "73845a4683507671b31f4412",
-  "c0454ff9408beba7748573c5"
+  "c0454ff9408beba7748573c5",
+  "285426d2501afa446b923419",
+  "59148a75b8b0e5b3f1e00298",
+  "3434658e712b9b53c36d7694",
+  "91e019622a730d9507467060",
+  "4b4bee2877e0111ec9d3b5ac",
+  "241938c2f45179a2235d18ee",
+  "9ab35cce6a7260e0b0916337",
+  "dea890c4bb96c6412f2d9900",
+  "0862a8ae46600614884f1e0a",
+  "ab2a11b109a82ffd1865dc06",
+  "4f3e3473725647302f0cea25",
+  "e95141705cd90963820f8de5",
+  "72b12b24699f1860bd68c2fe",
+  "fec11d429fc43bc98b028933",
+  "ec78624f694918bc79d154d1",
+  "94fc62ecd61d727ac594d825",
+  "8754c3b2fba597cac3b066b1",
+  "94c4b884d207311c4251e340",
+  "557cbc35c286ddc5f88a5168",
+  "e4a7e1a048c162452b4f117e",
+  "b644ab15c71f893c694872fa",
+  "853e737c8e9f0a04e91b6781",
+  "28663b36bf7df2283f8c4a2b",
+  "a5b7ff2c51285b7ad1170a12",
+  "910445df2b92032c49405306",
+  "676235fc27db217eb2376e38",
+  "b10f4558ecdb76df2d0c982c",
+  "58fbd019f1b7c40d06391210",
+  "e95769b3a0620df3c6f79d5a",
+  "8a188905e250124b55d28a68",
+  "fffeca568835c2e72b858965",
+  "44e2ccad6f99648365d38b2d",
+  "5e00b16d00b488e0c0271e1b",
+  "ab028e3c9e2b4ca63133a137",
+  "78c70d2413806aef36547444",
+  "9e2fa68bdb169506a8a0dc5f",
+  "d0ba74f141908fd9bf194c44",
+  "20bfaa73c8ff055b2cc6f145",
+  "6bb3cf0e6d74957a257ddb53",
+  "4781eaa8ab3a102c40874a25",
+  "24da82bf95b9f368ecb1ebf0",
+  "eb02f22df67b0a3a01689bf8",
+  "5b0c6524ca9d7df67a6805bb",
+  "1154ad5acce785d138dced2c",
+  "541bfe672bd38df400cb96e8",
+  "2caa2cc8b5ba1f8e1091d951",
+  "050da987a4150bc88adeaf30",
+  "f01dc18325448179b476ae5d",
+  "a57e1f67d0dd16b9350a8336",
+  "14f9af92574572d0e6759d75",
+  "24ade94beb103e58163c9719",
+  "5e26f9aa4c9364a37e5f1939",
+  "58b5a3e3a83920f43bd2cdb9",
+  "1b6ed1ab439b67a93dbe82f5",
+  "7f2d9f274d75c07b95b7bae3",
+  "5ae92fbf396f139efb6c977e",
+  "95c459c7b3c7e00fb2f2c708",
+  "04d1f5bd666a98dd9513abe2",
+  "19313779620559e3448edb33",
+  "2b18d3c78bc46444123fad2e",
+  "65729210112332347ac972d3",
+  "8cae920dc3c5c539c2430371",
+  "fe24ea75bc8162a224a0591f"
  ],
  "journal": [
   {
@@ -2148,6 +2211,190 @@
     "01a1a73c-f77d-7de6-baee-34c244ecc07c": [
      "nettoyage",
      "54"
+    ]
+   },
+   "relances": 0
+  },
+  {
+   "date": "2026-11-05",
+   "envoyes": 35,
+   "ids": [
+    "01a1ac65-32e5-7838-af7f-3d6bf769be01",
+    "01a1ac65-33a1-7625-94c4-3b5560eba9ea",
+    "01a1ac65-3455-7ea5-af78-a0189c697223",
+    "01a1ac65-3500-7186-9986-b11989dde8b8",
+    "01a1ac65-35a7-7742-83b3-7c8572525696",
+    "01a1ac65-362e-77da-84f2-79a61bf55611",
+    "01a1ac65-36dc-7509-9e5f-c8b47a0838f2",
+    "01a1ac65-378a-7e8d-933f-90e27db8fc19",
+    "01a1ac65-383a-7532-bcec-e3867a7b061f",
+    "01a1ac65-38e1-73dc-956b-b171da57219a",
+    "01a1ac65-39a0-7c0a-a32b-30bfa458d5ec",
+    "01a1ac65-3a51-7cdb-8738-3ad36b446353",
+    "01a1ac65-3b04-7a18-ade6-bbc232f75c80",
+    "01a1ac65-3bb9-704d-8a85-492fe4605674",
+    "01a1ac65-3c68-78cb-b8fa-5a946e6f2a7d",
+    "01a1ac65-3d20-7d00-991b-7ef2316769f3",
+    "01a1ac65-3ddb-76d6-b0df-2bf53279920f",
+    "01a1ac65-3e8b-70c0-b11d-43f9229721f3",
+    "01a1ac65-3f3f-71f8-9284-ff2e6dd0ea17",
+    "01a1ac65-3ffc-7cce-9354-41f0a702ea5e",
+    "01a1ac65-40e1-78e5-9e37-348367e57aaf",
+    "01a1ac65-4191-77fe-9d3c-24bca6e63e5c",
+    "01a1ac65-4236-7d0b-a189-adb5944a41f1",
+    "01a1ac65-42ed-779f-abcb-ca2b4c74f9e3",
+    "01a1ac65-43a0-7602-ae81-d13de02f46dc",
+    "01a1ac65-4458-72a9-bf33-fb27c6ba9a97",
+    "01a1ac65-4508-786b-9bf1-5c2b9c8df26d",
+    "01a1ac65-45be-748c-8881-f0a8adffa157",
+    "01a1ac65-466d-7dd9-a207-5ad05bccb432",
+    "01a1ac65-4715-76ad-babd-bdb4184313ce",
+    "01a1ac65-47c1-71d5-8a99-21807345cbe6",
+    "01a1ac65-4871-70b1-b7a2-5f461db229fb",
+    "01a1ac65-4933-741d-b344-4af2fb40c5ee",
+    "01a1ac65-49e4-795a-b450-81876bb6046f",
+    "01a1ac65-4a94-7b15-9c04-94caec548e27"
+   ],
+   "suivi": {
+    "01a1ac65-32e5-7838-af7f-3d6bf769be01": [
+     "plomberie-cvc",
+     "69"
+    ],
+    "01a1ac65-33a1-7625-94c4-3b5560eba9ea": [
+     "restauration",
+     "56"
+    ],
+    "01a1ac65-3455-7ea5-af78-a0189c697223": [
+     "informatique",
+     "13"
+    ],
+    "01a1ac65-3500-7186-9986-b11989dde8b8": [
+     "voirie-vrd",
+     "59"
+    ],
+    "01a1ac65-35a7-7742-83b3-7c8572525696": [
+     "espaces-verts",
+     "91"
+    ],
+    "01a1ac65-362e-77da-84f2-79a61bf55611": [
+     "plomberie-cvc",
+     "13"
+    ],
+    "01a1ac65-36dc-7509-9e5f-c8b47a0838f2": [
+     "informatique",
+     "93"
+    ],
+    "01a1ac65-378a-7e8d-933f-90e27db8fc19": [
+     "communication-web",
+     "06"
+    ],
+    "01a1ac65-383a-7532-bcec-e3867a7b061f": [
+     "securite",
+     "93"
+    ],
+    "01a1ac65-38e1-73dc-956b-b171da57219a": [
+     "voirie-vrd",
+     "77"
+    ],
+    "01a1ac65-39a0-7c0a-a32b-30bfa458d5ec": [
+     "nettoyage",
+     "54"
+    ],
+    "01a1ac65-3a51-7cdb-8738-3ad36b446353": [
+     "nettoyage",
+     "54"
+    ],
+    "01a1ac65-3b04-7a18-ade6-bbc232f75c80": [
+     "nettoyage",
+     "92"
+    ],
+    "01a1ac65-3bb9-704d-8a85-492fe4605674": [
+     "formation",
+     "75"
+    ],
+    "01a1ac65-3c68-78cb-b8fa-5a946e6f2a7d": [
+     "peinture",
+     "56"
+    ],
+    "01a1ac65-3d20-7d00-991b-7ef2316769f3": [
+     "peinture",
+     "20"
+    ],
+    "01a1ac65-3ddb-76d6-b0df-2bf53279920f": [
+     "peinture",
+     "20"
+    ],
+    "01a1ac65-3e8b-70c0-b11d-43f9229721f3": [
+     "peinture",
+     "20"
+    ],
+    "01a1ac65-3f3f-71f8-9284-ff2e6dd0ea17": [
+     "peinture",
+     "20"
+    ],
+    "01a1ac65-3ffc-7cce-9354-41f0a702ea5e": [
+     "peinture",
+     "20"
+    ],
+    "01a1ac65-40e1-78e5-9e37-348367e57aaf": [
+     "peinture",
+     "20"
+    ],
+    "01a1ac65-4191-77fe-9d3c-24bca6e63e5c": [
+     "peinture",
+     "20"
+    ],
+    "01a1ac65-4236-7d0b-a189-adb5944a41f1": [
+     "espaces-verts",
+     "94"
+    ],
+    "01a1ac65-42ed-779f-abcb-ca2b4c74f9e3": [
+     "informatique",
+     "69"
+    ],
+    "01a1ac65-43a0-7602-ae81-d13de02f46dc": [
+     "informatique",
+     "92"
+    ],
+    "01a1ac65-4458-72a9-bf33-fb27c6ba9a97": [
+     "menuiserie",
+     "62"
+    ],
+    "01a1ac65-4508-786b-9bf1-5c2b9c8df26d": [
+     "menuiserie",
+     "59"
+    ],
+    "01a1ac65-45be-748c-8881-f0a8adffa157": [
+     "peinture",
+     "56"
+    ],
+    "01a1ac65-466d-7dd9-a207-5ad05bccb432": [
+     "peinture",
+     "56"
+    ],
+    "01a1ac65-4715-76ad-babd-bdb4184313ce": [
+     "peinture",
+     "17"
+    ],
+    "01a1ac65-47c1-71d5-8a99-21807345cbe6": [
+     "peinture",
+     "56"
+    ],
+    "01a1ac65-4871-70b1-b7a2-5f461db229fb": [
+     "peinture",
+     "56"
+    ],
+    "01a1ac65-4933-741d-b344-4af2fb40c5ee": [
+     "peinture",
+     "35"
+    ],
+    "01a1ac65-49e4-795a-b450-81876bb6046f": [
+     "peinture",
+     "56"
+    ],
+    "01a1ac65-4a94-7b15-9c04-94caec548e27": [
+     "peinture",
+     "56"
     ]
    },
    "relances": 0
