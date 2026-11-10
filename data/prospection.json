@@ -705,7 +705,47 @@
   "407905c447fa142f558ce99a",
   "d3a5a747fee27cc50c97ade2",
   "19ea4b7ecd5a19031b2aed23",
-  "4452b32cba667f3079b2dc2d"
+  "4452b32cba667f3079b2dc2d",
+  "d7783bc2037931d04f4afe96",
+  "77a576597bf0ac0107bed1d1",
+  "6821dab5a3f853b39a93699f",
+  "bf889ef91b31ba611b202962",
+  "d1d149aa8bc25289cb67c73f",
+  "101ac0ea7959c183ee7bbd56",
+  "cbf72b71295cc29622bfd000",
+  "be38560c70cf5290d0d6a75e",
+  "afd4ed091e4960dfcb873dd8",
+  "78dfc77eae773eae6fcee593",
+  "2dca576ffefc76d8759d525e",
+  "48f503f0ce7be1563bc082cb",
+  "59359e8b652f3c6141339fa1",
+  "e716655dd257add5665ca2a4",
+  "21f538c5df48ecac612ae571",
+  "ebfe31f5efa185b1e927280a",
+  "015ba9110b38e825d75682aa",
+  "cec9058fa660066f0b0208f6",
+  "e7f4a3d1469c03d3d2168020",
+  "d5af3e3a5e402eab2e38c4e2",
+  "a7b4d1ebd89d7a69c8763265",
+  "1592870a5f0bb94ef14a3a81",
+  "b4feca66334a939ca9320320",
+  "0a3573f21d3d68dee5dbf1c3",
+  "c4dd6acd468757f5bd759662",
+  "6efa26e7001c5030088ee57b",
+  "8d3acaf7bb698430f12fbadc",
+  "6afc7aecbf58b495d555bdea",
+  "e8c8d280637561329fc8b957",
+  "e3c0f4c36e723ed634c2fd03",
+  "7bc64fadae141e0bf4bdec0e",
+  "1ea932d2e31cec89919efbd5",
+  "e1246fd9fcdf1a70c3a15571",
+  "cf1e5cfdeeaa1e6274d42d2f",
+  "ca35617d7ab84466745a620c",
+  "85b313b4f16c0c3532af0b7a",
+  "ba99aca154d648eccd6024f4",
+  "30a5c7df60e529cafa93ea11",
+  "c4891ba502ecff658abd0ce2",
+  "dcce9ea01608a87f8bdb11a8"
  ],
  "journal": [
   {
@@ -2096,7 +2136,8 @@
      "974"
     ]
    },
-   "relances": 0
+   "relances": 0,
+   "relance_faite": true
   },
   {
    "date": "2026-11-04",
@@ -2280,7 +2321,8 @@
      "54"
     ]
    },
-   "relances": 0
+   "relances": 0,
+   "relance_faite": true
   },
   {
    "date": "2026-11-05",
@@ -2464,7 +2506,8 @@
      "56"
     ]
    },
-   "relances": 0
+   "relances": 0,
+   "relance_faite": true
   },
   {
    "date": "2026-11-06",
@@ -2646,6 +2689,115 @@
     "01a1b174-6e3b-7885-92eb-9fa19750424e": [
      "espaces-verts",
      "31"
+    ]
+   },
+   "relances": 0
+  },
+  {
+   "date": "2026-11-10",
+   "envoyes": 20,
+   "ids": [
+    "01a1c625-b0d2-7d59-ba3c-1722c0bdfb53",
+    "01a1c625-b14c-7b42-b761-e8f35a0e98a6",
+    "01a1c625-b183-7190-91e5-fd7014bdbe79",
+    "01a1c625-b1e1-740f-99cd-a16ebfc290da",
+    "01a1c625-b237-7d6e-aa8e-3b043ba074b7",
+    "01a1c625-b275-763a-9575-9d4cbe227195",
+    "01a1c625-b2d8-77ff-abbe-92a91e0f1525",
+    "01a1c625-b335-7de1-b078-8e5ff57a87e6",
+    "01a1c625-b3c4-72a5-b5cb-c881ec24c6df",
+    "01a1c625-b41d-7815-8138-9f9d43063e29",
+    "01a1c625-b477-7f3b-8df1-2fb771fa4f97",
+    "01a1c625-b4bd-7885-93d2-4cd4c8ef2357",
+    "01a1c625-b4fb-71c4-8567-cee51401b7b2",
+    "01a1c625-b551-7054-b47c-0371c9daaf50",
+    "01a1c625-c986-7667-b28d-75c157751a45",
+    "01a1c625-ca07-7709-9b68-b235e3655a6b",
+    "01a1c625-ca83-7591-9132-d397ca7e086b",
+    "01a1c625-cad9-70d6-ab1d-c86197ea32d2",
+    "01a1c625-cb32-795d-bc4b-9af63196044d",
+    "01a1c625-cb81-743f-926e-0f145ec8ead9"
+   ],
+   "suivi": {
+    "01a1c625-b0d2-7d59-ba3c-1722c0bdfb53": [
+     "plomberie-cvc",
+     "34"
+    ],
+    "01a1c625-b14c-7b42-b761-e8f35a0e98a6": [
+     "plomberie-cvc",
+     "34"
+    ],
+    "01a1c625-b183-7190-91e5-fd7014bdbe79": [
+     "peinture",
+     "89"
+    ],
+    "01a1c625-b1e1-740f-99cd-a16ebfc290da": [
+     "communication-web",
+     "59"
+    ],
+    "01a1c625-b237-7d6e-aa8e-3b043ba074b7": [
+     "communication-web",
+     "35"
+    ],
+    "01a1c625-b275-763a-9575-9d4cbe227195": [
+     "communication-web",
+     "92"
+    ],
+    "01a1c625-b2d8-77ff-abbe-92a91e0f1525": [
+     "communication-web",
+     "75"
+    ],
+    "01a1c625-b335-7de1-b078-8e5ff57a87e6": [
+     "communication-web",
+     "34"
+    ],
+    "01a1c625-b3c4-72a5-b5cb-c881ec24c6df": [
+     "communication-web",
+     "59"
+    ],
+    "01a1c625-b41d-7815-8138-9f9d43063e29": [
+     "communication-web",
+     "75"
+    ],
+    "01a1c625-b477-7f3b-8df1-2fb771fa4f97": [
+     "communication-web",
+     "75"
+    ],
+    "01a1c625-b4bd-7885-93d2-4cd4c8ef2357": [
+     "communication-web",
+     "92"
+    ],
+    "01a1c625-b4fb-71c4-8567-cee51401b7b2": [
+     "nettoyage",
+     "91"
+    ],
+    "01a1c625-b551-7054-b47c-0371c9daaf50": [
+     "informatique",
+     "69"
+    ],
+    "01a1c625-c986-7667-b28d-75c157751a45": [
+     "peinture",
+     "69"
+    ],
+    "01a1c625-ca07-7709-9b68-b235e3655a6b": [
+     "peinture",
+     "73"
+    ],
+    "01a1c625-ca83-7591-9132-d397ca7e086b": [
+     "peinture",
+     "69"
+    ],
+    "01a1c625-cad9-70d6-ab1d-c86197ea32d2": [
+     "peinture",
+     "73"
+    ],
+    "01a1c625-cb32-795d-bc4b-9af63196044d": [
+     "informatique",
+     "56"
+    ],
+    "01a1c625-cb81-743f-926e-0f145ec8ead9": [
+     "peinture",
+     "11"
     ]
    },
    "relances": 0
