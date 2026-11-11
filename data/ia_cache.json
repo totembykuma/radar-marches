@@ -131,5 +131,26 @@
   "a_verifier": [],
   "hors_metier": false,
   "jour": "2026-11-10"
+ },
+ "26-108995": {
+  "resume": "Nettoyage régulier des locaux et des vitreries de l'ANSM, sur les sites de Paris et de l'Hérault (34), sans durée ni montant précisés.",
+  "score": 3,
+  "a_verifier": [],
+  "hors_metier": false,
+  "jour": "2026-11-11"
+ },
+ "26-109059": {
+  "resume": "Nettoyage des sites du CROUS de Versailles dans toute l'Île-de-France (8 départements), sans détail de durée, de lots ni de montant.",
+  "score": 2,
+  "a_verifier": [],
+  "hors_metier": false,
+  "jour": "2026-11-11"
+ },
+ "26-109467": {
+  "resume": "Fourniture à la commune de Forbach (Moselle) de produits d'entretien ménager, d'hygiène et d'essuyage, de petit matériel de brosserie et de consommables, sans quantités ni montant.",
+  "score": 4,
+  "a_verifier": [],
+  "hors_metier": false,
+  "jour": "2026-11-11"
  }
 }
