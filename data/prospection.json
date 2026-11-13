@@ -823,7 +823,47 @@
   "3d6988931c34eb7033461484",
   "67727007961530d70ec7ffe3",
   "a2e4476a16ab27fb7cfea118",
-  "fe2c7407a4369e0d90b60cb0"
+  "fe2c7407a4369e0d90b60cb0",
+  "ebccb8d596ddf9063a914d5f",
+  "c8169327978e5a539d4288bf",
+  "51907f4ec892317d54675d24",
+  "b6f122298eca36502bfe946e",
+  "c38edc9ff2131c9c1c8d1359",
+  "08351bd80b4139261affbde9",
+  "71c2c79d2b754d79cbb8df58",
+  "24d4cc8dfac8829882c3249e",
+  "cf306c134d04d8aec384cfc6",
+  "665ad67a21dd8384560446f6",
+  "3025c68f38b2aae02b50ee52",
+  "da7e300bc007c2e41fffc8bf",
+  "4e15bfbf2525b26daecc7f1f",
+  "64cb93911ae65fa6b3bdaace",
+  "0e2b1b03afe7f144f94d358f",
+  "66a81a5706c71c7b092b8f30",
+  "298a880c7a99cae6750ba6b0",
+  "ff6f123ddf5b1c7212253484",
+  "f62d982467744b7e0222adea",
+  "aa7bfe38ab5f7f0742f1e765",
+  "8f0de836144c01b81c09aadd",
+  "7c511c1121c7f9206d037210",
+  "44cd0c9c959f1f5ba217d6fb",
+  "6b47b7d8292fce64c5384f69",
+  "451a4c07837d06dc05ed68bc",
+  "93dfadde8cb799b6b722e323",
+  "a878854628574b4e6f69715f",
+  "4aa10142a2a01541f67ed41c",
+  "00eba2b752aad9b13f2d1bae",
+  "2cf9f2106c46d329101aba85",
+  "1782f63f70533219f12b5847",
+  "9ac65264b8afbe3b2b6a0afd",
+  "a2d5a283086b73748197fa2b",
+  "37d5a7c9c0c91d6d48085ad5",
+  "c9cc4458ac0f0f39af40fa0d",
+  "579461a666e35c91811fe2ee",
+  "03fb1b10ef23df4b58916166",
+  "0245fb2393fd211ad2718ec1",
+  "186770f79e73552d88a18dec",
+  "f6f018b51cedffc56816fa01"
  ],
  "journal": [
   {
@@ -3095,6 +3135,115 @@
     "01a1d088-5168-7355-ae25-ed7a7c599ee9": [
      "restauration",
      "77"
+    ]
+   },
+   "relances": 0
+  },
+  {
+   "date": "2026-11-13",
+   "envoyes": 20,
+   "ids": [
+    "01a1d591-8f9e-7b32-9dfd-0c8b5e6653f2",
+    "01a1d591-901d-7495-a797-bb471160bccb",
+    "01a1d591-90a1-75be-83da-897b41e23f91",
+    "01a1d591-9116-7c3a-8c19-8ab0185e7c25",
+    "01a1d591-9190-78a8-92c4-342248ab6d0b",
+    "01a1d591-9210-7dd1-a842-ab167a1e751f",
+    "01a1d591-9286-7a1d-8fcb-62e87f48db35",
+    "01a1d591-92fc-70ca-a75c-807995c09fe2",
+    "01a1d591-9377-7c79-9bf5-07b73d2a229b",
+    "01a1d591-93f9-7cb2-a820-6654dc80a745",
+    "01a1d591-947a-7442-aef7-605842ee7c1f",
+    "01a1d591-94ff-7324-b464-e5f2b473b4ac",
+    "01a1d591-9584-72ee-a431-6dd9c154e9df",
+    "01a1d591-9604-7528-b928-d78b7826c4ba",
+    "01a1d591-9688-764b-9a87-90a1120cab90",
+    "01a1d591-9728-75b5-a11a-98ee974dbb50",
+    "01a1d591-97a1-7ebf-b750-01533b091345",
+    "01a1d591-981c-7784-9d37-6821f746c97c",
+    "01a1d591-98a0-7533-9381-19af23e01c70",
+    "01a1d591-9923-7bd8-a198-4309fd9fc21f"
+   ],
+   "suivi": {
+    "01a1d591-8f9e-7b32-9dfd-0c8b5e6653f2": [
+     "electricite",
+     "06"
+    ],
+    "01a1d591-901d-7495-a797-bb471160bccb": [
+     "electricite",
+     "93"
+    ],
+    "01a1d591-90a1-75be-83da-897b41e23f91": [
+     "transport",
+     "76"
+    ],
+    "01a1d591-9116-7c3a-8c19-8ab0185e7c25": [
+     "informatique",
+     "92"
+    ],
+    "01a1d591-9190-78a8-92c4-342248ab6d0b": [
+     "peinture",
+     "76"
+    ],
+    "01a1d591-9210-7dd1-a842-ab167a1e751f": [
+     "securite",
+     "13"
+    ],
+    "01a1d591-9286-7a1d-8fcb-62e87f48db35": [
+     "communication-web",
+     "85"
+    ],
+    "01a1d591-92fc-70ca-a75c-807995c09fe2": [
+     "communication-web",
+     "85"
+    ],
+    "01a1d591-9377-7c79-9bf5-07b73d2a229b": [
+     "communication-web",
+     "44"
+    ],
+    "01a1d591-93f9-7cb2-a820-6654dc80a745": [
+     "espaces-verts",
+     "13"
+    ],
+    "01a1d591-947a-7442-aef7-605842ee7c1f": [
+     "informatique",
+     "93"
+    ],
+    "01a1d591-94ff-7324-b464-e5f2b473b4ac": [
+     "restauration",
+     "75"
+    ],
+    "01a1d591-9584-72ee-a431-6dd9c154e9df": [
+     "restauration",
+     "93"
+    ],
+    "01a1d591-9604-7528-b928-d78b7826c4ba": [
+     "menuiserie",
+     "06"
+    ],
+    "01a1d591-9688-764b-9a87-90a1120cab90": [
+     "menuiserie",
+     "83"
+    ],
+    "01a1d591-9728-75b5-a11a-98ee974dbb50": [
+     "menuiserie",
+     "06"
+    ],
+    "01a1d591-97a1-7ebf-b750-01533b091345": [
+     "menuiserie",
+     "06"
+    ],
+    "01a1d591-981c-7784-9d37-6821f746c97c": [
+     "securite",
+     "69"
+    ],
+    "01a1d591-98a0-7533-9381-19af23e01c70": [
+     "communication-web",
+     "33"
+    ],
+    "01a1d591-9923-7bd8-a198-4309fd9fc21f": [
+     "restauration",
+     "06"
     ]
    },
    "relances": 0
