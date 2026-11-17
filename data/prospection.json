@@ -863,7 +863,43 @@
   "03fb1b10ef23df4b58916166",
   "0245fb2393fd211ad2718ec1",
   "186770f79e73552d88a18dec",
-  "f6f018b51cedffc56816fa01"
+  "f6f018b51cedffc56816fa01",
+  "b4ec74367aa296b73cb133e7",
+  "cecb3263b49bf5b90f744727",
+  "2c017e6c8ced76c1ba5ebb87",
+  "fb4aeffff16b5544c323cd32",
+  "5de9ae101411aaaae2c13602",
+  "cf61840a60ab11466dce7524",
+  "b9b801850ecccec19456c527",
+  "9d8d0406fa1e16c76557217e",
+  "4eaaa25582c08c683c455918",
+  "717250e61c3244a9c1cb35de",
+  "b89a0898f066c50a9e75c143",
+  "65bdb70924c638db368a8ff6",
+  "9149f115d0be49328963deb7",
+  "c4d1865ca3c53d30cb18360d",
+  "4fc7e07b9131ef3a945d3be3",
+  "d6e0704d943ad78617e83956",
+  "0105c058fe75dabf68cd54b2",
+  "e79a3161ef3c2ebd31d9b1be",
+  "6271bb7466a6e12706e62e7b",
+  "c5df1673a09f173a29190a1b",
+  "43e6d9dd4cb11765f3e97e2e",
+  "ca51aecbfbbcf42f65562ef0",
+  "8b08f48e6e715fec11c78969",
+  "797b05d5274cb0d048f00513",
+  "581e855e7140a9f30678a943",
+  "305db1e1a75476b5ed5cc375",
+  "f7d9423197de0e10d13482e8",
+  "e748e3d20b2a0aad8776f5de",
+  "0eabf5b900f972b55c45d2ea",
+  "cec05dc22f899d22890ecbff",
+  "e547c29487523534365f4977",
+  "74462c149983904419ff94f0",
+  "57adef17718605a9ad3d4594",
+  "0b91b6974b157fd64f7fbeb9",
+  "6de0acc8109be44a4e250f8a",
+  "0ea995b4fc3d8e2ea931b979"
  ],
  "journal": [
   {
@@ -2919,7 +2955,8 @@
      "11"
     ]
    },
-   "relances": 0
+   "relances": 0,
+   "relance_faite": true
   },
   {
    "date": "2026-11-11",
@@ -3028,7 +3065,8 @@
      "57"
     ]
    },
-   "relances": 0
+   "relances": 0,
+   "relance_faite": true
   },
   {
    "date": "2026-11-12",
@@ -3137,7 +3175,8 @@
      "77"
     ]
    },
-   "relances": 0
+   "relances": 0,
+   "relance_faite": true
   },
   {
    "date": "2026-11-13",
@@ -3244,6 +3283,115 @@
     "01a1d591-9923-7bd8-a198-4309fd9fc21f": [
      "restauration",
      "06"
+    ]
+   },
+   "relances": 0
+  },
+  {
+   "date": "2026-11-17",
+   "envoyes": 20,
+   "ids": [
+    "01a1ea77-7791-7a69-801a-9cfc265757d4",
+    "01a1ea77-786e-7736-8c6e-68d41c15ef78",
+    "01a1ea77-795e-78f2-8ce1-bd31c34f7308",
+    "01a1ea77-7a25-7262-81c1-ee040b3bb28e",
+    "01a1ea77-7b69-780b-b25c-fdd0f78a073c",
+    "01a1ea77-7ce5-782f-a143-a2a0f979a912",
+    "01a1ea77-7e58-7430-8dc0-79d0ea0dda15",
+    "01a1ea77-7fc7-7165-bd1b-1bb5236b9957",
+    "01a1ea77-8088-7b9f-b95f-649f5a1ce667",
+    "01a1ea77-81ec-7eb5-b2f4-d99b0816380f",
+    "01a1ea77-8365-72ee-a352-f1b9d30fe073",
+    "01a1ea77-840b-74d2-881a-a79abc6e9d86",
+    "01a1ea77-8470-7a6b-a60b-985e8b91877d",
+    "01a1ea77-85b4-7a7d-8b86-aeb8970bca68",
+    "01a1ea77-865d-7df1-8030-024aac8c3bc8",
+    "01a1ea77-86c8-7dea-bdbb-c51612ad7bbc",
+    "01a1ea77-87a3-7536-af04-68d3e5d77f3f",
+    "01a1ea77-8901-7850-9604-169db7835c78",
+    "01a1ea77-8a75-78f3-ad40-08ec953e315a",
+    "01a1ea77-8b0e-7ad4-af27-4cd934a66a0f"
+   ],
+   "suivi": {
+    "01a1ea77-7791-7a69-801a-9cfc265757d4": [
+     "voirie-vrd",
+     "73"
+    ],
+    "01a1ea77-786e-7736-8c6e-68d41c15ef78": [
+     "voirie-vrd",
+     "73"
+    ],
+    "01a1ea77-795e-78f2-8ce1-bd31c34f7308": [
+     "informatique",
+     "54"
+    ],
+    "01a1ea77-7a25-7262-81c1-ee040b3bb28e": [
+     "electricite",
+     "45"
+    ],
+    "01a1ea77-7b69-780b-b25c-fdd0f78a073c": [
+     "electricite",
+     "45"
+    ],
+    "01a1ea77-7ce5-782f-a143-a2a0f979a912": [
+     "electricite",
+     "45"
+    ],
+    "01a1ea77-7e58-7430-8dc0-79d0ea0dda15": [
+     "electricite",
+     "45"
+    ],
+    "01a1ea77-7fc7-7165-bd1b-1bb5236b9957": [
+     "electricite",
+     "45"
+    ],
+    "01a1ea77-8088-7b9f-b95f-649f5a1ce667": [
+     "electricite",
+     "45"
+    ],
+    "01a1ea77-81ec-7eb5-b2f4-d99b0816380f": [
+     "plomberie-cvc",
+     "12"
+    ],
+    "01a1ea77-8365-72ee-a352-f1b9d30fe073": [
+     "nettoyage",
+     "78"
+    ],
+    "01a1ea77-840b-74d2-881a-a79abc6e9d86": [
+     "voirie-vrd",
+     "69"
+    ],
+    "01a1ea77-8470-7a6b-a60b-985e8b91877d": [
+     "nettoyage",
+     "34"
+    ],
+    "01a1ea77-85b4-7a7d-8b86-aeb8970bca68": [
+     "nettoyage",
+     "34"
+    ],
+    "01a1ea77-865d-7df1-8030-024aac8c3bc8": [
+     "nettoyage",
+     "34"
+    ],
+    "01a1ea77-86c8-7dea-bdbb-c51612ad7bbc": [
+     "espaces-verts",
+     "83"
+    ],
+    "01a1ea77-87a3-7536-af04-68d3e5d77f3f": [
+     "espaces-verts",
+     "30"
+    ],
+    "01a1ea77-8901-7850-9604-169db7835c78": [
+     "espaces-verts",
+     "34"
+    ],
+    "01a1ea77-8a75-78f3-ad40-08ec953e315a": [
+     "securite",
+     "59"
+    ],
+    "01a1ea77-8b0e-7ad4-af27-4cd934a66a0f": [
+     "informatique",
+     "44"
     ]
    },
    "relances": 0
