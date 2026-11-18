@@ -899,7 +899,46 @@
   "57adef17718605a9ad3d4594",
   "0b91b6974b157fd64f7fbeb9",
   "6de0acc8109be44a4e250f8a",
-  "0ea995b4fc3d8e2ea931b979"
+  "0ea995b4fc3d8e2ea931b979",
+  "4ba20c3b6ca17cc5ee4ccb0f",
+  "857962c6a8cefc9333c6fccd",
+  "c1a3f4b6b8eb28aba186eac8",
+  "21dd738bd670de8a908aa62c",
+  "17d886ed298afb6c2d208bbb",
+  "f084ca031fcb6379245065a3",
+  "783ffd38c31aae3403d3ff15",
+  "9e5b1f555dea80a9cedca97c",
+  "61c3cd3cc08522a1b4643a9a",
+  "d797d248488983fd41abe852",
+  "8b24e75d8ddbd6e49e917f3c",
+  "e95f27ffa852d827b64a1b61",
+  "3c8282b6890aba925a04c95d",
+  "4228e3c703d78d32964b4815",
+  "b46c6195f1e84aa1501785cb",
+  "1b0d66ccc1c211da1a3f8121",
+  "8c0461f366fb92536baa15ab",
+  "3038fc9274b634d2048aca76",
+  "da7cf964cdfec695f01f0039",
+  "ca557a66f2923ff399bc92c5",
+  "db5c7ac02342f96cc220d1a8",
+  "ec2e32e2a4738ceecf839b65",
+  "5ad684b96dabd3f9f5025b31",
+  "668117f698136a4c7c840665",
+  "648119555045d8d450e1da2c",
+  "dbc7efd9a044fb64f0ad975f",
+  "73b0df51543355bde429595d",
+  "eea562619fc83bc9a7f098dc",
+  "6cea455ba75db3b64aef5ffd",
+  "6398fc3527ab483eff0c4b01",
+  "fb965e21e9f5963ec4b5d10f",
+  "ac1f28bbbbaaa9f0da779e7f",
+  "08bc56c1b555122e22a9cb16",
+  "e23f8fdeddd5e69320b1a65b",
+  "ab1ffd2692948144a0262026",
+  "feaca6240b0c834c22871f8d",
+  "1b9cb47dc506cc1cb00c912d",
+  "b446616236899faea2295f06",
+  "240eb5c3a95744c3834a08c5"
  ],
  "journal": [
   {
@@ -3285,7 +3324,8 @@
      "06"
     ]
    },
-   "relances": 0
+   "relances": 0,
+   "relance_faite": true
   },
   {
    "date": "2026-11-17",
@@ -3392,6 +3432,115 @@
     "01a1ea77-8b0e-7ad4-af27-4cd934a66a0f": [
      "informatique",
      "44"
+    ]
+   },
+   "relances": 0
+  },
+  {
+   "date": "2026-11-18",
+   "envoyes": 20,
+   "ids": [
+    "01a1ef8a-9d91-7c67-b49d-0370cc2c0e91",
+    "01a1ef8a-9e45-7263-b48f-80dbaa928e49",
+    "01a1ef8a-9f05-7b8f-b83c-1a112a0dbc17",
+    "01a1ef8a-9faf-7aea-a767-c6eb3cf66f24",
+    "01a1ef8a-a061-728d-9e7c-875e804e48ca",
+    "01a1ef8a-a109-7905-bb23-7f1cffb8e3e9",
+    "01a1ef8a-a1ba-7582-9888-a05a23f090e6",
+    "01a1ef8a-a26d-726e-8c79-fb0bbf6f055f",
+    "01a1ef8a-a306-7838-9351-a39c42d24cc9",
+    "01a1ef8a-a3a1-7271-bb25-f6f312ceec6c",
+    "01a1ef8a-a483-76f8-b2d0-2048935f9d05",
+    "01a1ef8a-a54c-7645-9faf-2a1d834dca3a",
+    "01a1ef8a-a60f-73bb-a5e0-a8b86a71df03",
+    "01a1ef8a-a6bb-7e6c-9848-d2995471af5c",
+    "01a1ef8a-a75c-79a6-b07b-8222c50a5900",
+    "01a1ef8a-a7ff-7421-8043-0ae6c3fecfeb",
+    "01a1ef8a-a8d3-77fb-8573-9bc95b269d3b",
+    "01a1ef8a-a992-7a76-a996-b00f3b12d051",
+    "01a1ef8a-aa43-72fc-82e4-574cb5cb9e8e",
+    "01a1ef8a-ab00-76a7-a9d8-97f37fa18060"
+   ],
+   "suivi": {
+    "01a1ef8a-9d91-7c67-b49d-0370cc2c0e91": [
+     "voirie-vrd",
+     "974"
+    ],
+    "01a1ef8a-9e45-7263-b48f-80dbaa928e49": [
+     "restauration",
+     "91"
+    ],
+    "01a1ef8a-9f05-7b8f-b83c-1a112a0dbc17": [
+     "securite",
+     "13"
+    ],
+    "01a1ef8a-9faf-7aea-a767-c6eb3cf66f24": [
+     "securite",
+     "83"
+    ],
+    "01a1ef8a-a061-728d-9e7c-875e804e48ca": [
+     "securite",
+     "06"
+    ],
+    "01a1ef8a-a109-7905-bb23-7f1cffb8e3e9": [
+     "maconnerie-gros-oeuvre",
+     "13"
+    ],
+    "01a1ef8a-a1ba-7582-9888-a05a23f090e6": [
+     "maconnerie-gros-oeuvre",
+     "84"
+    ],
+    "01a1ef8a-a26d-726e-8c79-fb0bbf6f055f": [
+     "voirie-vrd",
+     "74"
+    ],
+    "01a1ef8a-a306-7838-9351-a39c42d24cc9": [
+     "voirie-vrd",
+     "92"
+    ],
+    "01a1ef8a-a3a1-7271-bb25-f6f312ceec6c": [
+     "voirie-vrd",
+     "92"
+    ],
+    "01a1ef8a-a483-76f8-b2d0-2048935f9d05": [
+     "espaces-verts",
+     "85"
+    ],
+    "01a1ef8a-a54c-7645-9faf-2a1d834dca3a": [
+     "menuiserie",
+     "93"
+    ],
+    "01a1ef8a-a60f-73bb-a5e0-a8b86a71df03": [
+     "restauration",
+     "62"
+    ],
+    "01a1ef8a-a6bb-7e6c-9848-d2995471af5c": [
+     "electricite",
+     "83"
+    ],
+    "01a1ef8a-a75c-79a6-b07b-8222c50a5900": [
+     "restauration",
+     "77"
+    ],
+    "01a1ef8a-a7ff-7421-8043-0ae6c3fecfeb": [
+     "nettoyage",
+     "14"
+    ],
+    "01a1ef8a-a8d3-77fb-8573-9bc95b269d3b": [
+     "nettoyage",
+     "69"
+    ],
+    "01a1ef8a-a992-7a76-a996-b00f3b12d051": [
+     "couverture",
+     "75"
+    ],
+    "01a1ef8a-aa43-72fc-82e4-574cb5cb9e8e": [
+     "peinture",
+     "73"
+    ],
+    "01a1ef8a-ab00-76a7-a9d8-97f37fa18060": [
+     "peinture",
+     "45"
     ]
    },
    "relances": 0
