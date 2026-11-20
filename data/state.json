@@ -113,13 +113,16 @@
   "bcaf3dc2-4661-4287-b4bf-a7fd6acfcc9d",
   "9b6bcb54-49b8-4e53-8ca6-60f1672144f3",
   "000bfc39-7983-47ca-bc1c-ec074b320429",
-  "36016e08-80a2-40c0-92ec-14519f467da0"
+  "36016e08-80a2-40c0-92ec-14519f467da0",
+  "16be340e-0a01-472d-8f34-263054886ba2"
  ],
  "reponses_auteurs": {
   "8f6bebb7e6f521f17e05a969": 2
  },
  "prospects_refus": [
-  "f06862dc7e458863d3003501"
+  "f06862dc7e458863d3003501",
+  "cb332bb4fb673a23752c9af4",
+  "18513c28f9c73c8886c45925"
  ],
  "reponses_journal": [
   {
@@ -136,6 +139,10 @@
   },
   {
    "date": "2026-10-21",
+   "action": "desinscrit"
+  },
+  {
+   "date": "2026-11-20",
    "action": "desinscrit"
   }
  ],
