@@ -976,7 +976,46 @@
   "c21369abe92834f841710c76",
   "439f73c73fce6dd7d8d337a8",
   "055859bbb7e56bdf821b8a6c",
-  "232b574a6663b38587ccd813"
+  "232b574a6663b38587ccd813",
+  "3994b6caa01954edf5077597",
+  "3d526c6563ccbe6e4db5c881",
+  "938d0472c5c39908ce02e366",
+  "a03c9c8026e7d52697e0a2d6",
+  "0848376a17cb3dd34e73b43a",
+  "029d950747df5300239c7dd5",
+  "e77ee01d5b9893942c8ea96d",
+  "5865d7af266725e5e3b140ed",
+  "9f783033469a73b18b6f710f",
+  "d533f5152d4c475526995efc",
+  "e7c74d4cec64f596560cc74c",
+  "0957a27dd577cfa75f83b530",
+  "9aa918fa514d45ef31fed55c",
+  "7ea6d9dca39e9e979d57f6c5",
+  "c29b41eaec3a2503f01a715e",
+  "c2c934902f6d3f557cb08f74",
+  "7ab4daf9534d30a5c53ea4a8",
+  "6688ceb7984d370f72f54652",
+  "f5b8437282c891016865db7e",
+  "4dab8bc21992bb2c8247f113",
+  "de855ea9012e37517204ff7c",
+  "fe5314a54cbb5c3627d1dfdf",
+  "21b55df440d43b2e26654ea1",
+  "9e2605ed7c1c40863443a601",
+  "848d715fadb15ef08a837381",
+  "831fb0719c7bda87b2b79dbd",
+  "cbdf1e358d34fd3ed7471894",
+  "ef7a73bc17234819a813ed48",
+  "985bb2f33a1ae771623f59e6",
+  "92ece715de975277d0fe8fcb",
+  "f342febe2837b2dbdff43561",
+  "d6a6c86f598ac9aaa1cb9de7",
+  "2982c5326b14500db4a3343f",
+  "092507a700a0e91343011f7d",
+  "d823c90bf77ef016c9f76501",
+  "dd35b8337ff97b774c7242b2",
+  "71d7156bf1e075d9984576c4",
+  "6ccaa6fb3497ac81da865296",
+  "05fb23e6765bd4b518c51e24"
  ],
  "journal": [
   {
@@ -3688,6 +3727,115 @@
     "01a1f4b4-9e75-7261-be24-d9ec379fbfaf": [
      "plomberie-cvc",
      "59"
+    ]
+   },
+   "relances": 0
+  },
+  {
+   "date": "2026-11-20",
+   "envoyes": 20,
+   "ids": [
+    "01a1f9c3-22f8-71a7-9723-235ae2f545cc",
+    "01a1f9c3-238b-7b5a-80f4-8b494a9839f4",
+    "01a1f9c3-2427-762e-b6b0-5d32f8b829da",
+    "01a1f9c3-24ae-788e-b789-f04c9a19b59e",
+    "01a1f9c3-255f-71d9-b64b-16dcb538edd5",
+    "01a1f9c3-25f6-7057-8054-085b2d14a7ea",
+    "01a1f9c3-2681-7ba0-9070-3435bcfc6f65",
+    "01a1f9c3-2710-78bc-84db-534ce76795ce",
+    "01a1f9c3-27ac-7981-8ac8-d8967a0adccb",
+    "01a1f9c3-283d-7773-9894-f276ccf5653d",
+    "01a1f9c3-28dc-7e12-8592-ab6d22935bbe",
+    "01a1f9c3-296c-7b80-ba1a-8b597d688900",
+    "01a1f9c3-29f3-7eb8-9663-5ed3b8364c5e",
+    "01a1f9c3-2a83-7d22-b5f0-57bddb2e1ecd",
+    "01a1f9c3-2b2d-735a-a866-febc63b9719d",
+    "01a1f9c3-2bc6-7760-bc00-9ba41505aa5f",
+    "01a1f9c3-2c50-7a20-bf6b-2615bb767bc1",
+    "01a1f9c3-2d0a-7d0e-90b4-ad416d14f533",
+    "01a1f9c3-2d97-710b-aaff-de0fbdbba3e1",
+    "01a1f9c3-2e26-7872-b1cb-b096a58e4a57"
+   ],
+   "suivi": {
+    "01a1f9c3-22f8-71a7-9723-235ae2f545cc": [
+     "electricite",
+     "63"
+    ],
+    "01a1f9c3-238b-7b5a-80f4-8b494a9839f4": [
+     "securite",
+     "49"
+    ],
+    "01a1f9c3-2427-762e-b6b0-5d32f8b829da": [
+     "informatique",
+     "51"
+    ],
+    "01a1f9c3-24ae-788e-b789-f04c9a19b59e": [
+     "informatique",
+     "31"
+    ],
+    "01a1f9c3-255f-71d9-b64b-16dcb538edd5": [
+     "plomberie-cvc",
+     "91"
+    ],
+    "01a1f9c3-25f6-7057-8054-085b2d14a7ea": [
+     "restauration",
+     "74"
+    ],
+    "01a1f9c3-2681-7ba0-9070-3435bcfc6f65": [
+     "restauration",
+     "74"
+    ],
+    "01a1f9c3-2710-78bc-84db-534ce76795ce": [
+     "informatique",
+     "93"
+    ],
+    "01a1f9c3-27ac-7981-8ac8-d8967a0adccb": [
+     "nettoyage",
+     "57"
+    ],
+    "01a1f9c3-283d-7773-9894-f276ccf5653d": [
+     "voirie-vrd",
+     "33"
+    ],
+    "01a1f9c3-28dc-7e12-8592-ab6d22935bbe": [
+     "menuiserie",
+     "95"
+    ],
+    "01a1f9c3-296c-7b80-ba1a-8b597d688900": [
+     "menuiserie",
+     "67"
+    ],
+    "01a1f9c3-29f3-7eb8-9663-5ed3b8364c5e": [
+     "menuiserie",
+     "72"
+    ],
+    "01a1f9c3-2a83-7d22-b5f0-57bddb2e1ecd": [
+     "menuiserie",
+     "76"
+    ],
+    "01a1f9c3-2b2d-735a-a866-febc63b9719d": [
+     "menuiserie",
+     "75"
+    ],
+    "01a1f9c3-2bc6-7760-bc00-9ba41505aa5f": [
+     "menuiserie",
+     "14"
+    ],
+    "01a1f9c3-2c50-7a20-bf6b-2615bb767bc1": [
+     "menuiserie",
+     "92"
+    ],
+    "01a1f9c3-2d0a-7d0e-90b4-ad416d14f533": [
+     "menuiserie",
+     "95"
+    ],
+    "01a1f9c3-2d97-710b-aaff-de0fbdbba3e1": [
+     "menuiserie",
+     "27"
+    ],
+    "01a1f9c3-2e26-7872-b1cb-b096a58e4a57": [
+     "menuiserie",
+     "27"
     ]
    },
    "relances": 0
