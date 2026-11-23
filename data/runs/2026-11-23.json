@@ -1,0 +1,32 @@
+{
+ "date": "2026-11-23T14:42+00:00",
+ "erreurs": [],
+ "avis_recuperes": 1389,
+ "avis_metiers": 507,
+ "essais_refuses": 0,
+ "abonnes": 0,
+ "comptes": {
+  "comptes": 3,
+  "relies": 2,
+  "modifies": 0,
+  "criteres_importes": 0
+ },
+ "invitations_compte": 0,
+ "marches_de_depart": 0,
+ "liens_espace_client": 0,
+ "fiches_acheteur": 0,
+ "emails_envoyes": 0,
+ "rappels_favoris": 0,
+ "bilans_resultats": 2,
+ "abonnes_sans_nouveaute": 2,
+ "entreprises_lauréates": 6000,
+ "pages_site": 7702,
+ "indexnow": "7702 pages, réponse 200",
+ "emails_rien_de_neuf": 2,
+ "alerte_gratuite": {
+  "inscrits": 0,
+  "desinscrits": 0,
+  "envoyes": 0
+ },
+ "emails_gratuits": 0
+}
