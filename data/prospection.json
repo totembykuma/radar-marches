@@ -1015,7 +1015,44 @@
   "dd35b8337ff97b774c7242b2",
   "71d7156bf1e075d9984576c4",
   "6ccaa6fb3497ac81da865296",
-  "05fb23e6765bd4b518c51e24"
+  "05fb23e6765bd4b518c51e24",
+  "ca36200220723670fd05f415",
+  "6acff680aa465e1454fd29ed",
+  "3e8f84d921be67ac429b66aa",
+  "d896fe19b9f2b38339233af5",
+  "a39a659ca29e26691c6bdc2f",
+  "7aec44b1a899ebefa7e67aba",
+  "1e227c46a0dff0e545769539",
+  "92b6000e7b36368e65fb0d3f",
+  "439ccd4f9cd4984bdf888fa8",
+  "264ba8733109db8d8bee0dd2",
+  "8ac41445e572dda0cea70116",
+  "68d4baaa0ae0f40b9a9f0916",
+  "e6ef81cc7bcc8eb52558556b",
+  "a6139c317c1051a7a7689729",
+  "b6165865bf8937db6a67f349",
+  "d1057ca512d8b5aef3fc30fd",
+  "8bac284c829cdbba57e48906",
+  "951e9e4753fa1003b37c3a04",
+  "5f4fb8431c8185651e0461a5",
+  "654c65580c9182659e4fb373",
+  "22b9f32f8a9e5580cd7b3ac4",
+  "7d1baea14c1a8a3be9ae6bb9",
+  "fd80e8601ee2fb71c7dc690d",
+  "e0624c64e9f52ba16400d207",
+  "eeac2b4c49b49b95dad6b6d6",
+  "4ab0d0a0f06939c08ef45eb8",
+  "f31fa0a9a0fdfeb9733c57d2",
+  "767ad2acdfecc74d5350d80c",
+  "960715a86ddc30eb23deb2d6",
+  "b4af6dd587a107e1d86fb0d1",
+  "c6244d620891eb1d2bff20c3",
+  "3add06156cdd307c60df4f68",
+  "ba67f344ae4de16e09c189c1",
+  "05ff8d5aecf6eb533e318373",
+  "55421d4f77c0833321fb4997",
+  "357760c3b3c9f9ef91a5414a",
+  "3e3222dbc53610ae10b7b2a8"
  ],
  "journal": [
   {
@@ -3511,7 +3548,8 @@
      "44"
     ]
    },
-   "relances": 0
+   "relances": 0,
+   "relance_faite": true
   },
   {
    "date": "2026-11-18",
@@ -3620,7 +3658,8 @@
      "45"
     ]
    },
-   "relances": 0
+   "relances": 0,
+   "relance_faite": true
   },
   {
    "date": "2026-11-19",
@@ -3729,7 +3768,8 @@
      "59"
     ]
    },
-   "relances": 0
+   "relances": 0,
+   "relance_faite": true
   },
   {
    "date": "2026-11-20",
@@ -3836,6 +3876,115 @@
     "01a1f9c3-2e26-7872-b1cb-b096a58e4a57": [
      "menuiserie",
      "27"
+    ]
+   },
+   "relances": 0
+  },
+  {
+   "date": "2026-11-24",
+   "envoyes": 20,
+   "ids": [
+    "01a20ef2-bd0c-7238-a6c7-ce33ad1201aa",
+    "01a20ef2-bd85-774c-aa10-6af54766e30b",
+    "01a20ef2-be03-78f9-98ac-eb1876c977c4",
+    "01a20ef2-be71-70b2-9259-808b2bfceccc",
+    "01a20ef2-bee8-79ff-accb-b214273af319",
+    "01a20ef2-bf66-713b-83e4-a9df85230300",
+    "01a20ef2-bfdf-7da2-9b4a-a3cd5ec949be",
+    "01a20ef2-c068-77e8-b443-9f25ce07d081",
+    "01a20ef2-c100-70d1-a7c1-57b0a9e15364",
+    "01a20ef2-c18a-7a36-ad5b-8d01cc6adc40",
+    "01a20ef2-c219-74b1-83c7-5a5c97d34d18",
+    "01a20ef2-c298-7743-8d58-602d50088e34",
+    "01a20ef2-c313-7ab4-b663-d539dc0eb796",
+    "01a20ef2-c3a2-7477-ad20-3fe21fa87721",
+    "01a20ef2-c428-7d52-bdbb-73717108e587",
+    "01a20ef2-c4b0-712c-8c14-a5e3a52cdaea",
+    "01a20ef2-c529-79d4-96b3-8efb856e5b61",
+    "01a20ef2-c5b6-7140-958d-0b3721896377",
+    "01a20ef2-c720-7c44-8e9f-729d641fbec3",
+    "01a20ef2-c7a9-77d5-90ea-1f9282fa52cb"
+   ],
+   "suivi": {
+    "01a20ef2-bd0c-7238-a6c7-ce33ad1201aa": [
+     "communication-web",
+     "92"
+    ],
+    "01a20ef2-bd85-774c-aa10-6af54766e30b": [
+     "nettoyage",
+     "05"
+    ],
+    "01a20ef2-be03-78f9-98ac-eb1876c977c4": [
+     "nettoyage",
+     "04"
+    ],
+    "01a20ef2-be71-70b2-9259-808b2bfceccc": [
+     "formation",
+     "06"
+    ],
+    "01a20ef2-bee8-79ff-accb-b214273af319": [
+     "formation",
+     "38"
+    ],
+    "01a20ef2-bf66-713b-83e4-a9df85230300": [
+     "maconnerie-gros-oeuvre",
+     "78"
+    ],
+    "01a20ef2-bfdf-7da2-9b4a-a3cd5ec949be": [
+     "maconnerie-gros-oeuvre",
+     "84"
+    ],
+    "01a20ef2-c068-77e8-b443-9f25ce07d081": [
+     "maconnerie-gros-oeuvre",
+     "13"
+    ],
+    "01a20ef2-c100-70d1-a7c1-57b0a9e15364": [
+     "plomberie-cvc",
+     "06"
+    ],
+    "01a20ef2-c18a-7a36-ad5b-8d01cc6adc40": [
+     "restauration",
+     "32"
+    ],
+    "01a20ef2-c219-74b1-83c7-5a5c97d34d18": [
+     "restauration",
+     "47"
+    ],
+    "01a20ef2-c298-7743-8d58-602d50088e34": [
+     "restauration",
+     "82"
+    ],
+    "01a20ef2-c313-7ab4-b663-d539dc0eb796": [
+     "restauration",
+     "31"
+    ],
+    "01a20ef2-c3a2-7477-ad20-3fe21fa87721": [
+     "restauration",
+     "82"
+    ],
+    "01a20ef2-c428-7d52-bdbb-73717108e587": [
+     "restauration",
+     "31"
+    ],
+    "01a20ef2-c4b0-712c-8c14-a5e3a52cdaea": [
+     "restauration",
+     "31"
+    ],
+    "01a20ef2-c529-79d4-96b3-8efb856e5b61": [
+     "restauration",
+     "31"
+    ],
+    "01a20ef2-c5b6-7140-958d-0b3721896377": [
+     "restauration",
+     "33"
+    ],
+    "01a20ef2-c720-7c44-8e9f-729d641fbec3": [
+     "restauration",
+     "31"
+    ],
+    "01a20ef2-c7a9-77d5-90ea-1f9282fa52cb": [
+     "restauration",
+     "12"
     ]
    },
    "relances": 0
