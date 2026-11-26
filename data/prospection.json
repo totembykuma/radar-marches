@@ -1120,7 +1120,46 @@
   "7aaab767ab384b2b8e1e9770",
   "23f95819389e395f846ad2fd",
   "8383d85b9bdb4815e6cfa2de",
-  "fe3ab1885301b3e9fb14d8a5"
+  "fe3ab1885301b3e9fb14d8a5",
+  "9b6be5cc84f71ae90165ffe2",
+  "f965d808bb78025c0079895a",
+  "1b83fcb47ab63313c681f829",
+  "0044ceea32288afed151a4a2",
+  "19e61052e56536b68afc3f51",
+  "75f5b9cc44fd39d159421060",
+  "f8044ae1d6f368983f343715",
+  "3e33945aae206bf1939957bd",
+  "7bb3c173719c8185b745fdad",
+  "3d65c64ed0c38e249b458095",
+  "68809a480a2be58cf0fb1510",
+  "14dac03b5d69032f73f6a225",
+  "e712b439866c4fc45562d710",
+  "bc6b474ee064b8d01b0be585",
+  "a8e29f231eef40a93cb0a255",
+  "52d5e607482d7d78c527b4b4",
+  "57d70a150961aabe4814cd58",
+  "c728573bf2c29191875dea7e",
+  "1ada4504b0b74fccb6d5e010",
+  "63b847b90dddba9efd4f596f",
+  "cca8b88f35c3574931ac7921",
+  "8462d4301d7ad20f39b98f48",
+  "5fdf61d51f0045a013f62e61",
+  "2b8eceda2a45b960b0ee78ba",
+  "7e465f0ab016baaa07b612bd",
+  "bf32e217151b6d4ab3b5e8ce",
+  "081408a2d57a4d9912d94c70",
+  "b2302139e65e7df810a2ed8a",
+  "6a05b7928b9b2d30aa3c6784",
+  "a9adcc0566e1b4055a8450d6",
+  "214e553b0bee675030391c63",
+  "9a8ddaf2459d1c23113b94be",
+  "0ae2429d864459adc077b847",
+  "bbe4eb3c96888c7a95045451",
+  "83aa2e4990c0ac5f10f6ab5d",
+  "6d79629e758fd8d500a8508c",
+  "d747c3fe11c4fcf0f51e85ea",
+  "30a88009a34ff0d54cdf037c",
+  "b1c378cb83360f7fdb703a01"
  ],
  "journal": [
   {
@@ -4238,6 +4277,115 @@
     "01a213e6-d70c-7030-b141-cefccfa5c598": [
      "voirie-vrd",
      "52"
+    ]
+   },
+   "relances": 0
+  },
+  {
+   "date": "2026-11-26",
+   "envoyes": 20,
+   "ids": [
+    "01a218fd-e283-7634-ac4a-70ab1155b86c",
+    "01a218fd-e318-7f0b-9614-20d1494a888f",
+    "01a218fd-e3b2-741e-b6c2-5cc1ee769542",
+    "01a218fd-e440-7a8c-9ae7-03afb6bf519f",
+    "01a218fd-e4db-791b-b958-8a4852057284",
+    "01a218fd-e588-71e0-b08b-065efac7d19e",
+    "01a218fd-e621-782b-8d87-f83728d238db",
+    "01a218fd-e6c3-76f9-97ff-e72d7dad83dc",
+    "01a218fd-e74f-7812-96d9-e1268c6e49f9",
+    "01a218fd-e7da-7eb3-821c-1e2645f99f06",
+    "01a218fd-e865-768d-8d6c-6f323541d52b",
+    "01a218fd-e8f2-7721-81b1-be2a65397f9b",
+    "01a218fd-e97d-79f6-8975-3f5e5b0168d6",
+    "01a218fd-ea1c-709e-865e-b434623975b5",
+    "01a218fd-eaae-7587-97d8-4f99ce2924d7",
+    "01a218fd-eb3f-7a52-83df-f5bb5e8fc42b",
+    "01a218fd-ebd3-707c-bceb-cdeb8f97c072",
+    "01a218fd-ec72-715d-af0a-53fdea8d1c8d",
+    "01a218fd-ed29-7dd7-bc4a-879d71ae31b1",
+    "01a218fd-edb8-75b2-ae34-a72ac7f1f5fe"
+   ],
+   "suivi": {
+    "01a218fd-e283-7634-ac4a-70ab1155b86c": [
+     "formation",
+     "44"
+    ],
+    "01a218fd-e318-7f0b-9614-20d1494a888f": [
+     "peinture",
+     "69"
+    ],
+    "01a218fd-e3b2-741e-b6c2-5cc1ee769542": [
+     "communication-web",
+     "75"
+    ],
+    "01a218fd-e440-7a8c-9ae7-03afb6bf519f": [
+     "communication-web",
+     "75"
+    ],
+    "01a218fd-e4db-791b-b958-8a4852057284": [
+     "plomberie-cvc",
+     "50"
+    ],
+    "01a218fd-e588-71e0-b08b-065efac7d19e": [
+     "plomberie-cvc",
+     "50"
+    ],
+    "01a218fd-e621-782b-8d87-f83728d238db": [
+     "plomberie-cvc",
+     "50"
+    ],
+    "01a218fd-e6c3-76f9-97ff-e72d7dad83dc": [
+     "plomberie-cvc",
+     "50"
+    ],
+    "01a218fd-e74f-7812-96d9-e1268c6e49f9": [
+     "plomberie-cvc",
+     "50"
+    ],
+    "01a218fd-e7da-7eb3-821c-1e2645f99f06": [
+     "plomberie-cvc",
+     "50"
+    ],
+    "01a218fd-e865-768d-8d6c-6f323541d52b": [
+     "plomberie-cvc",
+     "50"
+    ],
+    "01a218fd-e8f2-7721-81b1-be2a65397f9b": [
+     "plomberie-cvc",
+     "14"
+    ],
+    "01a218fd-e97d-79f6-8975-3f5e5b0168d6": [
+     "plomberie-cvc",
+     "14"
+    ],
+    "01a218fd-ea1c-709e-865e-b434623975b5": [
+     "plomberie-cvc",
+     "64"
+    ],
+    "01a218fd-eaae-7587-97d8-4f99ce2924d7": [
+     "plomberie-cvc",
+     "14"
+    ],
+    "01a218fd-eb3f-7a52-83df-f5bb5e8fc42b": [
+     "plomberie-cvc",
+     "29"
+    ],
+    "01a218fd-ebd3-707c-bceb-cdeb8f97c072": [
+     "plomberie-cvc",
+     "85"
+    ],
+    "01a218fd-ec72-715d-af0a-53fdea8d1c8d": [
+     "plomberie-cvc",
+     "06"
+    ],
+    "01a218fd-ed29-7dd7-bc4a-879d71ae31b1": [
+     "plomberie-cvc",
+     "14"
+    ],
+    "01a218fd-edb8-75b2-ae34-a72ac7f1f5fe": [
+     "plomberie-cvc",
+     "14"
     ]
    },
    "relances": 0
